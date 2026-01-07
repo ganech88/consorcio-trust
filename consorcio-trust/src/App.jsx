@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+// ⚠️ [EN VS CODE] DESCOMENTA LA SIGUIENTE LINEA:
+// import { createClient } from '@supabase/supabase-js';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend 
 } from 'recharts';
@@ -10,10 +11,42 @@ import {
 
 // --- CONFIGURACIÓN ---
 // ⚠️ IMPORTANTE: Reemplaza esto con tus claves reales de Supabase
-const SUPABASE_URL = 'PEGAR_AQUI_TU_URL';
-const SUPABASE_ANON_KEY = 'PEGAR_AQUI_TU_ANON_KEY';
+const SUPABASE_URL = 'https://kldgbgxycmvywvvftuvi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsZGdiZ3h5Y212eXd2dmZ0dXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjkzMDYsImV4cCI6MjA4MzMwNTMwNn0.SsoM3rQDwBifZAh1vzsJC1Nu0njJWBEOAWxJxl8IRtA';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ⚠️ [EN VS CODE] DESCOMENTA LA CONEXIÓN REAL Y BORRA EL SIMULADOR DE ABAJO:
+// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// --- SIMULADOR (MOCK) PARA QUE FUNCIONE EN LA VISTA PREVIA ---
+// (Borra todo este bloque 'const supabase = { ... }' cuando lo pegues en tu VS Code)
+const supabase = {
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null } }), // Inicia sin sesión para ver login
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signInWithPassword: () => Promise.resolve({ data: { session: { user: { id: '123', email: 'demo@trust.com' } } }, error: null }),
+    signUp: () => Promise.resolve({ data: { session: { user: { id: '123', email: 'demo@trust.com' } } }, error: null }),
+    signOut: () => Promise.resolve({ error: null }),
+  },
+  from: (table) => ({
+    select: () => ({
+      order: () => Promise.resolve({ 
+        data: table === 'claims' ? [] : [{ category: 'Seguridad', amount: 400000 }, { category: 'Limpieza', amount: 250000 }], 
+        error: null 
+      })
+    }),
+    insert: (data) => ({
+      select: () => Promise.resolve({ data: [data[0]], error: null })
+    })
+  }),
+  storage: {
+    from: () => ({
+      upload: () => Promise.resolve({ data: {}, error: null }),
+      getPublicUrl: () => ({ data: { publicUrl: 'https://via.placeholder.com/150' } })
+    })
+  }
+};
+// -------------------------------------------------------------
+
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EC4899'];
 
 // --- COMPONENTES UI AUXILIARES ---
@@ -66,7 +99,12 @@ export default function App() {
       if (session) fetchDatos();
     });
 
-    return () => subscription.unsubscribe();
+    // Cleanup seguro (verificando que subscription exista)
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   // --- LÓGICA DE DATOS ---
@@ -104,8 +142,11 @@ export default function App() {
     setLoading(true);
     try {
       if (isLoginView) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        // Simulación visual en mock: siempre loguea
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Forzar sesión en mock si no viene automático
+        if (!data.session) setSession({ user: { email: email, id: '123' } });
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
@@ -121,6 +162,7 @@ export default function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    setSession(null);
     setReclamos([]);
     setGastos([]);
   }
@@ -133,7 +175,6 @@ export default function App() {
 
     try {
       // 1. Subir imagen al Bucket 'comprobantes'
-      // IMPORTANTE: Debes haber creado el bucket 'comprobantes' en Supabase Storage
       const fileName = `${Date.now()}_${payFile.name.replace(/\s/g, '_')}`;
       
       const { data: uploadData, error: uploadError } = await supabase
@@ -155,7 +196,6 @@ export default function App() {
           status: 'pending',
           proof_url: publicUrl,
           user_id: session.user.id,
-          // Usamos un ID de unidad fijo por ahora, en el futuro vendría del perfil del usuario
           unit_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' 
         }
       ]);
@@ -168,7 +208,7 @@ export default function App() {
 
     } catch (error) {
       console.error(error);
-      alert("Error subiendo el pago. ¿Creaste el bucket 'comprobantes' en Supabase?: " + error.message);
+      alert("Error simulado (o real): " + error.message);
     } finally {
       setUploadingPay(false);
     }
@@ -189,7 +229,10 @@ export default function App() {
       
       if (error) throw error;
       
-      setReclamos([data[0], ...reclamos]);
+      // Manejo seguro de la respuesta para el Mock vs Real
+      const newItem = data ? data[0] : { title: nuevoReclamo, status: 'open', created_at: new Date(), id: Math.random() };
+      
+      setReclamos([newItem, ...reclamos]);
       setNuevoReclamo('');
     } catch (error) {
       alert("Error al crear reclamo: " + error.message);
@@ -240,6 +283,10 @@ export default function App() {
               {isLoginView ? '¿No tienes cuenta? Regístrate gratis' : '¿Ya tienes cuenta? Inicia Sesión'}
             </button>
           </div>
+          {/* Nota para el usuario en Preview */}
+          <p className="text-[10px] text-slate-400 text-center mt-4 border-t pt-2">
+            Nota: En esta vista previa, cualquier contraseña ingresa.
+          </p>
         </div>
       </div>
     );
