@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
+  <rect width="192" height="192" rx="40" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="192" y2="192">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(96,96)">
+    <!-- Building -->
+    <rect x="-32" y="-40" width="64" height="72" rx="4" fill="white" opacity="0.95"/>
+    <!-- Windows row 1 -->
+    <rect x="-24" y="-32" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <rect x="-6" y="-32" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <rect x="12" y="-32" width="12" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+    <!-- Windows row 2 -->
+    <rect x="-24" y="-16" width="12" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+    <rect x="-6" y="-16" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <rect x="12" y="-16" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <!-- Windows row 3 -->
+    <rect x="-24" y="0" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <rect x="-6" y="0" width="12" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+    <rect x="12" y="0" width="12" height="10" rx="2" fill="#2563EB" opacity="0.3"/>
+    <!-- Door -->
+    <rect x="-8" y="16" width="16" height="16" rx="2" fill="#1E40AF"/>
+  </g>
+</svg>
