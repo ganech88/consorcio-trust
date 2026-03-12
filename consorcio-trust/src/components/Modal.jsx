@@ -35,7 +35,7 @@ export default function Modal({ children, onClose, title }) {
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in outline-none"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in outline-none"
       >
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 flex justify-between items-center text-white">
           <h3 className="font-bold text-lg">{title}</h3>

@@ -1,5 +1,24 @@
 import { supabase } from '../lib/supabase';
 
+export async function fetchUserProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, phone, unit_id, consortium_id')
+    .eq('id', userId)
+    .limit(1)
+    .single();
+
+  if (error) {
+    const { data: fallback } = await supabase
+      .from('profiles')
+      .select('id, full_name, phone, unit_id, consortium_id')
+      .limit(1)
+      .single();
+    return fallback;
+  }
+  return data;
+}
+
 export async function fetchClaims() {
   const { data, error } = await supabase
     .from('claims')
@@ -66,4 +85,44 @@ export async function savePaymentRecord({ amount, proofUrl, userId, unitId }) {
 
   if (error) throw error;
   return data?.[0];
+}
+
+export async function fetchPayments(userId) {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, status, proof_url, created_at, unit_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchExpenseSummary(unitId) {
+  const { data, error } = await supabase
+    .from('expenses_summary')
+    .select('period, total_amount, due_date, status')
+    .eq('unit_id', unitId)
+    .order('period', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.warn('expenses_summary not available:', error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function updateProfile(userId, updates) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }

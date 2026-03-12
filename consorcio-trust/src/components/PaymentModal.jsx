@@ -5,7 +5,7 @@ import { useToast } from './Toast';
 import { uploadPaymentProof, savePaymentRecord } from '../services/data.service';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE_MB } from '../lib/constants';
 
-export default function PaymentModal({ session, onClose }) {
+export default function PaymentModal({ session, userProfile, onClose }) {
   const [payFile, setPayFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -51,7 +51,7 @@ export default function PaymentModal({ session, onClose }) {
         amount: 0,
         proofUrl: publicUrl,
         userId: session.user.id,
-        unitId: session.user.id, // Temporal hasta tener unit_id real
+        unitId: userProfile?.unit_id,
       });
 
       toast.success('Pago informado correctamente. El administrador lo revisará.');
@@ -73,13 +73,13 @@ export default function PaymentModal({ session, onClose }) {
     <Modal title="Informar Nuevo Pago" onClose={onClose}>
       <div className="space-y-5">
         {/* Info de saldo */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100/50 flex gap-3">
-          <div className="bg-blue-100 p-2 rounded-lg shrink-0">
-            <DollarSign className="text-blue-600" size={20} />
+        <div className="bg-gradient-to-r from-blue-50 dark:from-blue-900/30 to-indigo-50 dark:to-indigo-900/30 p-4 rounded-xl border border-blue-100/50 dark:border-blue-800/50 flex gap-3">
+          <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg shrink-0">
+            <DollarSign className="text-blue-600 dark:text-blue-400" size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-blue-800">Saldo Pendiente: $85,400</p>
-            <p className="text-xs text-blue-600 mt-0.5">Vencimiento: 10/01/2026</p>
+            <p className="text-sm font-bold text-blue-800 dark:text-blue-200">Saldo Pendiente: $85,400</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Vencimiento: 10/01/2026</p>
           </div>
         </div>
 
@@ -90,10 +90,10 @@ export default function PaymentModal({ session, onClose }) {
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer relative ${
             dragOver
-              ? 'border-blue-400 bg-blue-50'
+              ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30'
               : payFile
-                ? 'border-emerald-300 bg-emerald-50/50'
-                : 'border-slate-300 bg-slate-50/50 hover:border-slate-400 hover:bg-slate-50'
+                ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20'
+                : 'border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
           }`}
         >
           <input
@@ -104,22 +104,22 @@ export default function PaymentModal({ session, onClose }) {
             aria-label="Seleccionar comprobante de pago"
           />
           {payFile ? (
-            <div className="flex flex-col items-center text-emerald-600">
+            <div className="flex flex-col items-center text-emerald-600 dark:text-emerald-400">
               <CheckCircle size={36} className="mb-2" />
-              <span className="font-bold text-sm truncate max-w-[250px]">{payFile.name}</span>
-              <span className="text-xs mt-1 text-emerald-500">{fileSizeFormatted} - Clic para cambiar</span>
+              <span className="font-bold text-sm truncate max-w-[250px] dark:text-emerald-300">{payFile.name}</span>
+              <span className="text-xs mt-1 text-emerald-500 dark:text-emerald-400">{fileSizeFormatted} - Clic para cambiar</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center text-slate-400">
+            <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
               <UploadCloud size={36} className="mb-2" />
-              <span className="font-semibold text-sm text-slate-600">Arrastra o toca para subir</span>
+              <span className="font-semibold text-sm text-slate-600 dark:text-slate-300">Arrastra o toca para subir</span>
               <span className="text-xs mt-1">PDF o Imagen (max {MAX_FILE_SIZE_MB}MB)</span>
             </div>
           )}
         </div>
 
         {/* Advertencia */}
-        <div className="flex gap-2 items-start text-xs text-slate-500">
+        <div className="flex gap-2 items-start text-xs text-slate-500 dark:text-slate-400">
           <FileWarning size={14} className="shrink-0 mt-0.5" />
           <span>El comprobante será revisado por la administración. Recibirás una confirmación cuando sea aprobado.</span>
         </div>

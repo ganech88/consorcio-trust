@@ -47,26 +47,26 @@ const MOCK_ANNOUNCEMENTS = [
 const TYPE_CONFIG = {
   urgent: {
     icon: AlertTriangle,
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    iconColor: 'text-red-500',
-    badge: 'bg-red-100 text-red-700',
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    border: 'border-red-200 dark:border-red-800',
+    iconColor: 'text-red-500 dark:text-red-400',
+    badge: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
     label: 'Urgente',
   },
   event: {
     icon: Calendar,
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
-    iconColor: 'text-purple-500',
-    badge: 'bg-purple-100 text-purple-700',
+    bg: 'bg-purple-50 dark:bg-purple-900/30',
+    border: 'border-purple-200 dark:border-purple-800',
+    iconColor: 'text-purple-500 dark:text-purple-400',
+    badge: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
     label: 'Evento',
   },
   info: {
     icon: Info,
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    iconColor: 'text-blue-500',
-    badge: 'bg-blue-100 text-blue-700',
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    border: 'border-blue-200 dark:border-blue-800',
+    iconColor: 'text-blue-500 dark:text-blue-400',
+    badge: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
     label: 'Informativo',
   },
 };
@@ -83,8 +83,8 @@ function AnnouncementCard({ announcement }) {
 
   return (
     <div
-      className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-        announcement.pinned ? config.border : 'border-slate-100'
+      className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
+        announcement.pinned ? config.border : 'border-slate-100 dark:border-slate-700'
       }`}
     >
       {announcement.pinned && (
@@ -102,22 +102,22 @@ function AnnouncementCard({ announcement }) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-bold text-slate-800">{announcement.title}</h4>
+              <h4 className="font-bold text-slate-800 dark:text-slate-100">{announcement.title}</h4>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${config.badge}`}>
                 {config.label}
               </span>
             </div>
 
-            <p className="text-xs text-slate-400 mt-1">{formattedDate}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formattedDate}</p>
 
-            <p className={`text-sm text-slate-600 mt-2 leading-relaxed ${!expanded && 'line-clamp-2'}`}>
+            <p className={`text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed ${!expanded && 'line-clamp-2'}`}>
               {announcement.body}
             </p>
 
             {announcement.body.length > 100 && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="text-xs text-blue-600 font-medium mt-1.5 hover:text-blue-700 transition-colors"
+                className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1.5 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 {expanded ? 'Ver menos' : 'Ver más...'}
               </button>
@@ -135,7 +135,6 @@ export default function AnnouncementsView() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 rounded-2xl text-white shadow-lg shadow-orange-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <Megaphone size={24} />
@@ -144,7 +143,6 @@ export default function AnnouncementsView() {
         <p className="text-amber-100 mt-1 text-sm">Anuncios importantes y comunicados de la administración</p>
       </div>
 
-      {/* Pinned */}
       {pinned.length > 0 && (
         <div className="space-y-4">
           {pinned.map((a) => (
@@ -153,10 +151,9 @@ export default function AnnouncementsView() {
         </div>
       )}
 
-      {/* Rest */}
       {rest.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider px-1">Anteriores</h4>
+          <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">Anteriores</h4>
           {rest.map((a) => (
             <AnnouncementCard key={a.id} announcement={a} />
           ))}

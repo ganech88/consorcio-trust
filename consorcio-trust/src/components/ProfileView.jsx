@@ -1,30 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Building, Phone, Mail, Shield, Edit3, Save, X } from 'lucide-react';
 import { useToast } from './Toast';
+import { updateProfile } from '../services/data.service';
 
-export default function ProfileView({ session }) {
+export default function ProfileView({ session, userProfile, onProfileUpdate }) {
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    fullName: 'Propietario Demo',
+    fullName: 'Propietario',
     phone: '',
-    unit: '4° B',
-    floor: '4',
-    building: 'Torre Norte',
+    unit: '—',
+    floor: '—',
+    building: '—',
   });
   const toast = useToast();
 
-  function handleSave() {
-    setEditing(false);
-    toast.success('Perfil actualizado correctamente');
+  useEffect(() => {
+    if (userProfile) {
+      setForm({
+        fullName: userProfile.full_name || 'Propietario',
+        phone: userProfile.phone || '',
+        unit: userProfile.unit_id || '—',
+        floor: '—',
+        building: '—',
+      });
+    }
+  }, [userProfile]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const updated = await updateProfile(session.user.id, {
+        full_name: form.fullName,
+        phone: form.phone,
+      });
+      if (onProfileUpdate && updated) {
+        onProfileUpdate(updated);
+      }
+      setEditing(false);
+      toast.success('Perfil actualizado correctamente');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('No se pudo actualizar el perfil. Intenta nuevamente.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleCancel() {
+    if (userProfile) {
+      setForm({
+        fullName: userProfile.full_name || 'Propietario',
+        phone: userProfile.phone || '',
+        unit: userProfile.unit_id || '—',
+        floor: '—',
+        building: '—',
+      });
+    }
     setEditing(false);
   }
 
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl">
-      {/* Header Card */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-2xl text-white shadow-lg relative overflow-hidden">
         <div className="absolute right-0 top-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="relative flex items-center gap-5">
@@ -50,7 +87,6 @@ export default function ProfileView({ session }) {
         </div>
       </div>
 
-      {/* Info Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InfoCard icon={Building} label="Unidad" value={form.unit} />
         <InfoCard icon={Building} label="Edificio" value={form.building} />
@@ -58,17 +94,16 @@ export default function ProfileView({ session }) {
         <InfoCard icon={Phone} label="Teléfono" value={form.phone || 'No registrado'} muted={!form.phone} />
       </div>
 
-      {/* Edit Form */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <Edit3 size={18} className="text-blue-600" />
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Edit3 size={18} className="text-blue-600 dark:text-blue-400" />
             Datos Personales
           </h3>
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50"
+              className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30"
             >
               Editar
             </button>
@@ -95,13 +130,19 @@ export default function ProfileView({ session }) {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleSave}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-100"
+                disabled={saving}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-100 dark:shadow-blue-900/30 disabled:opacity-50"
               >
-                <Save size={16} /> Guardar
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save size={16} />
+                )}
+                {saving ? 'Guardando...' : 'Guardar'}
               </button>
               <button
                 onClick={handleCancel}
-                className="px-5 border border-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2"
+                className="px-5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 py-2.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
               >
                 <X size={16} /> Cancelar
               </button>
@@ -110,17 +151,16 @@ export default function ProfileView({ session }) {
         </div>
       </div>
 
-      {/* Account Info */}
-      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/50">
-        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Información de la cuenta</h4>
+      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Información de la cuenta</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-500">ID de usuario</span>
-            <span className="text-slate-700 font-mono text-xs">{session.user.id.substring(0, 12)}...</span>
+            <span className="text-slate-500 dark:text-slate-400">ID de usuario</span>
+            <span className="text-slate-700 dark:text-slate-300 font-mono text-xs">{session.user.id.substring(0, 12)}...</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Email verificado</span>
-            <span className="text-emerald-600 font-medium">Sí</span>
+            <span className="text-slate-500 dark:text-slate-400">Email verificado</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sí</span>
           </div>
         </div>
       </div>
@@ -130,13 +170,13 @@ export default function ProfileView({ session }) {
 
 function InfoCard({ icon: Icon, label, value, muted }) {
   return (
-    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-      <div className="bg-slate-50 p-2.5 rounded-lg">
-        <Icon size={18} className="text-slate-400" />
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
+      <div className="bg-slate-50 dark:bg-slate-700 p-2.5 rounded-lg">
+        <Icon size={18} className="text-slate-400 dark:text-slate-500" />
       </div>
       <div>
-        <p className="text-xs text-slate-400 font-medium">{label}</p>
-        <p className={`text-sm font-semibold ${muted ? 'text-slate-300 italic' : 'text-slate-800'}`}>{value}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{label}</p>
+        <p className={`text-sm font-semibold ${muted ? 'text-slate-300 dark:text-slate-600 italic' : 'text-slate-800 dark:text-slate-200'}`}>{value}</p>
       </div>
     </div>
   );
@@ -145,7 +185,7 @@ function InfoCard({ icon: Icon, label, value, muted }) {
 function FormField({ label, value, onChange, disabled, placeholder, hint }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
       <input
         type="text"
         value={value}
@@ -154,11 +194,11 @@ function FormField({ label, value, onChange, disabled, placeholder, hint }) {
         placeholder={placeholder}
         className={`w-full px-4 py-2.5 border rounded-xl outline-none transition-all ${
           disabled
-            ? 'bg-slate-50 border-slate-100 text-slate-600 cursor-default'
-            : 'border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+            ? 'bg-slate-50 dark:bg-slate-700 border-slate-100 dark:border-slate-600 text-slate-600 dark:text-slate-300 cursor-default'
+            : 'border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 dark:text-slate-100'
         }`}
       />
-      {hint && !disabled && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
+      {hint && !disabled && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{hint}</p>}
     </div>
   );
 }
