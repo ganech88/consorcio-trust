@@ -124,7 +124,7 @@ function AppContent() {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
       {showPayModal && (
-        <PaymentModal session={session} userProfile={userProfile} onClose={() => setShowPayModal(false)} />
+        <PaymentModal session={session} userProfile={userProfile} gastos={gastos} onClose={() => setShowPayModal(false)} />
       )}
 
       <Sidebar

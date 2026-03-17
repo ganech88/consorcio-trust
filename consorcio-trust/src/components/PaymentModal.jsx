@@ -5,7 +5,7 @@ import { useToast } from './Toast';
 import { uploadPaymentProof, savePaymentRecord } from '../services/data.service';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE_MB } from '../lib/constants';
 
-export default function PaymentModal({ session, userProfile, onClose }) {
+export default function PaymentModal({ session, userProfile, gastos = [], onClose }) {
   const [payFile, setPayFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -63,6 +63,9 @@ export default function PaymentModal({ session, userProfile, onClose }) {
     }
   }
 
+  const totalExpenses = gastos.reduce((sum, g) => sum + g.value, 0);
+  const expenseLabel = totalExpenses > 0 ? `$${totalExpenses.toLocaleString('es-AR')}` : '$—';
+
   const fileSizeFormatted = payFile
     ? payFile.size > 1024 * 1024
       ? `${(payFile.size / (1024 * 1024)).toFixed(1)} MB`
@@ -78,8 +81,8 @@ export default function PaymentModal({ session, userProfile, onClose }) {
             <DollarSign className="text-blue-600 dark:text-blue-400" size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-blue-800 dark:text-blue-200">Saldo Pendiente: $85,400</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Vencimiento: 10/01/2026</p>
+            <p className="text-sm font-bold text-blue-800 dark:text-blue-200">Saldo Pendiente: {expenseLabel}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Expensas del mes vigente</p>
           </div>
         </div>
 
