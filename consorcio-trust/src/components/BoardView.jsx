@@ -177,7 +177,7 @@ export default function BoardView({ session, userProfile }) {
           {filtered.map(post => {
             const catColor = CATEGORY_COLORS[post.category] || CATEGORY_COLORS['Otro'];
             const isOwner = post.user_id === session.user.id;
-            const unitNum = post.profiles?.unit_id || post.profiles?.unit_number || '—';
+            const unitNum = post.unit_id || '—';
             return (
               <div
                 key={post.id}

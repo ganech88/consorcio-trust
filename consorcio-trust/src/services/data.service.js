@@ -856,7 +856,7 @@ export async function collectPackage(id) {
 export async function fetchBoardPosts(consortiumId) {
   let query = supabase
     .from('board_posts')
-    .select('*, profiles(unit_id, full_name)')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (consortiumId) query = query.eq('consortium_id', consortiumId);
@@ -876,7 +876,7 @@ export async function createBoardPost({ consortiumId, userId, title, body, categ
       body: body || null,
       category,
     }])
-    .select('*, profiles(unit_id, full_name)')
+    .select('*')
     .single();
 
   if (error) throw error;
