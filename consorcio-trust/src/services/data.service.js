@@ -854,12 +854,15 @@ export async function collectPackage(id) {
 // ─── Tablón (board_posts) ──────────────────────────────────────────────────────
 
 export async function fetchBoardPosts(consortiumId) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('board_posts')
     .select('*, profiles(unit_id, full_name)')
     .order('created_at', { ascending: false });
 
-  if (error) { console.warn('board_posts:', error.message); return []; }
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
+  if (error) throw error;
   return data || [];
 }
 
