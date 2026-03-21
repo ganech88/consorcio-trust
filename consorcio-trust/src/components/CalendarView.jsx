@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { CalendarDays, Plus, Trash2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { fetchEvents, createEvent, deleteEvent } from '../services/data.service';
+import { CalendarDays, Plus, Trash2, ChevronLeft, ChevronRight, Loader2, Wrench } from 'lucide-react';
+import { fetchEvents, createEvent, deleteEvent, fetchMaintenanceTasks } from '../services/data.service';
 import { useToast } from './Toast';
 
 const EVENT_TYPES = [
@@ -220,16 +220,37 @@ export default function CalendarView({ session, userProfile }) {
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(today);
   const [events, setEvents] = useState([]);
+  const [maintenanceTasks, setMaintenanceTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
-    fetchEvents(userProfile?.consortium_id)
-      .then(setEvents)
-      .catch(e => toast.error(e.message, 'Error al cargar eventos'))
+    const cid = userProfile?.consortium_id;
+    Promise.all([
+      fetchEvents(cid),
+      fetchMaintenanceTasks(cid).catch(() => []),
+    ]).then(([evs, tasks]) => {
+      setEvents(evs);
+      setMaintenanceTasks(tasks);
+    }).catch(e => toast.error(e.message, 'Error al cargar calendario'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, toast]);
+
+  // Convert maintenance tasks to calendar events (synthetic, with type='mantenimiento')
+  const maintenanceEvents = maintenanceTasks
+    .filter(t => t.next_due)
+    .map(t => ({
+      id: `maint-${t.id}`,
+      title: t.name,
+      description: t.notes || null,
+      type: 'mantenimiento',
+      start_date: t.next_due + 'T00:00:00',
+      all_day: true,
+      _isMaintenance: true,
+    }));
+
+  const allEvents = [...events, ...maintenanceEvents];
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
@@ -255,11 +276,12 @@ export default function CalendarView({ session, userProfile }) {
   }
 
   const dayEvents = selectedDay
-    ? events.filter(e => sameDay(new Date(e.start_date), selectedDay))
+    ? allEvents.filter(e => sameDay(new Date(e.start_date), selectedDay))
     : [];
 
-  const upcoming = events
+  const upcoming = allEvents
     .filter(e => new Date(e.start_date) >= today)
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
     .slice(0, 5);
 
   if (loading) {
@@ -321,7 +343,7 @@ export default function CalendarView({ session, userProfile }) {
       <MiniCalendar
         year={year}
         month={month}
-        events={events}
+        events={allEvents}
         selectedDay={selectedDay}
         onSelectDay={setSelectedDay}
       />
@@ -356,7 +378,7 @@ export default function CalendarView({ session, userProfile }) {
                         </p>
                       )}
                     </div>
-                    {isAdmin && (
+                    {isAdmin && !ev._isMaintenance && (
                       <button
                         onClick={() => handleDelete(ev.id)}
                         disabled={deleting === ev.id}

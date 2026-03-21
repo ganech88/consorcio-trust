@@ -804,3 +804,214 @@ export async function fetchMonthlyFinanceSummary(consortiumId) {
 
   return Object.entries(byMonth).map(([month, total]) => ({ month, total }));
 }
+
+// ─── Paquetería (nueva tabla 013) ──────────────────────────────────────────────
+
+export async function fetchUserPackages(userId, isAdmin = false) {
+  let query = supabase
+    .from('packages')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (!isAdmin) {
+    query = query.eq('unit_user_id', userId);
+  }
+
+  const { data, error } = await query;
+  if (error) { console.warn('packages (013):', error.message); return []; }
+  return data || [];
+}
+
+export async function createPackage({ consortiumId, carrier, description, loggedBy }) {
+  const { data, error } = await supabase
+    .from('packages')
+    .insert([{
+      consortium_id: consortiumId || null,
+      carrier: carrier || null,
+      description,
+      logged_by: loggedBy,
+      status: 'pending',
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function collectPackage(id) {
+  const { data, error } = await supabase
+    .from('packages')
+    .update({ status: 'collected', collected_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ─── Tablón (board_posts) ──────────────────────────────────────────────────────
+
+export async function fetchBoardPosts(consortiumId) {
+  const { data, error } = await supabase
+    .from('board_posts')
+    .select('*, profiles(unit_id, full_name)')
+    .order('created_at', { ascending: false });
+
+  if (error) { console.warn('board_posts:', error.message); return []; }
+  return data || [];
+}
+
+export async function createBoardPost({ consortiumId, userId, title, body, category }) {
+  const { data, error } = await supabase
+    .from('board_posts')
+    .insert([{
+      consortium_id: consortiumId || null,
+      user_id: userId,
+      title,
+      body: body || null,
+      category,
+    }])
+    .select('*, profiles(unit_id, full_name)')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteBoardPost(id) {
+  const { error } = await supabase.from('board_posts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function reactBoardPost(id) {
+  const { error } = await supabase.rpc('increment_board_reactions', { post_id: id });
+  if (error) {
+    // Fallback: manual increment
+    const { data: current } = await supabase
+      .from('board_posts').select('reactions_count').eq('id', id).single();
+    const { error: updateError } = await supabase
+      .from('board_posts')
+      .update({ reactions_count: (current?.reactions_count || 0) + 1 })
+      .eq('id', id);
+    if (updateError) throw updateError;
+  }
+}
+
+// ─── Mantenimiento ────────────────────────────────────────────────────────────
+
+const RECURRENCE_DAYS = {
+  weekly:    7,
+  monthly:   30,
+  quarterly: 90,
+  biannual:  180,
+  annual:    365,
+};
+
+export async function fetchMaintenanceTasks(consortiumId) {
+  const { data, error } = await supabase
+    .from('maintenance_tasks')
+    .select('*')
+    .order('next_due', { ascending: true });
+
+  if (error) { console.warn('maintenance_tasks:', error.message); return []; }
+  return data || [];
+}
+
+export async function createMaintenanceTask({ consortiumId, name, category, recurrence, nextDue, estimatedCost, notes, createdBy }) {
+  const { data, error } = await supabase
+    .from('maintenance_tasks')
+    .insert([{
+      consortium_id: consortiumId || null,
+      name,
+      category: category || null,
+      recurrence: recurrence || 'monthly',
+      next_due: nextDue || null,
+      estimated_cost: estimatedCost || null,
+      notes: notes || null,
+      created_by: createdBy,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function completeMaintenanceTask(id) {
+  const today = new Date().toISOString().split('T')[0];
+
+  // First fetch to get recurrence
+  const { data: task, error: fetchErr } = await supabase
+    .from('maintenance_tasks')
+    .select('recurrence')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr) throw fetchErr;
+
+  // Compute next due date
+  const days = RECURRENCE_DAYS[task?.recurrence] || 30;
+  const nextDue = new Date(Date.now() + days * 86400000).toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('maintenance_tasks')
+    .update({ last_completed: today, next_due: nextDue })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ─── Visitantes pre-autorizados ───────────────────────────────────────────────
+
+export async function fetchAuthorizedVisitors(userId) {
+  let query = supabase
+    .from('authorized_visitors')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query;
+  if (error) { console.warn('authorized_visitors:', error.message); return []; }
+  return data || [];
+}
+
+export async function createAuthorizedVisitor({ consortiumId, userId, visitorName, visitorType, validFrom, validUntil, timeFrom, timeTo, note }) {
+  const { data, error } = await supabase
+    .from('authorized_visitors')
+    .insert([{
+      consortium_id: consortiumId || null,
+      user_id: userId,
+      visitor_name: visitorName,
+      visitor_type: visitorType || 'Visita',
+      valid_from: validFrom || null,
+      valid_until: validUntil || null,
+      time_from: timeFrom || null,
+      time_to: timeTo || null,
+      note: note || null,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function checkInVisitor(id, checkedInBy) {
+  const { data, error } = await supabase
+    .from('authorized_visitors')
+    .update({ checked_in_at: new Date().toISOString(), checked_in_by: checkedInBy })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

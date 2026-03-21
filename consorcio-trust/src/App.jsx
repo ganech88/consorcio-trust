@@ -10,24 +10,27 @@ import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import NotificationsPanel from './components/NotificationsPanel';
+import Logo from './components/Logo';
 import { SkeletonCard, SkeletonChart, SkeletonList } from './components/Skeleton';
 
 // Lazy loading de las vistas — cada una carga su bundle solo cuando se necesita
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const ClaimsView = lazy(() => import('./components/ClaimsView'));
-const AmenitiesView = lazy(() => import('./components/AmenitiesView'));
-const DocsView = lazy(() => import('./components/DocsView'));
+const Dashboard       = lazy(() => import('./components/Dashboard'));
+const ClaimsView      = lazy(() => import('./components/ClaimsView'));
+const AmenitiesView   = lazy(() => import('./components/AmenitiesView'));
+const DocsView        = lazy(() => import('./components/DocsView'));
 const AnnouncementsView = lazy(() => import('./components/AnnouncementsView'));
-const ProfileView = lazy(() => import('./components/ProfileView'));
-const ContactsView = lazy(() => import('./components/ContactsView'));
-const PaymentModal = lazy(() => import('./components/PaymentModal'));
-const AdminView = lazy(() => import('./components/AdminView'));
-const ExpensesView = lazy(() => import('./components/ExpensesView'));
-const ChatView = lazy(() => import('./components/ChatView'));
-const VotingView = lazy(() => import('./components/VotingView'));
-const CalendarView = lazy(() => import('./components/CalendarView'));
-const AccessView = lazy(() => import('./components/AccessView'));
-const FinanceView = lazy(() => import('./components/FinanceView'));
+const ProfileView     = lazy(() => import('./components/ProfileView'));
+const ContactsView    = lazy(() => import('./components/ContactsView'));
+const PaymentModal    = lazy(() => import('./components/PaymentModal'));
+const AdminView       = lazy(() => import('./components/AdminView'));
+const ExpensesView    = lazy(() => import('./components/ExpensesView'));
+const ChatView        = lazy(() => import('./components/ChatView'));
+const VotingView      = lazy(() => import('./components/VotingView'));
+const CalendarView    = lazy(() => import('./components/CalendarView'));
+const AccessView      = lazy(() => import('./components/AccessView'));
+const FinanceView     = lazy(() => import('./components/FinanceView'));
+const PackagesView    = lazy(() => import('./components/PackagesView'));
+const BoardView       = lazy(() => import('./components/BoardView'));
 
 const VIEW_TITLES = {
   [VIEWS.DASHBOARD]:     'Dashboard',
@@ -44,6 +47,8 @@ const VIEW_TITLES = {
   [VIEWS.CALENDAR]:      'Calendario',
   [VIEWS.ACCESS]:        'Accesos',
   [VIEWS.FINANCE]:       'Finanzas',
+  [VIEWS.PACKAGES]:      'Paquetería',
+  [VIEWS.BOARD]:         'Tablón',
 };
 
 function ViewSkeleton() {
@@ -58,7 +63,6 @@ function ViewSkeleton() {
   );
 }
 
-// Pide permiso para notificaciones push del navegador
 function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
@@ -73,12 +77,11 @@ function showPushNotification(title, body) {
 
 function AppContent() {
   const { session, setSession, authLoading, authError, logout } = useAuth();
-  const { reclamos, setReclamos, gastos, payments, userProfile, setUserProfile, dataLoading, loadData, resetData } = useData();
+  const { reclamos, setReclamos, gastos, payments, userProfile, setUserProfile, dataLoading, loadData, resetData, unreadChatCount } = useData();
   const [view, setView] = useState(VIEWS.DASHBOARD);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  // Badge de notificaciones en tiempo real (se suma con cada update de realtime)
   const [realtimeBadge, setRealtimeBadge] = useState(0);
   const { dark, toggle: toggleTheme } = useTheme();
   const toast = useToast();
@@ -90,7 +93,7 @@ function AppContent() {
     }
   }, [session?.user?.id, loadData]);
 
-  // ── Realtime: escuchar cambios en reclamos del usuario actual ──────────────
+  // Realtime: claim updates
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -98,26 +101,14 @@ function AppContent() {
       .channel(`claims-user-${session.user.id}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'claims',
-          filter: `user_id=eq.${session.user.id}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'claims', filter: `user_id=eq.${session.user.id}` },
         (payload) => {
           const updated = payload.new;
-          // Actualizar el estado local sin reload
-          setReclamos(prev =>
-            prev.map(r => r.id === updated.id ? { ...r, ...updated } : r)
-          );
-          // Incrementar badge si el panel de notificaciones está cerrado
-          if (!showNotifications) {
-            setRealtimeBadge(n => n + 1);
-          }
-          // Notificación push del navegador
+          setReclamos(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
+          if (!showNotifications) setRealtimeBadge(n => n + 1);
           const statusLabel =
-            updated.status === 'closed' ? 'fue resuelto' :
-            updated.status === 'pending' ? 'está en proceso' : 'fue actualizado';
+            updated.status === 'closed'   ? 'fue resuelto' :
+            updated.status === 'pending'  ? 'está en proceso' : 'fue actualizado';
           showPushNotification(
             'ConsorcioTrust',
             `Tu reclamo "${updated.title}" ${statusLabel}${updated.admin_note ? `: ${updated.admin_note}` : ''}`
@@ -127,10 +118,8 @@ function AppContent() {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session?.user?.id, setReclamos, toast]); // showNotifications excluído para no re-suscribir
+    return () => { supabase.removeChannel(channel); };
+  }, [session?.user?.id, setReclamos, toast]);
 
   async function handleLogout() {
     await logout();
@@ -152,9 +141,11 @@ function AppContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative">
+            <Logo size={56} className="animate-pulse" />
+          </div>
           <p className="text-white/70 text-sm font-medium">Cargando ConsorcioTrust...</p>
         </div>
       </div>
@@ -163,13 +154,13 @@ function AppContent() {
 
   if (authError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur rounded-2xl p-8 max-w-sm w-full text-center">
           <p className="text-white font-bold text-lg mb-2">Error de conexión</p>
           <p className="text-white/70 text-sm mb-6">{authError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"
+            className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-colors"
           >
             Reintentar
           </button>
@@ -221,7 +212,7 @@ function AppContent() {
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="text-slate-400 dark:text-slate-500 hover:text-accent-500 dark:hover:text-accent-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               aria-label={dark ? 'Modo claro' : 'Modo oscuro'}
             >
               {dark ? <Sun size={20} /> : <Moon size={20} />}
@@ -230,7 +221,7 @@ function AppContent() {
             <div className="relative">
               <button
                 onClick={handleOpenNotifications}
-                className="relative text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
+                className="relative text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 p-2 rounded-lg hover:bg-brand-50 dark:hover:bg-slate-700 transition-colors"
                 aria-label="Notificaciones"
               >
                 <Bell size={20} />
@@ -264,7 +255,9 @@ function AppContent() {
                     gastos={gastos}
                     payments={payments}
                     session={session}
+                    userProfile={userProfile}
                     onPaymentClick={() => setShowPayModal(true)}
+                    onNavigate={handleNavigate}
                   />
                 )}
                 {view === VIEWS.CLAIMS && (
@@ -303,13 +296,24 @@ function AppContent() {
                 {view === VIEWS.FINANCE && (
                   <FinanceView session={session} userProfile={userProfile} />
                 )}
+                {view === VIEWS.PACKAGES && (
+                  <PackagesView session={session} userProfile={userProfile} />
+                )}
+                {view === VIEWS.BOARD && (
+                  <BoardView session={session} userProfile={userProfile} />
+                )}
               </Suspense>
             )}
           </div>
         </div>
       </main>
 
-      <BottomNav currentView={view} onNavigate={handleNavigate} />
+      <BottomNav
+        currentView={view}
+        onNavigate={handleNavigate}
+        unreadChatCount={unreadChatCount}
+        onPaymentClick={() => setShowPayModal(true)}
+      />
     </div>
   );
 }

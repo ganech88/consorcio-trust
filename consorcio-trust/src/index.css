@@ -16,6 +16,13 @@
     @apply bg-slate-900 text-slate-100;
   }
 
+  .dark {
+    --bg-page: #0f1117;
+    --bg-card: #1a1f2e;
+    --bg-sidebar: #161b27;
+    --bg-modal: #1e2438;
+  }
+
   /* Scrollbar personalizado */
   ::-webkit-scrollbar {
     width: 6px;

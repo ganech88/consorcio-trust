@@ -1,13 +1,32 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { DollarSign, AlertCircle, Calendar, UploadCloud, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { CHART_COLORS } from '../lib/constants';
+import {
+  DollarSign, AlertCircle, UploadCloud, TrendingUp, CheckCircle, Clock,
+  XCircle, Calendar, Wrench, MessageSquare,
+} from 'lucide-react';
+import { CHART_COLORS, CHART_COLORS_DARK, VIEWS } from '../lib/constants';
 import { formatDate, formatCurrency } from '../lib/utils';
+import { useTheme } from '../lib/ThemeContext';
 
 const PAYMENT_STATUS = {
-  approved: { label: 'Aprobado', icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-  pending: { label: 'Pendiente', icon: Clock, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' },
-  rejected: { label: 'Rechazado', icon: XCircle, color: 'text-red-500 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/30' },
+  approved: { label: 'Aprobado', icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30', dot: 'bg-emerald-500' },
+  pending:  { label: 'Pendiente', icon: Clock,        color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/30',   dot: 'bg-amber-500' },
+  rejected: { label: 'Rechazado', icon: XCircle,      color: 'text-red-500 dark:text-red-400',       bg: 'bg-red-50 dark:bg-red-900/30',       dot: 'bg-red-500' },
 };
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Buenos días';
+  if (h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
+function getDateSpanish() {
+  return new Date().toLocaleDateString('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
 
 function StatCard({ icon: Icon, iconBg, iconColor, label, value, subtitle, subtitleColor, action }) {
   return (
@@ -37,21 +56,123 @@ function CustomTooltip({ active, payload }) {
   return (
     <div className="bg-white dark:bg-slate-700 px-4 py-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-600">
       <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{payload[0].name}</p>
-      <p className="text-sm text-blue-600 dark:text-blue-400 font-bold">${payload[0].value.toLocaleString('es-AR')}</p>
+      <p className="text-sm text-brand-600 dark:text-brand-400 font-bold">${payload[0].value.toLocaleString('es-AR')}</p>
     </div>
   );
 }
 
-export default function Dashboard({ reclamos, gastos, payments = [], session, onPaymentClick }) {
+function PaymentTimeline({ payments }) {
+  if (!payments.length) {
+    return (
+      <div className="py-12 text-center text-slate-400 dark:text-slate-500">
+        <DollarSign size={40} className="mx-auto mb-2 opacity-30" />
+        <p className="text-sm font-medium">No hay pagos registrados</p>
+        <p className="text-xs mt-1">Usá el botón "Informar Pago" para enviar tu comprobante</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative pl-6">
+      {/* Vertical line */}
+      <div className="absolute left-2 top-2 bottom-2 w-px bg-slate-100 dark:bg-slate-700" />
+
+      <div className="space-y-4">
+        {payments.map((pay) => {
+          const status = PAYMENT_STATUS[pay.status] || PAYMENT_STATUS.pending;
+          const StatusIcon = status.icon;
+          return (
+            <div key={pay.id} className="relative flex items-start gap-4">
+              {/* Dot */}
+              <div className={`absolute -left-[18px] mt-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${status.dot} shrink-0`} />
+
+              <div className="flex-1 bg-slate-50 dark:bg-slate-700/40 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {pay.amount ? formatCurrency(pay.amount) : 'Comprobante adjunto'}
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    {formatDate(pay.created_at, 'short')}
+                  </p>
+                </div>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${status.bg} ${status.color} shrink-0`}>
+                  <StatusIcon size={11} />
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard({ reclamos, gastos, payments = [], session, userProfile, onPaymentClick, onNavigate }) {
+  const { dark } = useTheme();
+  const chartColors = dark ? CHART_COLORS_DARK : CHART_COLORS;
+
   const userClaimsCount = reclamos.filter((r) => r.user_id === session.user.id).length;
-
-  const displayPayments = payments.length > 0 ? payments.slice(0, 6) : [];
-
+  const displayPayments = payments.slice(0, 6);
   const totalExpenses = gastos.reduce((sum, g) => sum + g.value, 0);
   const expenseLabel = totalExpenses > 0 ? `$${totalExpenses.toLocaleString('es-AR')}` : '$—';
 
+  // Claims urgency color
+  const claimsIconBg =
+    userClaimsCount === 0 ? 'bg-emerald-50 dark:bg-emerald-900/30' :
+    userClaimsCount <= 2   ? 'bg-amber-50 dark:bg-amber-900/30' :
+                             'bg-red-50 dark:bg-red-900/30';
+  const claimsIconColor =
+    userClaimsCount === 0 ? 'text-emerald-500' :
+    userClaimsCount <= 2   ? 'text-amber-500' :
+                             'text-red-500';
+
+  const firstName = userProfile?.full_name?.split(' ')[0] || '';
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Greeting strip */}
+      <div className="bg-gradient-to-r from-brand-600 to-brand-700 rounded-2xl px-6 py-5 text-white shadow-lg shadow-brand-500/20">
+        <p className="text-brand-100 text-sm capitalize">{getDateSpanish()}</p>
+        <h2 className="text-2xl font-bold mt-1 font-display">
+          {getGreeting()}{firstName ? `, ${firstName}` : ''}
+        </h2>
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-3 gap-3">
+        <button
+          onClick={onPaymentClick}
+          className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-md transition-all group"
+        >
+          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 transition-colors">
+            <UploadCloud size={22} className="text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight">Informar Pago</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate?.(VIEWS.CLAIMS)}
+          className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-md transition-all group"
+        >
+          <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-xl flex items-center justify-center group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
+            <AlertCircle size={22} className="text-orange-500 dark:text-orange-400" />
+          </div>
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight">Nuevo Reclamo</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate?.(VIEWS.AMENITIES)}
+          className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-md transition-all group"
+        >
+          <div className="w-12 h-12 bg-brand-50 dark:bg-brand-900/30 rounded-xl flex items-center justify-center group-hover:bg-brand-100 dark:group-hover:bg-brand-900/50 transition-colors">
+            <Calendar size={22} className="text-brand-600 dark:text-brand-400" />
+          </div>
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight">Reservar</span>
+        </button>
+      </div>
+
+      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <StatCard
           icon={DollarSign}
@@ -59,12 +180,12 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
           iconColor="text-emerald-500"
           label="Expensas del Mes"
           value={expenseLabel}
-          subtitle={totalExpenses > 0 ? "Calculado de gastos registrados" : "Sin datos de expensas"}
-          subtitleColor={totalExpenses > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}
+          subtitle={totalExpenses > 0 ? 'Calculado de gastos registrados' : 'Sin datos de expensas'}
+          subtitleColor={totalExpenses > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}
           action={
             <button
               onClick={onPaymentClick}
-              className="mt-4 w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100 dark:shadow-emerald-900/30 hover:shadow-emerald-200"
+              className="mt-4 w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-100 dark:shadow-emerald-900/30"
             >
               <UploadCloud size={16} /> Informar Pago
             </button>
@@ -73,32 +194,52 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
 
         <StatCard
           icon={AlertCircle}
-          iconBg="bg-orange-50 dark:bg-orange-900/30"
-          iconColor="text-orange-500"
+          iconBg={claimsIconBg}
+          iconColor={claimsIconColor}
           label="Mis Reclamos"
           value={userClaimsCount}
-          subtitle="Activos actualmente"
+          subtitle={
+            userClaimsCount === 0 ? 'Sin reclamos activos' :
+            userClaimsCount <= 2  ? 'Reclamos en curso' :
+                                    'Varios reclamos pendientes'
+          }
+          subtitleColor={
+            userClaimsCount === 0 ? 'text-emerald-600 dark:text-emerald-400' :
+            userClaimsCount <= 2  ? 'text-amber-600 dark:text-amber-400' :
+                                    'text-red-500 dark:text-red-400'
+          }
         />
 
         <StatCard
           icon={Calendar}
-          iconBg="bg-blue-50 dark:bg-blue-900/30"
-          iconColor="text-blue-500"
+          iconBg="bg-brand-50 dark:bg-brand-900/30"
+          iconColor="text-brand-500"
           label="Últimos Pagos"
           value={displayPayments.length}
           subtitle="Pagos registrados"
-          subtitleColor="text-blue-600 dark:text-blue-400"
+          subtitleColor="text-brand-600 dark:text-brand-400"
         />
       </div>
 
+      {/* Pie chart — clickable */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={20} className="text-blue-600 dark:text-blue-400" />
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Destino de tus Fondos</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={20} className="text-brand-600 dark:text-brand-400" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Destino de tus Fondos</h3>
+          </div>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate(VIEWS.FINANCE)}
+              className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium"
+            >
+              Ver finanzas →
+            </button>
+          )}
         </div>
 
         {gastos.length > 0 ? (
-          <div className="h-72">
+          <div className="h-72 cursor-pointer" onClick={() => onNavigate?.(VIEWS.FINANCE)}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -113,7 +254,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
                   animationDuration={800}
                 >
                   {gastos.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
@@ -135,8 +276,9 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
         )}
       </div>
 
+      {/* Payment timeline */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <DollarSign size={20} className="text-emerald-600 dark:text-emerald-400" />
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Historial de Pagos</h3>
@@ -145,48 +287,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
             {displayPayments.length > 0 ? `Últimos ${displayPayments.length}` : 'Sin registros'}
           </span>
         </div>
-
-        {displayPayments.length > 0 ? (
-          <div className="overflow-x-auto -mx-6 px-6">
-            <table className="w-full min-w-[480px]">
-              <thead>
-                <tr className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
-                  <th className="text-left py-3 font-semibold">Fecha</th>
-                  <th className="text-left py-3 font-semibold">Monto</th>
-                  <th className="text-right py-3 font-semibold">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                {displayPayments.map((pay) => {
-                  const status = PAYMENT_STATUS[pay.status] || PAYMENT_STATUS.pending;
-                  const StatusIcon = status.icon;
-                  return (
-                    <tr key={pay.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
-                      <td className="py-3 text-sm text-slate-700 dark:text-slate-300">
-                        {formatDate(pay.created_at, 'short')}
-                      </td>
-                      <td className="py-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                        {pay.amount ? formatCurrency(pay.amount) : 'Comprobante'}
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>
-                          <StatusIcon size={12} />
-                          {status.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="py-12 text-center text-slate-400 dark:text-slate-500">
-            <DollarSign size={40} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm font-medium">No hay pagos registrados</p>
-            <p className="text-xs mt-1">Usá el botón "Informar Pago" para enviar tu comprobante</p>
-          </div>
-        )}
+        <PaymentTimeline payments={displayPayments} />
       </div>
     </div>
   );
