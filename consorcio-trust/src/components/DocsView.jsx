@@ -1,22 +1,52 @@
-import { FileText, Download, Eye, Search, FolderOpen } from 'lucide-react';
-import { useState } from 'react';
-import { DOCUMENTS_LIST } from '../lib/constants';
-import { useToast } from './Toast';
+import { useState, useEffect } from 'react';
+import { FileText, Download, Eye, Search, FolderOpen, Loader2 } from 'lucide-react';
+import { fetchDocuments } from '../services/data.service';
+
+const CATEGORIES = [
+  { value: 'all',          label: 'Todos' },
+  { value: 'reglamentos',  label: 'Reglamentos' },
+  { value: 'actas',        label: 'Actas' },
+  { value: 'expensas',     label: 'Expensas' },
+  { value: 'seguros',      label: 'Seguros' },
+  { value: 'general',      label: 'General' },
+];
+
+function downloadFile(url, name) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name}.pdf`;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.click();
+}
 
 export default function DocsView() {
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const toast = useToast();
+  const [activeCategory, setActiveCategory] = useState('all');
 
-  const filteredDocs = DOCUMENTS_LIST.filter((doc) =>
-    doc.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    fetchDocuments()
+      .then(setDocs)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
-  function handleDownload(doc) {
-    toast.info(`Descarga de "${doc.name}" próximamente disponible`, 'Función en desarrollo');
-  }
+  const filtered = docs.filter(doc => {
+    const matchesSearch = doc.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || doc.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Cantidad de docs por categoría para mostrar en badges
+  const countByCategory = (cat) =>
+    cat === 'all' ? docs.length : docs.filter(d => d.category === cat).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Header + buscador */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
         <h3 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-800 dark:text-slate-100">
           <FolderOpen size={20} className="text-blue-600 dark:text-blue-400" />
@@ -27,22 +57,57 @@ export default function DocsView() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Buscar documento..."
             className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-slate-50/50 dark:bg-slate-700 dark:text-slate-100"
           />
         </div>
       </div>
 
+      {/* Filtro por categoría */}
+      <div className="flex gap-2 flex-wrap">
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat.value}
+            onClick={() => setActiveCategory(cat.value)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              activeCategory === cat.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+            }`}
+          >
+            {cat.label}
+            <span className={`text-[10px] ${activeCategory === cat.value ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>
+              ({countByCategory(cat.value)})
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Lista de documentos */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700">
-        {filteredDocs.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 size={32} className="animate-spin text-blue-500" />
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <FileText size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-4" />
-            <h4 className="font-semibold text-slate-600 dark:text-slate-300">No se encontraron documentos</h4>
-            <p className="text-slate-400 dark:text-slate-500 mt-1 text-sm">Intenta con otra búsqueda</p>
+            <h4 className="font-semibold text-slate-600 dark:text-slate-300">
+              {docs.length === 0 ? 'No hay documentos disponibles' : 'No se encontraron documentos'}
+            </h4>
+            <p className="text-slate-400 dark:text-slate-500 mt-1 text-sm">
+              {docs.length === 0
+                ? 'La administración aún no subió documentos'
+                : 'Intentá con otra búsqueda o categoría'}
+            </p>
           </div>
         ) : (
-          filteredDocs.map((doc) => (
+          filtered.map(doc => (
             <div
               key={doc.id}
               className="p-4 flex items-center gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors group"
@@ -53,22 +118,33 @@ export default function DocsView() {
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
-                  {doc.name}.{doc.type}
+                  {doc.name}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Subido el {doc.date}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {doc.category && doc.category !== 'general' && (
+                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded capitalize">
+                      {CATEGORIES.find(c => c.value === doc.category)?.label ?? doc.category}
+                    </span>
+                  )}
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    {new Date(doc.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleDownload(doc)}
+                <a
+                  href={doc.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   aria-label={`Ver ${doc.name}`}
                   title="Ver"
                 >
                   <Eye size={18} />
-                </button>
+                </a>
                 <button
-                  onClick={() => handleDownload(doc)}
+                  onClick={() => downloadFile(doc.file_url, doc.name)}
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   aria-label={`Descargar ${doc.name}`}
                   title="Descargar"

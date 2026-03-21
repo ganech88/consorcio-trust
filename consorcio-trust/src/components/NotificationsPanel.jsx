@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle, Clock, AlertCircle, X, DollarSign, MessageSquare } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Bell, CheckCircle, Clock, AlertCircle, X, MessageSquare } from 'lucide-react';
 
 function generateNotifications(reclamos, payments) {
   const notifs = [];
@@ -34,7 +34,10 @@ function generateNotifications(reclamos, payments) {
 
 export default function NotificationsPanel({ isOpen, onClose, reclamos = [], payments = [] }) {
   const panelRef = useRef(null);
-  const notifications = generateNotifications(reclamos, payments);
+  const notifications = useMemo(
+    () => generateNotifications(reclamos, payments),
+    [reclamos, payments]
+  );
 
   useEffect(() => {
     function handleClickOutside(e) {

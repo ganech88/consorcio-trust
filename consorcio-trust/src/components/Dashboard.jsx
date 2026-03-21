@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { DollarSign, AlertCircle, Calendar, UploadCloud, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { CHART_COLORS } from '../lib/constants';
+import { formatDate, formatCurrency } from '../lib/utils';
 
 const PAYMENT_STATUS = {
   approved: { label: 'Aprobado', icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
@@ -162,10 +163,10 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, on
                   return (
                     <tr key={pay.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                       <td className="py-3 text-sm text-slate-700 dark:text-slate-300">
-                        {pay.created_at ? new Date(pay.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                        {formatDate(pay.created_at, 'short')}
                       </td>
                       <td className="py-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                        {pay.amount ? `$${Number(pay.amount).toLocaleString('es-AR')}` : 'Comprobante'}
+                        {pay.amount ? formatCurrency(pay.amount) : 'Comprobante'}
                       </td>
                       <td className="py-3 text-right">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, AlertCircle, CheckCircle2, Clock, MessageSquare, Filter, ChevronDown } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle2, Clock, MessageSquare, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createClaim } from '../services/data.service';
 import { useToast } from './Toast';
 import { CLAIM_STATUS } from '../lib/constants';
+import { formatDate } from '../lib/utils';
 
 const STATUS_CONFIG = {
   [CLAIM_STATUS.OPEN]: {
@@ -46,35 +47,41 @@ const CATEGORY_OPTIONS = [
   'Otro',
 ];
 
-export default function ClaimsView({ reclamos, setReclamos, session }) {
+const PAGE_SIZE = 8;
+
+export default function ClaimsView({ reclamos, setReclamos, session, userProfile }) {
   const [nuevoReclamo, setNuevoReclamo] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const toast = useToast();
 
   async function handleCreate(e) {
     e.preventDefault();
     if (!nuevoReclamo.trim()) return;
 
+    // consortium_id viene del perfil del usuario — no del user.id
+    const consortiumId = userProfile?.consortium_id ?? null;
+
     setCreating(true);
     try {
       const newClaim = await createClaim({
         title: nuevoReclamo.trim(),
-        consortiumId: session.user.id,
+        category: category || null,
+        description: description.trim() || null,
+        consortiumId,
         userId: session.user.id,
       });
-
-      newClaim.category = category;
-      newClaim.description = description;
 
       setReclamos((prev) => [newClaim, ...prev]);
       setNuevoReclamo('');
       setDescription('');
       setCategory('');
       setShowForm(false);
+      setPage(1);
       toast.success('Reclamo creado exitosamente');
     } catch (error) {
       toast.error(error.message, 'Error al crear reclamo');
@@ -86,6 +93,15 @@ export default function ClaimsView({ reclamos, setReclamos, session }) {
   const filteredClaims = filter === 'all'
     ? reclamos
     : reclamos.filter((r) => r.status === filter);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClaims.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedClaims = filteredClaims.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handleFilterChange(f) {
+    setFilter(f);
+    setPage(1);
+  }
 
   const counts = {
     all: reclamos.length,
@@ -186,7 +202,7 @@ export default function ClaimsView({ reclamos, setReclamos, session }) {
         {FILTER_OPTIONS.map((opt) => (
           <button
             key={opt.id}
-            onClick={() => setFilter(opt.id)}
+            onClick={() => handleFilterChange(opt.id)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
               filter === opt.id
                 ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-sm'
@@ -204,18 +220,18 @@ export default function ClaimsView({ reclamos, setReclamos, session }) {
       </div>
 
       <div className="space-y-3">
-        {filteredClaims.length === 0 ? (
+        {pagedClaims.length === 0 ? (
           <div className="text-center py-16">
             <AlertCircle size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-4" />
             <h4 className="font-semibold text-slate-600 dark:text-slate-300 text-lg">
               {filter === 'all' ? 'No hay reclamos' : `No hay reclamos ${FILTER_OPTIONS.find(f => f.id === filter)?.label.toLowerCase()}`}
             </h4>
             <p className="text-slate-400 dark:text-slate-500 mt-1">
-              {filter === 'all' ? 'Crea uno nuevo usando el botón de arriba' : 'Probá con otro filtro'}
+              {filter === 'all' ? 'Creá uno nuevo usando el botón de arriba' : 'Probá con otro filtro'}
             </p>
           </div>
         ) : (
-          filteredClaims.map((rec) => {
+          pagedClaims.map((rec) => {
             const status = STATUS_CONFIG[rec.status] || STATUS_CONFIG[CLAIM_STATUS.OPEN];
             const StatusIcon = status.icon;
 
@@ -242,11 +258,7 @@ export default function ClaimsView({ reclamos, setReclamos, session }) {
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-2">{rec.description}</p>
                       )}
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
-                        {rec.created_at ? new Date(rec.created_at).toLocaleDateString('es-AR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        }) : 'Fecha desconocida'}
+                        {formatDate(rec.created_at)}
                       </p>
                     </div>
                   </div>
@@ -261,6 +273,30 @@ export default function ClaimsView({ reclamos, setReclamos, session }) {
           })
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            aria-label="Página anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            aria-label="Página siguiente"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

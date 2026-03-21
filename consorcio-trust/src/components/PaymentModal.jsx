@@ -7,6 +7,7 @@ import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE_MB } from '../lib/constants';
 
 export default function PaymentModal({ session, userProfile, gastos = [], onClose }) {
   const [payFile, setPayFile] = useState(null);
+  const [amount, setAmount] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const toast = useToast();
@@ -39,7 +40,13 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
 
   async function handleUpload() {
     if (!payFile) {
-      toast.error('Selecciona un archivo primero');
+      toast.error('Seleccioná un archivo primero');
+      return;
+    }
+
+    const parsedAmount = parseFloat(amount.replace(/[^0-9.,]/g, '').replace(',', '.'));
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error('Ingresá el monto del pago');
       return;
     }
 
@@ -48,7 +55,7 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
       const { publicUrl } = await uploadPaymentProof(payFile);
 
       await savePaymentRecord({
-        amount: 0,
+        amount: parsedAmount,
         proofUrl: publicUrl,
         userId: session.user.id,
         unitId: userProfile?.unit_id,
@@ -83,6 +90,24 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
           <div>
             <p className="text-sm font-bold text-blue-800 dark:text-blue-200">Saldo Pendiente: {expenseLabel}</p>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Expensas del mes vigente</p>
+          </div>
+        </div>
+
+        {/* Monto del pago */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+            Monto pagado <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-semibold">$</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0,00"
+              className="w-full pl-7 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-slate-50/50 dark:bg-slate-700 dark:text-slate-100"
+            />
           </div>
         </div>
 

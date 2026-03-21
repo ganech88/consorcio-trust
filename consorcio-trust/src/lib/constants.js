@@ -7,6 +7,13 @@ export const VIEWS = {
   DOCS: 'docs',
   CONTACTS: 'contactos',
   PROFILE: 'perfil',
+  ADMIN: 'admin',
+  EXPENSES: 'expensas',
+  CHAT: 'chat',
+  VOTING: 'votaciones',
+  CALENDAR: 'calendario',
+  ACCESS: 'accesos',
+  FINANCE: 'finanzas',
 };
 
 // --- Estados de reclamos ---
@@ -21,12 +28,18 @@ export const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EC489
 
 // --- Items de navegación ---
 export const NAV_ITEMS = [
-  { id: VIEWS.DASHBOARD, label: 'Dashboard', iconName: 'Home' },
-  { id: VIEWS.ANNOUNCEMENTS, label: 'Novedades', iconName: 'Megaphone' },
-  { id: VIEWS.CLAIMS, label: 'Reclamos', iconName: 'AlertCircle' },
-  { id: VIEWS.AMENITIES, label: 'Reservas', iconName: 'Calendar' },
-  { id: VIEWS.DOCS, label: 'Documentos', iconName: 'FileText' },
-  { id: VIEWS.CONTACTS, label: 'Contactos', iconName: 'Phone' },
+  { id: VIEWS.DASHBOARD,     label: 'Dashboard',   iconName: 'Home' },
+  { id: VIEWS.ANNOUNCEMENTS, label: 'Novedades',   iconName: 'Megaphone' },
+  { id: VIEWS.CLAIMS,        label: 'Reclamos',    iconName: 'AlertCircle' },
+  { id: VIEWS.AMENITIES,     label: 'Reservas',    iconName: 'Calendar' },
+  { id: VIEWS.EXPENSES,      label: 'Expensas',    iconName: 'Receipt' },
+  { id: VIEWS.CHAT,          label: 'Mensajes',    iconName: 'MessageSquare' },
+  { id: VIEWS.VOTING,        label: 'Votaciones',  iconName: 'Vote' },
+  { id: VIEWS.CALENDAR,      label: 'Calendario',  iconName: 'CalendarDays' },
+  { id: VIEWS.ACCESS,        label: 'Accesos',     iconName: 'Package' },
+  { id: VIEWS.FINANCE,       label: 'Finanzas',    iconName: 'TrendingUp' },
+  { id: VIEWS.DOCS,          label: 'Documentos',  iconName: 'FileText' },
+  { id: VIEWS.CONTACTS,      label: 'Contactos',   iconName: 'Phone' },
 ];
 
 // --- Amenities disponibles ---

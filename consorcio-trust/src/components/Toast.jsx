@@ -83,7 +83,8 @@ export function ToastProvider({ children }) {
 
   const addToast = useCallback(({ type = 'info', title, message, duration = 4000 }) => {
     const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { id, type, title, message, duration }]);
+    // Los nuevos toasts van al inicio para que aparezcan arriba en la lista
+    setToasts((prev) => [{ id, type, title, message, duration }, ...prev]);
     return id;
   }, []);
 
