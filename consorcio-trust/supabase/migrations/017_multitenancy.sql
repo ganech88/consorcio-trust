@@ -1,5 +1,5 @@
--- 1. Create consortiums table
-create table if not exists consortiums (
+-- 1. Create consortia table
+create table if not exists consortia (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   address     text,
@@ -7,21 +7,21 @@ create table if not exists consortiums (
   invite_code text unique default substring(gen_random_uuid()::text, 1, 8),
   created_at  timestamptz default now()
 );
-alter table consortiums enable row level security;
-create policy "members read own consortium" on consortiums
+alter table consortia enable row level security;
+create policy "members read own consortium" on consortia
   for select using (
-    exists (select 1 from profiles where id = auth.uid() and consortium_id = consortiums.id)
+    exists (select 1 from profiles where id = auth.uid() and consortium_id = consortia.id)
   );
-create policy "admin update consortium" on consortiums
+create policy "admin update consortium" on consortia
   for update using (
-    exists (select 1 from profiles where id = auth.uid() and consortium_id = consortiums.id and role = 'admin')
+    exists (select 1 from profiles where id = auth.uid() and consortium_id = consortia.id and role = 'admin')
   );
 
 -- 2. Add consortium_id to profiles (if not exists)
-alter table profiles add column if not exists consortium_id uuid references consortiums(id);
+alter table profiles add column if not exists consortium_id uuid references consortia(id);
 
 -- 3. Insert a default consortium for existing data
-insert into consortiums (id, name, address)
+insert into consortia (id, name, address)
 values ('00000000-0000-0000-0000-000000000001', 'Consorcio Principal', 'Dirección del edificio')
 on conflict (id) do nothing;
 
