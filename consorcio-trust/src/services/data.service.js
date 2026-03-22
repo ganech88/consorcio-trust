@@ -1044,7 +1044,7 @@ export async function checkInVisitor(id, checkedInBy) {
 export async function fetchConsortium(consortiumId) {
   if (!consortiumId) return null;
   const { data, error } = await supabase
-    .from('consortiums')
+    .from('consortia')
     .select('*')
     .eq('id', consortiumId)
     .single();
@@ -1054,7 +1054,7 @@ export async function fetchConsortium(consortiumId) {
 
 export async function updateConsortium(consortiumId, updates) {
   const { data, error } = await supabase
-    .from('consortiums')
+    .from('consortia')
     .update(updates)
     .eq('id', consortiumId)
     .select()
@@ -1076,7 +1076,7 @@ export async function fetchConsortiumMembers(consortiumId) {
 
 export async function joinConsortiumByCode(inviteCode, userId) {
   const { data: consortium, error: lookupError } = await supabase
-    .from('consortiums')
+    .from('consortia')
     .select('id, name')
     .eq('invite_code', inviteCode.trim())
     .single();
@@ -1094,9 +1094,47 @@ export async function joinConsortiumByCode(inviteCode, userId) {
   return consortium;
 }
 
+// ─── Admin: perfiles ───────────────────────────────────────────────────────────
+
+export async function fetchAllProfiles(consortiumId) {
+  if (!consortiumId) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, unit_id, role, created_at')
+    .eq('consortium_id', consortiumId)
+    .order('unit_id');
+  if (error) { console.warn('fetchAllProfiles:', error.message); return []; }
+  return data || [];
+}
+
+export async function updateProfileRole(profileId, role) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ role })
+    .eq('id', profileId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function regenerateInviteCode(consortiumId) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const { data, error } = await supabase
+    .from('consortia')
+    .update({ invite_code: code })
+    .eq('id', consortiumId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function createConsortiumForUser(name, address, city, userId) {
   const { data: consortium, error: createError } = await supabase
-    .from('consortiums')
+    .from('consortia')
     .insert([{ name, address: address || null, city: city || null }])
     .select()
     .single();

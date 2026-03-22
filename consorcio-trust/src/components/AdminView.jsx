@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   ChevronDown, ChevronUp, Check, X, Clock, Upload, Loader2, Trash2, Pin,
-  Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy,
+  Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy, RefreshCw,
 } from 'lucide-react';
 import {
   fetchAllClaims, updateClaimStatus,
@@ -14,10 +14,12 @@ import {
   fetchAllConversations,
   fetchMaintenanceTasks, createMaintenanceTask, completeMaintenanceTask,
   updateConsortium, fetchConsortiumMembers,
+  fetchAllProfiles, updateProfileRole, regenerateInviteCode,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
 const TABS = [
+  { id: 'usuarios',      label: 'Usuarios',       icon: Users },
   { id: 'claims',        label: 'Reclamos',       icon: AlertCircle },
   { id: 'expenses',      label: 'Expensas',       icon: DollarSign },
   { id: 'liquidacion',   label: 'Liquidación',    icon: Receipt },
@@ -48,6 +50,114 @@ const EXPENSE_CATEGORIES = [
   'Mantenimiento', 'Limpieza', 'Electricidad', 'Gas', 'Agua',
   'Seguro', 'Administración', 'Amenities', 'Ascensores', 'Otro',
 ];
+
+// ─── Usuarios ─────────────────────────────────────────────────────────────────
+
+const ROLE_OPTIONS = [
+  { value: 'resident', label: 'Residente' },
+  { value: 'admin',    label: 'Admin' },
+  { value: 'owner',    label: 'Propietario' },
+];
+
+const ROLE_BADGE = {
+  admin:    'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
+  owner:    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  resident: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
+};
+
+function UsersTab({ userProfile }) {
+  const toast = useToast();
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingRole, setSavingRole] = useState(null);
+
+  useEffect(() => {
+    fetchAllProfiles(userProfile?.consortium_id)
+      .then(setProfiles)
+      .catch(e => toast.error(e.message, 'Error al cargar usuarios'))
+      .finally(() => setLoading(false));
+  }, [userProfile?.consortium_id, toast]);
+
+  async function handleRoleChange(profileId, newRole) {
+    setSavingRole(profileId);
+    try {
+      const updated = await updateProfileRole(profileId, newRole);
+      setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, role: updated.role } : p));
+      toast.success('Rol actualizado');
+    } catch (e) {
+      toast.error(e.message, 'Error al cambiar rol');
+    } finally {
+      setSavingRole(null);
+    }
+  }
+
+  if (loading) return <LoadingSpinner />;
+  if (profiles.length === 0) return <EmptyState icon={Users} text="No hay usuarios registrados en este consorcio" />;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        {profiles.length} usuario{profiles.length !== 1 ? 's' : ''} registrado{profiles.length !== 1 ? 's' : ''} en el consorcio.
+      </p>
+
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Nombre</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Unidad</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Registro</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rol</span>
+        </div>
+
+        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          {profiles.map(p => (
+            <div key={p.id} className="flex flex-col sm:grid sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              {/* Nombre */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                    {(p.full_name || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                  {p.full_name || 'Sin nombre'}
+                </span>
+              </div>
+
+              {/* Unidad */}
+              <span className="text-sm text-slate-500 dark:text-slate-400 sm:text-left">
+                {p.unit_id ? `Unidad ${p.unit_id}` : '—'}
+              </span>
+
+              {/* Fecha registro */}
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—'}
+              </span>
+
+              {/* Rol selector inline */}
+              <div className="flex items-center gap-2">
+                <span className={`hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full ${ROLE_BADGE[p.role] ?? ROLE_BADGE.resident}`}>
+                  {ROLE_OPTIONS.find(r => r.value === p.role)?.label ?? p.role}
+                </span>
+                <select
+                  value={p.role ?? 'resident'}
+                  disabled={savingRole === p.id}
+                  onChange={e => handleRoleChange(p.id, e.target.value)}
+                  className="border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 text-xs bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-60 cursor-pointer"
+                >
+                  {ROLE_OPTIONS.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+                {savingRole === p.id && <Loader2 size={13} className="animate-spin text-brand-500 shrink-0" />}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Reclamos ─────────────────────────────────────────────────────────────────
 
@@ -1240,6 +1350,7 @@ function ConsorcioTab({ session, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [form, setForm] = useState({ name: '', address: '', city: '' });
 
   useEffect(() => {
@@ -1282,6 +1393,20 @@ function ConsorcioTab({ session, userProfile }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  }
+
+  async function handleRegenerate() {
+    if (!userProfile?.consortium_id) return;
+    setRegenerating(true);
+    try {
+      const updated = await regenerateInviteCode(userProfile.consortium_id);
+      setConsortium(prev => ({ ...prev, invite_code: updated.invite_code }));
+      toast.success('Código regenerado correctamente');
+    } catch (e) {
+      toast.error(e.message, 'Error al regenerar código');
+    } finally {
+      setRegenerating(false);
+    }
   }
 
   if (loading) return <LoadingSpinner />;
@@ -1356,6 +1481,15 @@ function ConsorcioTab({ session, userProfile }) {
               {copied ? <Check size={16} /> : <Copy size={16} />}
               {copied ? 'Copiado' : 'Copiar'}
             </button>
+            <button
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              title="Regenerar código"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-accent-600 disabled:opacity-60"
+            >
+              {regenerating ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+              Regenerar
+            </button>
           </div>
         </div>
       )}
@@ -1421,7 +1555,7 @@ function EmptyState({ icon: Icon, text }) {
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
 export default function AdminView({ session, userProfile }) {
-  const [activeTab, setActiveTab] = useState('claims');
+  const [activeTab, setActiveTab] = useState('usuarios');
 
   if (!userProfile || userProfile.role !== 'admin') {
     return (
@@ -1473,6 +1607,7 @@ export default function AdminView({ session, userProfile }) {
       </div>
 
       {/* Contenido */}
+      {activeTab === 'usuarios'      && <UsersTab userProfile={userProfile} />}
       {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}
       {activeTab === 'expenses'      && <ExpensesTab session={session} userProfile={userProfile} />}
       {activeTab === 'liquidacion'   && <LiquidacionTab session={session} userProfile={userProfile} />}
