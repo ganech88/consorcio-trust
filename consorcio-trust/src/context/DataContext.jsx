@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { fetchClaims, fetchExpenses, fetchUserProfile, fetchPayments } from '../services/data.service';
+import { fetchClaims, fetchExpenses, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
 const DataContext = createContext(null);
@@ -9,6 +9,7 @@ export function DataProvider({ children }) {
   const [gastos, setGastos] = useState([]);
   const [payments, setPayments] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
+  const [consortium, setConsortium] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const toast = useToast();
@@ -24,7 +25,13 @@ export function DataProvider({ children }) {
       ]);
       setReclamos(claims);
       setGastos(expenses);
-      if (profile) setUserProfile(profile);
+      if (profile) {
+        setUserProfile(profile);
+        if (profile.consortium_id) {
+          const c = await fetchConsortium(profile.consortium_id);
+          if (c) setConsortium(c);
+        }
+      }
       setPayments(userPayments);
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -39,6 +46,7 @@ export function DataProvider({ children }) {
     setGastos([]);
     setPayments([]);
     setUserProfile(null);
+    setConsortium(null);
     setUnreadChatCount(0);
   }, []);
 
@@ -48,6 +56,7 @@ export function DataProvider({ children }) {
       gastos,
       payments, setPayments,
       userProfile, setUserProfile,
+      consortium, setConsortium,
       dataLoading,
       loadData,
       resetData,

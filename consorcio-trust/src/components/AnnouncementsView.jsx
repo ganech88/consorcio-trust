@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Megaphone, AlertTriangle, Info, Calendar, Pin, Loader2 } from 'lucide-react';
 import { fetchAnnouncements } from '../services/data.service';
+import { useData } from '../context/DataContext';
 
 const TYPE_CONFIG = {
   urgent: {
@@ -101,12 +102,13 @@ function AnnouncementCard({ announcement }) {
 }
 
 export default function AnnouncementsView() {
+  const { userProfile } = useData();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchAnnouncements()
+    fetchAnnouncements(userProfile?.consortium_id)
       .then(setAnnouncements)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));

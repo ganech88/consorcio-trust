@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider, useData } from './context/DataContext';
 import { supabase } from './lib/supabase';
 import LoginPage from './components/LoginPage';
+import ConsortiumOnboarding from './components/ConsortiumOnboarding';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import NotificationsPanel from './components/NotificationsPanel';
@@ -171,6 +172,15 @@ function AppContent() {
 
   if (!session) {
     return <LoginPage onLogin={(s) => setSession(s)} />;
+  }
+
+  if (!dataLoading && userProfile && !userProfile.consortium_id) {
+    return (
+      <ConsortiumOnboarding
+        session={session}
+        onComplete={() => loadData(session.user.id)}
+      />
+    );
   }
 
   return (

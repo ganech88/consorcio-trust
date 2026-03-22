@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   ChevronDown, ChevronUp, Check, X, Clock, Upload, Loader2, Trash2, Pin,
-  Receipt, Users, Wrench, Plus, CheckCircle,
+  Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy,
 } from 'lucide-react';
 import {
   fetchAllClaims, updateClaimStatus,
@@ -13,6 +13,7 @@ import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
   fetchAllConversations,
   fetchMaintenanceTasks, createMaintenanceTask, completeMaintenanceTask,
+  updateConsortium, fetchConsortiumMembers,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -24,6 +25,7 @@ const TABS = [
   { id: 'announcements', label: 'Comunicados',    icon: Megaphone },
   { id: 'documents',     label: 'Documentos',     icon: FileText },
   { id: 'maintenance',   label: 'Mantenimiento',  icon: Wrench },
+  { id: 'consorcio',     label: 'Consorcio',      icon: Building2 },
 ];
 
 const STATUS_LABELS = {
@@ -410,7 +412,7 @@ function AnnouncementsTab({ session, userProfile }) {
   }
 
   useEffect(() => {
-    fetchAnnouncements()
+    fetchAnnouncements(userProfile?.consortium_id)
       .then(setAnnouncements)
       .catch(e => toast.error(e.message, 'Error al cargar comunicados'))
       .finally(() => setLoading(false));
@@ -580,7 +582,7 @@ function DocumentsTab({ session, userProfile }) {
   const fileRef = useRef(null);
 
   useEffect(() => {
-    fetchDocuments()
+    fetchDocuments(userProfile?.consortium_id)
       .then(setDocuments)
       .catch(e => toast.error(e.message, 'Error al cargar documentos'))
       .finally(() => setLoading(false));
@@ -1229,6 +1231,174 @@ function MaintenanceTab({ session, userProfile }) {
   );
 }
 
+// ─── Consorcio ────────────────────────────────────────────────────────────────
+
+function ConsorcioTab({ session, userProfile }) {
+  const toast = useToast();
+  const [consortium, setConsortium] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [form, setForm] = useState({ name: '', address: '', city: '' });
+
+  useEffect(() => {
+    if (!userProfile?.consortium_id) { setLoading(false); return; }
+    Promise.all([
+      import('../services/data.service').then(m => m.fetchConsortium(userProfile.consortium_id)),
+      fetchConsortiumMembers(userProfile.consortium_id),
+    ]).then(([c, m]) => {
+      if (c) {
+        setConsortium(c);
+        setForm({ name: c.name || '', address: c.address || '', city: c.city || '' });
+      }
+      setMembers(m);
+    }).catch(e => toast.error(e.message, 'Error al cargar consorcio'))
+      .finally(() => setLoading(false));
+  }, [userProfile?.consortium_id, toast]);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    if (!form.name.trim()) { toast.error('El nombre es requerido'); return; }
+    setSaving(true);
+    try {
+      const updated = await updateConsortium(userProfile.consortium_id, {
+        name: form.name.trim(),
+        address: form.address.trim() || null,
+        city: form.city.trim() || null,
+      });
+      setConsortium(updated);
+      toast.success('Consorcio actualizado');
+    } catch (e) {
+      toast.error(e.message, 'Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCopy() {
+    if (!consortium?.invite_code) return;
+    navigator.clipboard.writeText(consortium.invite_code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="space-y-6">
+      {/* Editar datos */}
+      <form onSubmit={handleSave} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+          <Building2 size={16} className="text-brand-600" />
+          Datos del Consorcio
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2">
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Nombre</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Dirección</label>
+            <input
+              type="text"
+              value={form.address}
+              onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Ciudad</label>
+            <input
+              type="text"
+              value={form.city}
+              onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+            />
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          Guardar cambios
+        </button>
+      </form>
+
+      {/* Código de invitación */}
+      {consortium?.invite_code && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm">
+          <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-3">Código de Invitación</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            Compartí este código con los residentes para que puedan unirse al consorcio.
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="flex-1 font-mono text-2xl font-bold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-xl px-4 py-3 text-center select-all">
+              {consortium.invite_code}
+            </span>
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                copied
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600'
+              }`}
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de miembros */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+          <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+            <Users size={16} className="text-slate-400" />
+            Miembros ({members.length})
+          </h4>
+        </div>
+        {members.length === 0 ? (
+          <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">Sin miembros registrados</p>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+            {members.map(m => (
+              <div key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                    {(m.full_name || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{m.full_name || 'Sin nombre'}</p>
+                  {m.unit_id && <p className="text-xs text-slate-400 dark:text-slate-500">Unidad {m.unit_id}</p>}
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  m.role === 'admin'
+                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                }`}>
+                  {m.role === 'admin' ? 'Admin' : 'Residente'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Utilidades ───────────────────────────────────────────────────────────────
 
 function LoadingSpinner() {
@@ -1310,6 +1480,7 @@ export default function AdminView({ session, userProfile }) {
       {activeTab === 'announcements' && <AnnouncementsTab session={session} userProfile={userProfile} />}
       {activeTab === 'documents'     && <DocumentsTab session={session} userProfile={userProfile} />}
       {activeTab === 'maintenance'   && <MaintenanceTab session={session} userProfile={userProfile} />}
+      {activeTab === 'consorcio'     && <ConsorcioTab session={session} userProfile={userProfile} />}
     </div>
   );
 }

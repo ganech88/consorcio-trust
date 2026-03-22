@@ -264,13 +264,16 @@ export async function updateReservationStatus(reservationId, status, adminNote) 
 
 // ─── Comunicados ──────────────────────────────────────────────────────────────
 
-export async function fetchAnnouncements() {
-  const { data, error } = await supabase
+export async function fetchAnnouncements(consortiumId) {
+  let query = supabase
     .from('announcements')
     .select('*')
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
@@ -303,12 +306,15 @@ export async function deleteAnnouncement(id) {
 
 // ─── Documentos ───────────────────────────────────────────────────────────────
 
-export async function fetchDocuments() {
-  const { data, error } = await supabase
+export async function fetchDocuments(consortiumId) {
+  let query = supabase
     .from('documents')
     .select('*')
     .order('created_at', { ascending: false });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) {
     console.warn('documents table not available:', error.message);
     return [];
@@ -384,7 +390,7 @@ export async function fetchExpensePeriods(consortiumId) {
     .select('*')
     .order('period', { ascending: false });
 
-  if (consortiumId) query.eq('consortium_id', consortiumId);
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
 
   const { data, error } = await query;
   if (error) { console.warn('expense_periods:', error.message); return []; }
@@ -552,10 +558,12 @@ export async function countUnreadMessages(userId) {
 // ─── Votaciones ────────────────────────────────────────────────────────────────
 
 export async function fetchPolls(consortiumId) {
-  const query = supabase
+  let query = supabase
     .from('polls')
     .select('*')
     .order('ends_at', { ascending: false });
+
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
 
   const { data, error } = await query;
   if (error) { console.warn('polls:', error.message); return []; }
@@ -621,11 +629,14 @@ export async function deletePoll(id) {
 // ─── Eventos / Calendario ─────────────────────────────────────────────────────
 
 export async function fetchEvents(consortiumId) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('events')
     .select('*')
     .order('start_date', { ascending: true });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) { console.warn('events:', error.message); return []; }
   return data || [];
 }
@@ -756,11 +767,14 @@ export async function deliverPackage(id) {
 // ─── Balance financiero ────────────────────────────────────────────────────────
 
 export async function fetchExpensesLog(consortiumId) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('expenses_log')
     .select('*')
     .order('date', { ascending: false });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) { console.warn('expenses_log:', error.message); return []; }
   return data || [];
 }
@@ -785,11 +799,14 @@ export async function addExpenseLog({ description, category, amount, date, provi
 }
 
 export async function fetchMonthlyFinanceSummary(consortiumId) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('expenses_log')
     .select('date, amount, category')
     .order('date', { ascending: true });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) { console.warn('expenses_log summary:', error.message); return []; }
   if (!data) return [];
 
@@ -913,11 +930,14 @@ const RECURRENCE_DAYS = {
 };
 
 export async function fetchMaintenanceTasks(consortiumId) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('maintenance_tasks')
     .select('*')
     .order('next_due', { ascending: true });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) { console.warn('maintenance_tasks:', error.message); return []; }
   return data || [];
 }
@@ -1017,4 +1037,77 @@ export async function checkInVisitor(id, checkedInBy) {
 
   if (error) throw error;
   return data;
+}
+
+// ─── Consorcios ───────────────────────────────────────────────────────────────
+
+export async function fetchConsortium(consortiumId) {
+  if (!consortiumId) return null;
+  const { data, error } = await supabase
+    .from('consortiums')
+    .select('*')
+    .eq('id', consortiumId)
+    .single();
+  if (error) { console.warn('fetchConsortium:', error.message); return null; }
+  return data;
+}
+
+export async function updateConsortium(consortiumId, updates) {
+  const { data, error } = await supabase
+    .from('consortiums')
+    .update(updates)
+    .eq('id', consortiumId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchConsortiumMembers(consortiumId) {
+  if (!consortiumId) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, unit_id, role')
+    .eq('consortium_id', consortiumId)
+    .order('unit_id');
+  if (error) { console.warn('fetchConsortiumMembers:', error.message); return []; }
+  return data || [];
+}
+
+export async function joinConsortiumByCode(inviteCode, userId) {
+  const { data: consortium, error: lookupError } = await supabase
+    .from('consortiums')
+    .select('id, name')
+    .eq('invite_code', inviteCode.trim())
+    .single();
+
+  if (lookupError || !consortium) {
+    throw new Error('Código de invitación inválido. Verificá el código e intentá de nuevo.');
+  }
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ consortium_id: consortium.id })
+    .eq('id', userId);
+
+  if (updateError) throw updateError;
+  return consortium;
+}
+
+export async function createConsortiumForUser(name, address, city, userId) {
+  const { data: consortium, error: createError } = await supabase
+    .from('consortiums')
+    .insert([{ name, address: address || null, city: city || null }])
+    .select()
+    .single();
+
+  if (createError) throw createError;
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ consortium_id: consortium.id, role: 'admin' })
+    .eq('id', userId);
+
+  if (updateError) throw updateError;
+  return consortium;
 }
