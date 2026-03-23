@@ -385,7 +385,7 @@ export async function fetchContacts() {
 // ─── Períodos de expensas ─────────────────────────────────────────────────────
 
 export async function fetchExpensePeriods(consortiumId) {
-  const query = supabase
+  let query = supabase
     .from('expense_periods')
     .select('*')
     .order('period', { ascending: false });

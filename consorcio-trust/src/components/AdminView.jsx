@@ -526,7 +526,7 @@ function AnnouncementsTab({ session, userProfile }) {
       .then(setAnnouncements)
       .catch(e => toast.error(e.message, 'Error al cargar comunicados'))
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [userProfile?.consortium_id, toast]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -696,7 +696,7 @@ function DocumentsTab({ session, userProfile }) {
       .then(setDocuments)
       .catch(e => toast.error(e.message, 'Error al cargar documentos'))
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [userProfile?.consortium_id, toast]);
 
   async function handleUpload(e) {
     e.preventDefault();
