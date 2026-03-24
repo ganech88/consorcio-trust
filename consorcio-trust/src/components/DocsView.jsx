@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Eye, Search, FolderOpen, Loader2 } from 'lucide-react';
-import { fetchDocuments } from '../services/data.service';
+import { fetchConsortiumDocuments } from '../services/data.service';
 import { useData } from '../context/DataContext';
 
 const CATEGORIES = [
@@ -30,7 +30,7 @@ export default function DocsView() {
   const [activeCategory, setActiveCategory] = useState('all');
 
   useEffect(() => {
-    fetchDocuments(userProfile?.consortium_id)
+    fetchConsortiumDocuments(userProfile?.consortium_id)
       .then(setDocs)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));

@@ -304,9 +304,9 @@ export async function deleteAnnouncement(id) {
   if (error) throw error;
 }
 
-// ─── Documentos ───────────────────────────────────────────────────────────────
+// ─── Documentos del consorcio (biblioteca admin → DocsView) ───────────────────
 
-export async function fetchDocuments(consortiumId) {
+export async function fetchConsortiumDocuments(consortiumId) {
   let query = supabase
     .from('documents')
     .select('*')
@@ -322,7 +322,7 @@ export async function fetchDocuments(consortiumId) {
   return data || [];
 }
 
-export async function uploadDocument(file, name, category, consortiumId, uploadedBy) {
+export async function uploadConsortiumDocument(file, name, category, consortiumId, uploadedBy) {
   if (file.type !== 'application/pdf') {
     throw new Error('Solo se permiten archivos PDF.');
   }
@@ -358,13 +358,53 @@ export async function uploadDocument(file, name, category, consortiumId, uploade
   return data?.[0];
 }
 
-export async function deleteDocument(id, filePath) {
+export async function deleteConsortiumDocument(id, filePath) {
   if (filePath) {
     await supabase.storage.from('documents').remove([filePath]);
   }
   const { error } = await supabase.from('documents').delete().eq('id', id);
   if (error) throw error;
 }
+
+// ─── Documentos de residentes (aprobaciones) ──────────────────────────────────
+
+export const fetchDocuments = async (consortiumId, userId, isAdmin = false) => {
+  let query = supabase
+    .from('documents')
+    .select(isAdmin ? '*, profiles(full_name, unit_id)' : '*')
+    .eq('consortium_id', consortiumId)
+    .order('created_at', { ascending: false });
+  if (!isAdmin) query = query.eq('user_id', userId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+};
+
+export const createDocument = async (consortiumId, userId, doc) => {
+  const { data, error } = await supabase
+    .from('documents')
+    .insert({ ...doc, consortium_id: consortiumId, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateDocumentStatus = async (docId, status, adminNotes, reviewedBy) => {
+  const { data, error } = await supabase
+    .from('documents')
+    .update({ status, admin_notes: adminNotes, reviewed_by: reviewedBy, reviewed_at: new Date().toISOString() })
+    .eq('id', docId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteDocument = async (docId) => {
+  const { error } = await supabase.from('documents').delete().eq('id', docId);
+  if (error) throw error;
+};
 
 // ─── Contactos ────────────────────────────────────────────────────────────────
 
