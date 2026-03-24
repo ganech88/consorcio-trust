@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { fetchClaims, fetchExpenses, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
+import { fetchClaims, fetchExpenseItems, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
 const DataContext = createContext(null);
@@ -19,7 +19,7 @@ export function DataProvider({ children }) {
     try {
       const [claims, expenses, profile, userPayments] = await Promise.all([
         fetchClaims(),
-        fetchExpenses(),
+        fetchExpenseItems(),
         userId ? fetchUserProfile(userId) : Promise.resolve(null),
         userId ? fetchPayments(userId) : Promise.resolve([]),
       ]);

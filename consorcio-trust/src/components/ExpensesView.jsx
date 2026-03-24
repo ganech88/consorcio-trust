@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
-import {
-  fetchUserPeriodItems,
-  updatePeriodItemStatus,
-} from '../services/data.service';
+import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
+import { fetchExpenses, createExpensePayment } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
-  pending: {
-    label: 'Pendiente',
-    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    icon: Clock,
-  },
-  paid: {
-    label: 'Pagado',
-    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-    icon: CheckCircle,
-  },
+  pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', icon: Clock },
+  partial: { label: 'Parcial',   color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',   icon: Clock },
+  paid:    { label: 'Pagado',    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', icon: CheckCircle },
+  overdue: { label: 'Vencido',   color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',        icon: AlertCircle },
+};
+
+const PAYMENT_STATUS_CONFIG = {
+  pending:  { label: 'Pendiente de aprobación', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
+  approved: { label: 'Aprobado',                color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  rejected: { label: 'Rechazado',               color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
 };
 
 function formatCurrency(amount) {
@@ -30,41 +27,124 @@ function formatPeriod(period) {
   return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 }
 
-export default function ExpensesView({ session, userProfile }) {
+function PaymentModal({ expense, userId, onClose, onPaid }) {
   const toast = useToast();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(null);
+  const [amount, setAmount] = useState(String(expense.amount));
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    fetchUserPeriodItems(session.user.id)
-      .then(setItems)
-      .catch(e => toast.error(e.message, 'Error al cargar expensas'))
-      .finally(() => setLoading(false));
-  }, [session?.user?.id, toast]);
-
-  async function handleMarkPaid(item) {
-    setPaying(item.id);
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      toast.error('Ingresá un monto válido');
+      return;
+    }
+    setSaving(true);
     try {
-      const updated = await updatePeriodItemStatus(item.id, 'paid');
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, ...updated } : i));
-      toast.success('Expensa marcada como pagada');
-    } catch (e) {
-      toast.error(e.message, 'Error al actualizar');
+      const payment = await createExpensePayment(expense.id, userId, {
+        amount: Number(amount),
+        notes: notes.trim() || null,
+      });
+      toast.success('Pago registrado. El administrador lo revisará pronto.');
+      onPaid(expense.id, payment);
+      onClose();
+    } catch (err) {
+      toast.error(err.message, 'Error al registrar pago');
     } finally {
-      setPaying(null);
+      setSaving(false);
     }
   }
 
-  const current = items[0] ?? null;
-  const pending = items.filter(i => i.status === 'pending');
-  const totalPending = pending.reduce((s, i) => s + Number(i.amount), 0);
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+          <h4 className="font-bold text-slate-800 dark:text-slate-100">Registrar pago</h4>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
+            <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{expense.title}</p>
+            <p className="text-xs text-brand-600/70 dark:text-brand-400/70 mt-0.5">
+              {formatPeriod(expense.period)} · Total: {formatCurrency(expense.amount)}
+            </p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto a pagar ($)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Notas (opcional)</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Ej: Transferencia banco / número de operación..."
+              rows={2}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+            Registrar pago
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default function ExpensesView({ session, userProfile }) {
+  const toast = useToast();
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [payTarget, setPayTarget] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+
+  useEffect(() => {
+    if (!userProfile?.consortium_id) return;
+    fetchExpenses(userProfile.consortium_id)
+      .then(setExpenses)
+      .catch(e => toast.error(e.message, 'Error al cargar expensas'))
+      .finally(() => setLoading(false));
+  }, [userProfile?.consortium_id, toast]);
+
+  function handlePaid(expenseId, payment) {
+    setExpenses(prev => prev.map(e =>
+      e.id === expenseId
+        ? { ...e, expense_payments: [...(e.expense_payments || []), payment] }
+        : e
+    ));
+  }
+
+  const currentPeriod = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const currentExpenses = expenses.filter(e => e.period === currentPeriod);
+  const myPayments = expenses.flatMap(e =>
+    (e.expense_payments || [])
+      .filter(p => p.user_id === session?.user?.id)
+      .map(p => ({ ...p, expenseTitle: e.title, expensePeriod: e.period }))
+  );
+  const totalPending = expenses
+    .filter(e => e.status === 'pending' || e.status === 'overdue')
+    .reduce((s, e) => s + Number(e.amount), 0);
 
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-blue-500" />
+        <Loader2 size={32} className="animate-spin text-brand-500" />
       </div>
     );
   }
@@ -72,7 +152,7 @@ export default function ExpensesView({ session, userProfile }) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-2xl text-white shadow-lg">
+      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg">
         <div className="flex items-center gap-3 mb-4">
           <Receipt size={24} />
           <h3 className="text-xl font-bold">Mis Expensas</h3>
@@ -89,101 +169,128 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       </div>
 
-      {/* Expensa actual */}
-      {current && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-            Período actual
+      {/* Período actual */}
+      {currentExpenses.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+            Período actual — {formatPeriod(currentPeriod)}
           </h4>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">
-                {formatCurrency(current.amount)}
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {formatPeriod(current.expense_periods?.period)}
-              </p>
-              {current.expense_periods?.due_date && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} />
-                  Vence: {new Date(current.expense_periods.due_date).toLocaleDateString('es-AR')}
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_CONFIG[current.status]?.color}`}>
-                {STATUS_CONFIG[current.status]?.label}
-              </span>
-              {current.status === 'pending' && (
-                <button
-                  onClick={() => handleMarkPaid(current)}
-                  disabled={paying === current.id}
-                  className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                >
-                  {paying === current.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                  Marcar pagado
-                </button>
-              )}
-            </div>
+          <div className="space-y-3">
+            {currentExpenses.map(exp => {
+              const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
+              const Icon = st.icon;
+              const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
+              const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
+              return (
+                <div key={exp.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${st.color}`}>
+                        <Icon size={18} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-800 dark:text-slate-100">{exp.title}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{formatCurrency(exp.amount)}</p>
+                        {exp.due_date && (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+                            <AlertCircle size={11} />
+                            Vence: {new Date(exp.due_date).toLocaleDateString('es-AR')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                      {myPay ? (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PAYMENT_STATUS_CONFIG[myPay.status]?.color}`}>
+                          {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
+                        </span>
+                      ) : canPay ? (
+                        <button
+                          onClick={() => setPayTarget(exp)}
+                          className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          <CreditCard size={12} /> Registrar pago
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  {exp.description && (
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 pl-13">{exp.description}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Historial */}
+      {/* Historial de todas las expensas */}
       <div>
         <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
-          Historial ({items.length})
+          Todas las expensas ({expenses.length})
         </h4>
-
-        {items.length === 0 ? (
+        {expenses.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
             <Receipt size={40} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No tenés expensas registradas aún</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay expensas registradas aún</p>
             <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
               El administrador publicará las liquidaciones mensualmente
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {items.map(item => {
-              const st = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
-              const Icon = st.icon;
+          <div className="space-y-2">
+            {expenses.map(exp => {
+              const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
+              const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
+              const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
+              const isExpanded = expandedId === exp.id;
               return (
-                <div
-                  key={item.id}
-                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex items-center gap-4"
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${st.color}`}>
-                    <Icon size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
-                      {formatPeriod(item.expense_periods?.period)}
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      Vence: {item.expense_periods?.due_date
-                        ? new Date(item.expense_periods.due_date).toLocaleDateString('es-AR')
-                        : '—'}
-                    </p>
-                    {item.paid_at && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        Pagado: {new Date(item.paid_at).toLocaleDateString('es-AR')}
+                <div key={exp.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                  <div className="p-4 flex items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{exp.title}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                        {formatPeriod(exp.period)}
+                        {exp.due_date ? ` · Vence ${new Date(exp.due_date).toLocaleDateString('es-AR')}` : ''}
                       </p>
+                    </div>
+                    <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{formatCurrency(exp.amount)}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
+                    {canPay && (
+                      <button
+                        onClick={() => setPayTarget(exp)}
+                        className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
+                      >
+                        <CreditCard size={11} /> Pagar
+                      </button>
+                    )}
+                    {myPay && (
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : exp.id)}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors shrink-0"
+                      >
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
                     )}
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-slate-800 dark:text-slate-100">{formatCurrency(item.amount)}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
-                  </div>
-                  {item.status === 'pending' && (
-                    <button
-                      onClick={() => handleMarkPaid(item)}
-                      disabled={paying === item.id}
-                      className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors disabled:opacity-60"
-                      title="Marcar como pagado"
-                    >
-                      {paying === item.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                    </button>
+                  {isExpanded && myPay && (
+                    <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Mi pago
+                      </p>
+                      <div className="flex items-center gap-3 text-xs">
+                        <CreditCard size={12} className="text-slate-400" />
+                        <span className="text-slate-700 dark:text-slate-300">{formatCurrency(myPay.amount)}</span>
+                        <span className="text-slate-400">{new Date(myPay.paid_at).toLocaleDateString('es-AR')}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full font-bold text-[10px] ${PAYMENT_STATUS_CONFIG[myPay.status]?.color}`}>
+                          {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
+                        </span>
+                      </div>
+                      {myPay.notes && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 ml-5">{myPay.notes}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -191,6 +298,42 @@ export default function ExpensesView({ session, userProfile }) {
           </div>
         )}
       </div>
+
+      {/* Historial de mis pagos */}
+      {myPayments.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+            Mis pagos registrados ({myPayments.length})
+          </h4>
+          <div className="space-y-2">
+            {myPayments.map(p => {
+              const pst = PAYMENT_STATUS_CONFIG[p.status] || PAYMENT_STATUS_CONFIG.pending;
+              return (
+                <div key={p.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 flex items-center gap-3">
+                  <CreditCard size={16} className="text-brand-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{p.expenseTitle}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {formatPeriod(p.expensePeriod)} · {new Date(p.paid_at).toLocaleDateString('es-AR')}
+                    </p>
+                  </div>
+                  <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{formatCurrency(p.amount)}</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${pst.color}`}>{pst.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {payTarget && (
+        <PaymentModal
+          expense={payTarget}
+          userId={session.user.id}
+          onClose={() => setPayTarget(null)}
+          onPaid={handlePaid}
+        />
+      )}
     </div>
   );
 }
