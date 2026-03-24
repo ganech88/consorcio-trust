@@ -345,12 +345,13 @@ export async function uploadConsortiumDocument(file, name, category, consortiumI
   const { data, error } = await supabase
     .from('documents')
     .insert([{
-      name,
-      category: category || 'general',
-      file_path: fileName,
+      title: name,
+      doc_type: category || 'general',
+      file_name: fileName,
       file_url: publicUrl,
       consortium_id: consortiumId || null,
-      uploaded_by: uploadedBy,
+      user_id: uploadedBy,
+      status: 'approved',
     }])
     .select();
 

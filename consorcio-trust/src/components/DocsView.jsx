@@ -37,14 +37,14 @@ export default function DocsView() {
   }, []);
 
   const filtered = docs.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || doc.category === activeCategory;
+    const matchesSearch = (doc.title ?? '').toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || doc.doc_type === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
   // Cantidad de docs por categoría para mostrar en badges
   const countByCategory = (cat) =>
-    cat === 'all' ? docs.length : docs.filter(d => d.category === cat).length;
+    cat === 'all' ? docs.length : docs.filter(d => d.doc_type === cat).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -120,12 +120,12 @@ export default function DocsView() {
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
-                  {doc.name}
+                  {doc.title}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {doc.category && doc.category !== 'general' && (
+                  {doc.doc_type && doc.doc_type !== 'general' && (
                     <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded capitalize">
-                      {CATEGORIES.find(c => c.value === doc.category)?.label ?? doc.category}
+                      {CATEGORIES.find(c => c.value === doc.doc_type)?.label ?? doc.doc_type}
                     </span>
                   )}
                   <p className="text-xs text-slate-400 dark:text-slate-500">
@@ -140,15 +140,15 @@ export default function DocsView() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  aria-label={`Ver ${doc.name}`}
+                  aria-label={`Ver ${doc.title}`}
                   title="Ver"
                 >
                   <Eye size={18} />
                 </a>
                 <button
-                  onClick={() => downloadFile(doc.file_url, doc.name)}
+                  onClick={() => downloadFile(doc.file_url, doc.title)}
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  aria-label={`Descargar ${doc.name}`}
+                  aria-label={`Descargar ${doc.title}`}
                   title="Descargar"
                 >
                   <Download size={18} />
