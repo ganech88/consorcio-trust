@@ -94,7 +94,7 @@ export async function updateClaimStatus(claimId, status, adminNote, adminUserId)
 
 // ─── Expensas ─────────────────────────────────────────────────────────────────
 
-export async function fetchExpenses() {
+export async function fetchExpenseItems() {
   const { data, error } = await supabase
     .from('expense_items')
     .select('category, amount');
@@ -121,7 +121,7 @@ export async function fetchExpenseSummary(unitId) {
   return data;
 }
 
-export async function createExpense({ category, amount, consortiumId }) {
+export async function createExpenseItem({ category, amount, consortiumId }) {
   const { data, error } = await supabase
     .from('expense_items')
     .insert([{
@@ -1149,3 +1149,62 @@ export async function createConsortiumForUser(name, address, city, userId) {
   if (updateError) throw updateError;
   return consortium;
 }
+
+// ─── Expenses (nueva tabla 019) ────────────────────────────────────────────────
+
+export const fetchExpenses = async (consortiumId) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*, expense_payments(*)')
+    .eq('consortium_id', consortiumId)
+    .order('due_date', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const createExpense = async (consortiumId, userId, expense) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .insert({ ...expense, consortium_id: consortiumId, created_by: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateExpense = async (expenseId, updates) => {
+  const { data, error } = await supabase
+    .from('expenses')
+    .update(updates)
+    .eq('id', expenseId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteExpense = async (expenseId) => {
+  const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
+  if (error) throw error;
+};
+
+export const createExpensePayment = async (expenseId, userId, payment) => {
+  const { data, error } = await supabase
+    .from('expense_payments')
+    .insert({ ...payment, expense_id: expenseId, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updatePaymentStatus = async (paymentId, status, notes) => {
+  const { data, error } = await supabase
+    .from('expense_payments')
+    .update({ status, notes })
+    .eq('id', paymentId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
