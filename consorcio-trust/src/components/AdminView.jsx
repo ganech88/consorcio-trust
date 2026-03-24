@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
-  ChevronDown, ChevronUp, Check, X, Clock, Upload, Loader2, Trash2, Pin,
+  ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2, Pin,
   Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy, RefreshCw,
 } from 'lucide-react';
 import {
@@ -9,7 +9,7 @@ import {
   createExpense,
   fetchAllReservations, updateReservationStatus,
   fetchAnnouncements, createAnnouncement, deleteAnnouncement,
-  fetchDocuments, uploadDocument, deleteDocument,
+  fetchDocuments, updateDocumentStatus, deleteDocument,
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
   fetchAllConversations,
   fetchMaintenanceTasks, createMaintenanceTask, completeMaintenanceTask,
@@ -38,13 +38,21 @@ const STATUS_LABELS = {
   rejected:    { label: 'Rechazada',  color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
 };
 
-const DOC_CATEGORIES = [
-  { value: 'reglamentos', label: 'Reglamentos' },
-  { value: 'actas',       label: 'Actas' },
-  { value: 'expensas',    label: 'Expensas' },
-  { value: 'seguros',     label: 'Seguros' },
-  { value: 'general',     label: 'General' },
-];
+const DOC_TYPES_MAP = {
+  general:   'General',
+  identity:  'Identidad',
+  ownership: 'Propiedad',
+  request:   'Solicitud',
+  complaint: 'Reclamo',
+  other:     'Otro',
+};
+
+const DOC_STATUS = {
+  pending:      { label: 'Pendiente',   color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
+  approved:     { label: 'Aprobado',    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  rejected:     { label: 'Rechazado',   color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  under_review: { label: 'En revisión', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+};
 
 const EXPENSE_CATEGORIES = [
   'Mantenimiento', 'Limpieza', 'Electricidad', 'Gas', 'Agua',
@@ -684,166 +692,170 @@ function DocumentsTab({ session, userProfile }) {
   const toast = useToast();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(null);
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('general');
-  const [file, setFile] = useState(null);
-  const fileRef = useRef(null);
+  const [filter, setFilter] = useState('all');
+  const [saving, setSaving] = useState(null);
+  const [noteInputs, setNoteInputs] = useState({});
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
-    fetchDocuments(userProfile?.consortium_id)
+    fetchDocuments(userProfile?.consortium_id, null, true)
       .then(setDocuments)
       .catch(e => toast.error(e.message, 'Error al cargar documentos'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, toast]);
 
-  async function handleUpload(e) {
-    e.preventDefault();
-    if (!file) { toast.error('Seleccioná un archivo PDF'); return; }
-    if (!name.trim()) { toast.error('Ingresá un nombre para el documento'); return; }
-    setUploading(true);
+  async function handleStatus(doc, status) {
+    setSaving(doc.id);
     try {
-      const doc = await uploadDocument(
-        file, name.trim(), category,
-        userProfile?.consortium_id, session.user.id
-      );
-      if (doc) setDocuments(prev => [doc, ...prev]);
-      toast.success('Documento subido correctamente');
-      setName('');
-      setCategory('general');
-      setFile(null);
-      if (fileRef.current) fileRef.current.value = '';
+      const updated = await updateDocumentStatus(doc.id, status, noteInputs[doc.id] || null, session.user.id);
+      setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, ...updated } : d));
+      toast.success('Estado actualizado');
+      setExpanded(null);
     } catch (e) {
-      toast.error(e.message, 'Error al subir documento');
+      toast.error(e.message, 'Error al actualizar');
     } finally {
-      setUploading(false);
+      setSaving(null);
     }
   }
 
   async function handleDelete(doc) {
-    setDeleting(doc.id);
     try {
-      await deleteDocument(doc.id, doc.file_path);
+      await deleteDocument(doc.id);
       setDocuments(prev => prev.filter(d => d.id !== doc.id));
       toast.success('Documento eliminado');
     } catch (e) {
       toast.error(e.message, 'Error al eliminar');
-    } finally {
-      setDeleting(null);
     }
   }
 
+  const filtered = filter === 'all' ? documents : documents.filter(d => d.status === filter);
+
+  if (loading) return <LoadingSpinner />;
+
   return (
-    <div className="space-y-6">
-      {/* Formulario de carga */}
-      <form onSubmit={handleUpload} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Subir nuevo documento (PDF)</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Nombre del documento</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Ej: Acta Asamblea 2026"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Categoría</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              {DOC_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Archivo PDF</label>
-          <div
-            onClick={() => fileRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
-              file
-                ? 'border-blue-300 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-700'
-                : 'border-slate-200 dark:border-slate-600 hover:border-blue-300 dark:hover:border-blue-600'
+    <div className="space-y-4">
+      {/* Filtros */}
+      <div className="flex gap-2 flex-wrap">
+        {['all', 'pending', 'under_review', 'approved', 'rejected'].map(s => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              filter === s
+                ? 'bg-blue-600 text-white'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
-            {file ? (
-              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{file.name}</p>
-            ) : (
-              <div className="space-y-1">
-                <Upload size={24} className="mx-auto text-slate-400 dark:text-slate-500" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">Hacé clic para seleccionar un PDF</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">Máximo 10 MB</p>
-              </div>
+            {s === 'all' ? 'Todos' : DOC_STATUS[s]?.label ?? s}
+            {s !== 'all' && (
+              <span className="ml-1.5 opacity-70">
+                ({documents.filter(d => d.status === s).length})
+              </span>
             )}
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            onChange={e => setFile(e.target.files?.[0] || null)}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={uploading}
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
-        >
-          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-          Subir Documento
-        </button>
-      </form>
+          </button>
+        ))}
+      </div>
 
-      {/* Lista de documentos */}
-      {loading ? <LoadingSpinner /> : (
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-            Documentos cargados ({documents.length})
-          </h4>
-          {documents.length === 0 ? (
-            <EmptyState icon={FileText} text="No hay documentos subidos aún" />
-          ) : (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
-              {documents.map(doc => (
-                <div key={doc.id} className="p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <div className="bg-red-50 dark:bg-red-900/30 p-2.5 rounded-xl shrink-0">
-                    <FileText size={18} className="text-red-500 dark:text-red-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">{doc.name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      {DOC_CATEGORIES.find(c => c.value === doc.category)?.label ?? doc.category} ·{' '}
-                      {new Date(doc.created_at).toLocaleDateString('es-AR')}
-                    </p>
-                  </div>
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors shrink-0"
-                    title="Ver documento"
-                  >
-                    <FileText size={15} />
-                  </a>
-                  <button
-                    onClick={() => handleDelete(doc)}
-                    disabled={deleting === doc.id}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0 disabled:opacity-60"
-                    title="Eliminar"
-                  >
-                    {deleting === doc.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-                  </button>
+      {filtered.length === 0 ? (
+        <EmptyState icon={FileText} text="No hay documentos en esta categoría" />
+      ) : (
+        filtered.map(doc => {
+          const isOpen = expanded === doc.id;
+          const st = DOC_STATUS[doc.status] ?? DOC_STATUS.pending;
+          const userName = doc.profiles?.full_name || 'Usuario';
+          const unitId = doc.profiles?.unit_id || '—';
+
+          return (
+            <div key={doc.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+              <button
+                onClick={() => {
+                  setExpanded(isOpen ? null : doc.id);
+                  if (!isOpen) setNoteInputs(prev => ({ ...prev, [doc.id]: doc.admin_notes || '' }));
+                }}
+                className="w-full p-4 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <span className={`mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${st.color}`}>
+                  {st.label}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">{doc.title}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    {userName} · Unidad {unitId} · {new Date(doc.created_at).toLocaleDateString('es-AR')}
+                  </p>
+                  {doc.doc_type && doc.doc_type !== 'general' && (
+                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded mt-1 inline-block">
+                      {DOC_TYPES_MAP[doc.doc_type] ?? doc.doc_type}
+                    </span>
+                  )}
                 </div>
-              ))}
+                {isOpen ? <ChevronUp size={16} className="text-slate-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-400 shrink-0" />}
+              </button>
+
+              {isOpen && (
+                <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700 pt-3 space-y-3">
+                  {doc.description && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+                      {doc.description}
+                    </p>
+                  )}
+                  {doc.file_url && (
+                    <a
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      <FileText size={13} /> Ver archivo adjunto
+                    </a>
+                  )}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+                      Nota para el residente <span className="font-normal">(opcional)</span>
+                    </label>
+                    <textarea
+                      value={noteInputs[doc.id] ?? ''}
+                      onChange={e => setNoteInputs(prev => ({ ...prev, [doc.id]: e.target.value }))}
+                      rows={2}
+                      placeholder="Mensaje al residente..."
+                      className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => handleStatus(doc, 'under_review')}
+                      disabled={saving === doc.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition-colors disabled:opacity-60"
+                    >
+                      <Clock size={13} /> En revisión
+                    </button>
+                    <button
+                      onClick={() => handleStatus(doc, 'approved')}
+                      disabled={saving === doc.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors disabled:opacity-60"
+                    >
+                      {saving === doc.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => handleStatus(doc, 'rejected')}
+                      disabled={saving === doc.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 transition-colors disabled:opacity-60"
+                    >
+                      <X size={13} /> Rechazar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc)}
+                      disabled={saving === doc.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors disabled:opacity-60"
+                    >
+                      <Trash2 size={13} /> Eliminar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })
       )}
     </div>
   );
