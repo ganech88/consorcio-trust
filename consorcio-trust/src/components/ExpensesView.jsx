@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
-import { fetchExpenses, createExpensePayment } from '../services/data.service';
+import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { fetchExpenses, createExpensePayment, createMercadoPagoPayment } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
@@ -113,6 +113,7 @@ export default function ExpensesView({ session, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [payTarget, setPayTarget] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [mpLoading, setMpLoading] = useState(null); // expense id siendo procesado por MP
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
@@ -128,6 +129,21 @@ export default function ExpensesView({ session, userProfile }) {
         ? { ...e, expense_payments: [...(e.expense_payments || []), payment] }
         : e
     ));
+  }
+
+  async function handleMercadoPago(expense) {
+    setMpLoading(expense.id);
+    try {
+      const { init_point } = await createMercadoPagoPayment(
+        expense.id,
+        session.user.id,
+        expense.amount
+      );
+      window.location.href = init_point;
+    } catch (err) {
+      toast.error(err.message, 'Error MercadoPago');
+      setMpLoading(null);
+    }
   }
 
   const currentPeriod = new Date().toISOString().slice(0, 7); // "YYYY-MM"
@@ -206,12 +222,25 @@ export default function ExpensesView({ session, userProfile }) {
                           {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
                         </span>
                       ) : canPay ? (
-                        <button
-                          onClick={() => setPayTarget(exp)}
-                          className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
-                        >
-                          <CreditCard size={12} /> Registrar pago
-                        </button>
+                        <div className="flex flex-col gap-1.5">
+                          <button
+                            onClick={() => handleMercadoPago(exp)}
+                            disabled={mpLoading === exp.id}
+                            className="flex items-center gap-1.5 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-60"
+                            style={{ backgroundColor: '#009EE3' }}
+                          >
+                            {mpLoading === exp.id
+                              ? <Loader2 size={12} className="animate-spin" />
+                              : <ExternalLink size={12} />}
+                            Pagar con MercadoPago
+                          </button>
+                          <button
+                            onClick={() => setPayTarget(exp)}
+                            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                          >
+                            <CreditCard size={12} /> Registrar pago
+                          </button>
+                        </div>
                       ) : null}
                     </div>
                   </div>
@@ -258,12 +287,25 @@ export default function ExpensesView({ session, userProfile }) {
                     <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{formatCurrency(exp.amount)}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
                     {canPay && (
-                      <button
-                        onClick={() => setPayTarget(exp)}
-                        className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
-                      >
-                        <CreditCard size={11} /> Pagar
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleMercadoPago(exp)}
+                          disabled={mpLoading === exp.id}
+                          className="flex items-center gap-1 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-60"
+                          style={{ backgroundColor: '#009EE3' }}
+                        >
+                          {mpLoading === exp.id
+                            ? <Loader2 size={11} className="animate-spin" />
+                            : <ExternalLink size={11} />}
+                          MP
+                        </button>
+                        <button
+                          onClick={() => setPayTarget(exp)}
+                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <CreditCard size={11} /> Manual
+                        </button>
+                      </div>
                     )}
                     {myPay && (
                       <button

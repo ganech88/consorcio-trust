@@ -1248,3 +1248,28 @@ export const updatePaymentStatus = async (paymentId, status, notes) => {
   if (error) throw error;
   return data;
 };
+
+// ─── MercadoPago ───────────────────────────────────────────────────────────────
+
+export const createMercadoPagoPayment = async (expenseId, userId, amount) => {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ expenseId, userId, amount }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Error al crear el pago en MercadoPago');
+  }
+
+  return res.json();
+};

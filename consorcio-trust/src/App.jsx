@@ -89,6 +89,31 @@ function AppContent() {
   const { dark, toggle: toggleTheme } = useTheme();
   const toast = useToast();
 
+  // Manejar retorno desde MercadoPago con query params ?payment=success|failure|pending&expense=ID
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const expenseId = params.get('expense');
+
+    if (paymentStatus) {
+      if (paymentStatus === 'success') {
+        toast.success('¡Pago procesado correctamente! Puede demorar unos minutos en reflejarse.', 'Pago aprobado');
+      } else if (paymentStatus === 'failure') {
+        toast.error('El pago no pudo procesarse. Podés intentarlo de nuevo.', 'Pago rechazado');
+      } else if (paymentStatus === 'pending') {
+        toast.info('Tu pago está siendo procesado. Te avisaremos cuando se confirme.', 'Pago pendiente');
+      }
+
+      // Limpiar los query params de la URL sin recargar la página
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+
+      // Navegar a expensas si venimos de un pago
+      if (expenseId) setView(VIEWS.EXPENSES);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (session?.user?.id) {
       loadData(session.user.id);
