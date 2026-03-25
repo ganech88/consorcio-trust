@@ -345,12 +345,13 @@ export async function uploadConsortiumDocument(file, name, category, consortiumI
   const { data, error } = await supabase
     .from('documents')
     .insert([{
-      name,
-      category: category || 'general',
-      file_path: fileName,
+      title: name,
+      doc_type: category || 'general',
+      file_name: fileName,
       file_url: publicUrl,
       consortium_id: consortiumId || null,
-      uploaded_by: uploadedBy,
+      user_id: uploadedBy,
+      status: 'approved',
     }])
     .select();
 
@@ -751,57 +752,6 @@ export async function addVisitor({ unitId, userId, name, docNumber, consortiumId
 export async function removeVisitor(id) {
   const { error } = await supabase.from('visitors').delete().eq('id', id);
   if (error) throw error;
-}
-
-// ─── Encomiendas ──────────────────────────────────────────────────────────────
-
-export async function fetchPackages(userId) {
-  const { data, error } = await supabase
-    .from('packages')
-    .select('*')
-    .eq('user_id', userId)
-    .order('received_at', { ascending: false });
-
-  if (error) { console.warn('packages:', error.message); return []; }
-  return data || [];
-}
-
-export async function fetchAllPackages() {
-  const { data, error } = await supabase
-    .from('packages')
-    .select('*, profiles(full_name, unit_id)')
-    .order('received_at', { ascending: false });
-
-  if (error) { console.warn('packages:', error.message); return []; }
-  return data || [];
-}
-
-export async function registerPackage({ unitId, userId, description, consortiumId }) {
-  const { data, error } = await supabase
-    .from('packages')
-    .insert([{
-      unit_id: unitId,
-      user_id: userId,
-      description,
-      consortium_id: consortiumId || null,
-    }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-export async function deliverPackage(id) {
-  const { data, error } = await supabase
-    .from('packages')
-    .update({ delivered_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
 }
 
 // ─── Balance financiero ────────────────────────────────────────────────────────

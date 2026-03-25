@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   fetchVisitors, addVisitor, removeVisitor,
-  fetchPackages, fetchAllPackages, registerPackage, deliverPackage,
+  fetchUserPackages, createPackage, collectPackage,
   fetchAuthorizedVisitors, createAuthorizedVisitor, checkInVisitor,
 } from '../services/data.service';
 import { useToast } from './Toast';
@@ -493,9 +493,7 @@ function PackagesSection({ session, userProfile, isAdmin }) {
   const [delivering, setDelivering] = useState(null);
 
   useEffect(() => {
-    const fetcher = isAdmin ? fetchAllPackages : fetchPackages;
-    const arg = isAdmin ? undefined : session.user.id;
-    fetcher(arg)
+    fetchUserPackages(session.user.id, isAdmin)
       .then(setPackages)
       .catch(e => toast.error(e.message, 'Error al cargar encomiendas'))
       .finally(() => setLoading(false));
@@ -506,11 +504,11 @@ function PackagesSection({ session, userProfile, isAdmin }) {
     if (!form.description.trim()) { toast.error('Ingresá una descripción'); return; }
     setSaving(true);
     try {
-      const pkg = await registerPackage({
-        unitId: isAdmin ? (form.unitId.trim() || 'N/A') : (userProfile?.unit_id ?? ''),
-        userId: isAdmin ? (form.userId || null) : session.user.id,
-        description: form.description.trim(),
+      const pkg = await createPackage({
         consortiumId: userProfile?.consortium_id,
+        carrier: form.unitId.trim() || null,
+        description: form.description.trim(),
+        loggedBy: session.user.id,
       });
       setPackages(prev => [pkg, ...prev]);
       setForm({ description: '', unitId: '', userId: '' });
@@ -526,7 +524,7 @@ function PackagesSection({ session, userProfile, isAdmin }) {
   async function handleDeliver(id) {
     setDelivering(id);
     try {
-      const updated = await deliverPackage(id);
+      const updated = await collectPackage(id);
       setPackages(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
       toast.success('Entregado al propietario');
     } catch (e) {
@@ -536,8 +534,8 @@ function PackagesSection({ session, userProfile, isAdmin }) {
     }
   }
 
-  const pending   = packages.filter(p => !p.delivered_at);
-  const delivered = packages.filter(p => p.delivered_at);
+  const pending   = packages.filter(p => p.status !== 'collected');
+  const delivered = packages.filter(p => p.status === 'collected');
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
@@ -568,14 +566,13 @@ function PackagesSection({ session, userProfile, isAdmin }) {
         <form onSubmit={handleRegister} className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Unidad</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Unidad / Destinatario</label>
               <input
                 type="text"
                 value={form.unitId}
                 onChange={e => setForm(p => ({ ...p, unitId: e.target.value }))}
                 placeholder="Ej: 3B"
                 className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
-                required
               />
             </div>
             <div>
@@ -615,9 +612,9 @@ function PackagesSection({ session, userProfile, isAdmin }) {
           packages.map(pkg => (
             <div key={pkg.id} className="p-4 flex items-center gap-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                pkg.delivered_at ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'
+                pkg.status === 'collected' ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'
               }`}>
-                {pkg.delivered_at
+                {pkg.status === 'collected'
                   ? <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400" />
                   : <Clock size={16} className="text-amber-600 dark:text-amber-400" />
                 }
@@ -625,16 +622,16 @@ function PackagesSection({ session, userProfile, isAdmin }) {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{pkg.description}</p>
                 <p className="text-xs text-slate-400 dark:text-slate-500">
-                  {isAdmin && pkg.unit_id ? `Unidad ${pkg.unit_id} · ` : ''}
-                  Recibido: {formatDateTime(pkg.received_at)}
+                  {isAdmin && pkg.carrier ? `Unidad ${pkg.carrier} · ` : ''}
+                  Recibido: {formatDateTime(pkg.logged_at)}
                 </p>
-                {pkg.delivered_at && (
+                {pkg.status === 'collected' && (
                   <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    Entregado: {formatDateTime(pkg.delivered_at)}
+                    Entregado: {formatDateTime(pkg.collected_at)}
                   </p>
                 )}
               </div>
-              {isAdmin && !pkg.delivered_at && (
+              {isAdmin && pkg.status !== 'collected' && (
                 <button
                   onClick={() => handleDeliver(pkg.id)}
                   disabled={delivering === pkg.id}

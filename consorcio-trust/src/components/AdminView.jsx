@@ -11,7 +11,6 @@ import {
   fetchAnnouncements, createAnnouncement, deleteAnnouncement,
   fetchDocuments, updateDocumentStatus, deleteDocument,
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
-  fetchAllConversations,
   fetchMaintenanceTasks, createMaintenanceTask, completeMaintenanceTask,
   updateConsortium, fetchConsortiumMembers,
   fetchAllProfiles, updateProfileRole, regenerateInviteCode,
