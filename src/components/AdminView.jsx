@@ -3,7 +3,7 @@ import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2, Pin,
   Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy, RefreshCw,
-  Eye, CreditCard, Gavel, Eye as EyeIcon, Users2,
+  Eye, CreditCard, Gavel, Eye as EyeIcon, Users2, Bell, CreditCard as MpIcon, Save,
 } from 'lucide-react';
 import {
   fetchAllClaims, updateClaimStatus,
@@ -18,6 +18,7 @@ import {
   fetchExpenses, createExpense, updateExpense, deleteExpense, updatePaymentStatus,
   fetchFines, createFine, updateFineStatus, deleteFine,
   fetchAnnouncementReadCount,
+  updateReminderSettings, fetchMpConfig, saveMpConfig,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -1627,18 +1628,31 @@ function ConsorcioTab({ session, userProfile }) {
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [form, setForm] = useState({ name: '', address: '', city: '' });
+  const [reminderForm, setReminderForm] = useState({ enabled: false, days_before: 3, days_after: 2 });
+  const [savingReminder, setSavingReminder] = useState(false);
+  const [mpForm, setMpForm] = useState({ access_token: '', public_key: '', enabled: false });
+  const [savingMp, setSavingMp] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) { setLoading(false); return; }
     Promise.all([
       import('../services/data.service').then(m => m.fetchConsortium(userProfile.consortium_id)),
       fetchConsortiumMembers(userProfile.consortium_id),
-    ]).then(([c, m]) => {
+      fetchMpConfig(userProfile.consortium_id),
+    ]).then(([c, m, mp]) => {
       if (c) {
         setConsortium(c);
         setForm({ name: c.name || '', address: c.address || '', city: c.city || '' });
+        setReminderForm({
+          enabled: c.reminder_enabled ?? false,
+          days_before: c.reminder_days_before_due ?? 3,
+          days_after: c.reminder_days_after_due ?? 2,
+        });
       }
       setMembers(m);
+      if (mp) {
+        setMpForm({ access_token: mp.access_token || '', public_key: mp.public_key || '', enabled: mp.enabled ?? false });
+      }
     }).catch(e => toast.error(e.message, 'Error al cargar consorcio'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, toast]);
@@ -1681,6 +1695,41 @@ function ConsorcioTab({ session, userProfile }) {
       toast.error(e.message, 'Error al regenerar código');
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function handleSaveReminder(e) {
+    e.preventDefault();
+    setSavingReminder(true);
+    try {
+      await updateReminderSettings(userProfile.consortium_id, {
+        reminder_enabled: reminderForm.enabled,
+        reminder_days_before_due: Number(reminderForm.days_before),
+        reminder_days_after_due: Number(reminderForm.days_after),
+      });
+      toast.success('Configuración de recordatorios guardada');
+    } catch (err) {
+      toast.error(err.message, 'Error al guardar');
+    } finally {
+      setSavingReminder(false);
+    }
+  }
+
+  async function handleSaveMp(e) {
+    e.preventDefault();
+    if (!mpForm.access_token.trim()) { toast.error('El Access Token es requerido'); return; }
+    setSavingMp(true);
+    try {
+      await saveMpConfig(userProfile.consortium_id, {
+        access_token: mpForm.access_token.trim(),
+        public_key: mpForm.public_key.trim() || null,
+        enabled: mpForm.enabled,
+      });
+      toast.success('Configuración MercadoPago guardada');
+    } catch (err) {
+      toast.error(err.message, 'Error al guardar');
+    } finally {
+      setSavingMp(false);
     }
   }
 
@@ -1768,6 +1817,115 @@ function ConsorcioTab({ session, userProfile }) {
           </div>
         </div>
       )}
+
+      {/* Recordatorios de deuda */}
+      <form onSubmit={handleSaveReminder} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+          <Bell size={16} className="text-amber-500" />
+          Recordatorios automáticos de deuda
+        </h4>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <div
+            onClick={() => setReminderForm(p => ({ ...p, enabled: !p.enabled }))}
+            className={`relative w-10 h-5 rounded-full transition-colors ${reminderForm.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${reminderForm.enabled ? 'translate-x-5' : ''}`} />
+          </div>
+          <span className="text-sm text-slate-700 dark:text-slate-300">
+            {reminderForm.enabled ? 'Activado' : 'Desactivado'}
+          </span>
+        </label>
+        {reminderForm.enabled && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+                Días antes del vencimiento
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="30"
+                value={reminderForm.days_before}
+                onChange={e => setReminderForm(p => ({ ...p, days_before: e.target.value }))}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+                Días después del vencimiento
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="30"
+                value={reminderForm.days_after}
+                onChange={e => setReminderForm(p => ({ ...p, days_after: e.target.value }))}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 outline-none"
+              />
+            </div>
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={savingReminder}
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {savingReminder ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Guardar recordatorios
+        </button>
+      </form>
+
+      {/* MercadoPago */}
+      <form onSubmit={handleSaveMp} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+          <MpIcon size={16} className="text-sky-500" />
+          Integración MercadoPago
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Permite que los residentes paguen sus expensas online con tarjeta, transferencia o efectivo.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Access Token</label>
+            <input
+              type="password"
+              value={mpForm.access_token}
+              onChange={e => setMpForm(p => ({ ...p, access_token: e.target.value }))}
+              placeholder="APP_USR-..."
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-sky-500 outline-none font-mono"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Public Key</label>
+            <input
+              type="text"
+              value={mpForm.public_key}
+              onChange={e => setMpForm(p => ({ ...p, public_key: e.target.value }))}
+              placeholder="APP_USR-..."
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-sky-500 outline-none font-mono"
+            />
+          </div>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div
+              onClick={() => setMpForm(p => ({ ...p, enabled: !p.enabled }))}
+              className={`relative w-10 h-5 rounded-full transition-colors ${mpForm.enabled ? 'bg-sky-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mpForm.enabled ? 'translate-x-5' : ''}`} />
+            </div>
+            <span className="text-sm text-slate-700 dark:text-slate-300">
+              {mpForm.enabled ? 'Habilitado para residentes' : 'Deshabilitado'}
+            </span>
+          </label>
+        </div>
+        <button
+          type="submit"
+          disabled={savingMp}
+          className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {savingMp ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Guardar MercadoPago
+        </button>
+      </form>
 
       {/* Lista de miembros */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">

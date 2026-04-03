@@ -17,6 +17,7 @@ export const VIEWS = {
   PACKAGES: 'paqueteria',
   BOARD: 'tablon',
   DOCUMENTS: 'documents',
+  SUPPLIERS: 'proveedores',
 };
 
 // --- Estados de reclamos ---
@@ -46,6 +47,7 @@ export const NAV_ITEMS = [
   { id: VIEWS.AMENITIES,     label: 'Reservas',      iconName: 'Calendar' },
   { id: VIEWS.ACCESS,        label: 'Accesos',       iconName: 'DoorOpen' },
   { id: VIEWS.FINANCE,       label: 'Finanzas',      iconName: 'TrendingUp' },
+  { id: VIEWS.SUPPLIERS,     label: 'Proveedores',   iconName: 'Store' },
   { id: VIEWS.DOCS,          label: 'Documentos',    iconName: 'FileText' },
   { id: VIEWS.DOCUMENTS,    label: 'Mis Documentos', iconName: 'FileText' },
   { id: VIEWS.CONTACTS,      label: 'Contactos',     iconName: 'Phone' },
@@ -56,7 +58,7 @@ export const NAV_SECTIONS = [
   { label: 'Tu Hogar',   keys: ['dashboard', 'expensas', 'calendario', 'paqueteria'] },
   { label: 'Comunidad',  keys: ['anuncios', 'reclamos', 'chat', 'votaciones', 'tablon'] },
   { label: 'Espacios',   keys: ['amenities', 'accesos'] },
-  { label: 'Info',       keys: ['finanzas', 'docs', 'documents', 'contactos'] },
+  { label: 'Info',       keys: ['finanzas', 'proveedores', 'docs', 'documents', 'contactos'] },
 ];
 
 // --- Amenities disponibles ---

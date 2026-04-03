@@ -33,6 +33,7 @@ const FinanceView     = lazy(() => import('./components/FinanceView'));
 const PackagesView    = lazy(() => import('./components/PackagesView'));
 const BoardView       = lazy(() => import('./components/BoardView'));
 const DocumentsView   = lazy(() => import('./components/DocumentsView'));
+const SuppliersView   = lazy(() => import('./components/SuppliersView'));
 
 const VIEW_TITLES = {
   [VIEWS.DASHBOARD]:     'Dashboard',
@@ -52,6 +53,7 @@ const VIEW_TITLES = {
   [VIEWS.PACKAGES]:      'Paquetería',
   [VIEWS.BOARD]:         'Tablón',
   [VIEWS.DOCUMENTS]:     'Mis Documentos',
+  [VIEWS.SUPPLIERS]:     'Proveedores',
 };
 
 function ViewSkeleton() {
@@ -316,6 +318,9 @@ function AppContent() {
                 )}
                 {view === VIEWS.DOCUMENTS && (
                   <DocumentsView session={session} userProfile={userProfile} />
+                )}
+                {view === VIEWS.SUPPLIERS && (
+                  <SuppliersView session={session} userProfile={userProfile} />
                 )}
               </Suspense>
             )}
