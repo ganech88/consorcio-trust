@@ -29,3 +29,9 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Claude Code config (user-specific)
+.claude/
+
+# Empty nested scaffold
+consorcio-trust/
