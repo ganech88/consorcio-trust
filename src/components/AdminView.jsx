@@ -4,7 +4,9 @@ import {
   ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2, Pin,
   Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy, RefreshCw,
   Eye, CreditCard, Gavel, Eye as EyeIcon, Users2, Bell, CreditCard as MpIcon, Save,
+  Paperclip,
 } from 'lucide-react';
+import FileUploadInline from './FileUpload';
 import {
   fetchAllClaims, updateClaimStatus,
   fetchAllReservations, updateReservationStatus,
@@ -2010,6 +2012,7 @@ function FinesTab({ session, userProfile }) {
     reason: '',
     period: currentPeriod,
     notes: '',
+    attachment_url: '',
   });
 
   useEffect(() => {
@@ -2044,9 +2047,10 @@ function FinesTab({ session, userProfile }) {
         period: form.period || null,
         notes: form.notes || null,
         appliedBy: session.user.id,
+        attachmentUrl: form.attachment_url || null,
       });
       setFines(prev => [fine, ...prev]);
-      setForm({ unit_id: '', user_id: '', amount: '', reason: '', period: currentPeriod, notes: '' });
+      setForm({ unit_id: '', user_id: '', amount: '', reason: '', period: currentPeriod, notes: '', attachment_url: '' });
       setShowForm(false);
       toast.success('Multa aplicada');
     } catch (err) {
@@ -2221,6 +2225,18 @@ function FinesTab({ session, userProfile }) {
             />
           </div>
 
+          {/* Adjunto: imagen de infracción o documento */}
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              Adjunto (imagen de infracción o documento)
+            </label>
+            <FileUploadInline
+              value={form.attachment_url}
+              onChange={url => setForm(prev => ({ ...prev, attachment_url: url || '' }))}
+              folder="fines"
+            />
+          </div>
+
           <div className="flex gap-3 justify-end pt-1">
             <button
               type="button"
@@ -2274,6 +2290,16 @@ function FinesTab({ session, userProfile }) {
                     )}
                     {fine.notes && (
                       <p className="text-xs text-slate-400 dark:text-slate-500 truncate italic">{fine.notes}</p>
+                    )}
+                    {fine.attachment_url && (
+                      <a
+                        href={fine.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5 mt-0.5"
+                      >
+                        <Paperclip size={10} /> Ver adjunto
+                      </a>
                     )}
                   </div>
 

@@ -138,7 +138,31 @@ export async function createExpenseItem({ category, amount, consortiumId }) {
 // ─── Pagos ────────────────────────────────────────────────────────────────────
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+export async function uploadAttachment(file, folder = 'general') {
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error('Tipo de archivo no permitido. Solo JPG, PNG, WebP o PDF.');
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error('El archivo supera el límite de 10 MB.');
+  }
+  const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'pdf'].includes(ext) ? ext : 'bin';
+  const fileName = `${folder}/${crypto.randomUUID()}.${safeExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('comprobantes')
+    .upload(fileName, file, { contentType: file.type });
+
+  if (uploadError) throw uploadError;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('comprobantes')
+    .getPublicUrl(fileName);
+
+  return publicUrl;
+}
 
 export async function uploadPaymentProof(file) {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -1286,7 +1310,7 @@ export async function fetchMyFines(userId) {
   return data || [];
 }
 
-export async function createFine({ consortiumId, unitId, userId, amount, reason, period, notes, appliedBy }) {
+export async function createFine({ consortiumId, unitId, userId, amount, reason, period, notes, appliedBy, attachmentUrl }) {
   const { data, error } = await supabase
     .from('fines')
     .insert([{
@@ -1298,6 +1322,7 @@ export async function createFine({ consortiumId, unitId, userId, amount, reason,
       period: period || null,
       notes: notes || null,
       applied_by: appliedBy,
+      attachment_url: attachmentUrl || null,
     }])
     .select()
     .single();
