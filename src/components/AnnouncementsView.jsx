@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Megaphone, AlertTriangle, Info, Calendar, Pin, Loader2 } from 'lucide-react';
-import { fetchAnnouncements } from '../services/data.service';
+import { useState, useEffect, useRef } from 'react';
+import { Megaphone, AlertTriangle, Info, Calendar, Pin, Loader2, CheckCheck } from 'lucide-react';
+import { fetchAnnouncements, markAnnouncementRead, fetchMyAnnouncementReads } from '../services/data.service';
 import { useData } from '../context/DataContext';
 
 const TYPE_CONFIG = {
@@ -36,11 +36,28 @@ function isNew(dateStr) {
   return Date.now() - new Date(dateStr).getTime() < SEVEN_DAYS_MS;
 }
 
-function AnnouncementCard({ announcement }) {
+function AnnouncementCard({ announcement, isRead, onRead }) {
   const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef(null);
   const config = TYPE_CONFIG[announcement.type] || TYPE_CONFIG.info;
   const Icon = config.icon;
   const newItem = isNew(announcement.created_at);
+
+  // Marcar como leído cuando la card entra en el viewport
+  useEffect(() => {
+    if (isRead) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onRead(announcement.id);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (cardRef.current) observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [announcement.id, isRead, onRead]);
 
   const formattedDate = new Date(announcement.created_at).toLocaleDateString('es-AR', {
     day: 'numeric',
@@ -50,6 +67,7 @@ function AnnouncementCard({ announcement }) {
 
   return (
     <div
+      ref={cardRef}
       className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
         announcement.pinned ? config.border : 'border-slate-100 dark:border-slate-700'
       }`}
@@ -78,6 +96,11 @@ function AnnouncementCard({ announcement }) {
                   Nuevo
                 </span>
               )}
+              {isRead && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500">
+                  <CheckCheck size={10} /> Leído
+                </span>
+              )}
             </div>
 
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formattedDate}</p>
@@ -104,18 +127,34 @@ function AnnouncementCard({ announcement }) {
 export default function AnnouncementsView() {
   const { userProfile } = useData();
   const [announcements, setAnnouncements] = useState([]);
+  const [readIds, setReadIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchAnnouncements(userProfile?.consortium_id)
-      .then(setAnnouncements)
+    if (!userProfile?.consortium_id) return;
+
+    Promise.all([
+      fetchAnnouncements(userProfile.consortium_id),
+      fetchMyAnnouncementReads(userProfile.id),
+    ])
+      .then(([ann, reads]) => {
+        setAnnouncements(ann);
+        setReadIds(new Set(reads));
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userProfile?.consortium_id, userProfile?.id]);
+
+  function handleRead(announcementId) {
+    if (readIds.has(announcementId)) return;
+    setReadIds(prev => new Set([...prev, announcementId]));
+    markAnnouncementRead(announcementId, userProfile.id);
+  }
 
   const pinned = announcements.filter(a => a.pinned);
   const rest = announcements.filter(a => !a.pinned);
+  const unreadCount = announcements.filter(a => !readIds.has(a.id)).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -124,7 +163,14 @@ export default function AnnouncementsView() {
           <Megaphone size={24} />
           Novedades del Consorcio
         </h3>
-        <p className="text-amber-100 mt-1 text-sm">Anuncios importantes y comunicados de la administración</p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-amber-100 text-sm">Anuncios importantes y comunicados de la administración</p>
+          {!loading && unreadCount > 0 && (
+            <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+              {unreadCount} sin leer
+            </span>
+          )}
+        </div>
       </div>
 
       {loading && (
@@ -148,7 +194,14 @@ export default function AnnouncementsView() {
 
       {!loading && pinned.length > 0 && (
         <div className="space-y-4">
-          {pinned.map(a => <AnnouncementCard key={a.id} announcement={a} />)}
+          {pinned.map(a => (
+            <AnnouncementCard
+              key={a.id}
+              announcement={a}
+              isRead={readIds.has(a.id)}
+              onRead={handleRead}
+            />
+          ))}
         </div>
       )}
 
@@ -157,7 +210,14 @@ export default function AnnouncementsView() {
           <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
             {pinned.length > 0 ? 'Anteriores' : 'Comunicados'}
           </h4>
-          {rest.map(a => <AnnouncementCard key={a.id} announcement={a} />)}
+          {rest.map(a => (
+            <AnnouncementCard
+              key={a.id}
+              announcement={a}
+              isRead={readIds.has(a.id)}
+              onRead={handleRead}
+            />
+          ))}
         </div>
       )}
     </div>

@@ -1248,3 +1248,122 @@ export const updatePaymentStatus = async (paymentId, status, notes) => {
   if (error) throw error;
   return data;
 };
+
+// ─── Multas ───────────────────────────────────────────────────────────────────
+
+export async function fetchFines(consortiumId) {
+  const { data, error } = await supabase
+    .from('fines')
+    .select('*, profiles(full_name, unit_id)')
+    .eq('consortium_id', consortiumId)
+    .order('created_at', { ascending: false });
+
+  if (error) { console.warn('fines:', error.message); return []; }
+  return data || [];
+}
+
+export async function fetchUnitFines(unitId, consortiumId) {
+  const { data, error } = await supabase
+    .from('fines')
+    .select('*')
+    .eq('unit_id', unitId)
+    .eq('consortium_id', consortiumId)
+    .eq('status', 'active')
+    .order('fine_date', { ascending: false });
+
+  if (error) { console.warn('fetchUnitFines:', error.message); return []; }
+  return data || [];
+}
+
+export async function fetchMyFines(userId) {
+  const { data, error } = await supabase
+    .from('fines')
+    .select('*')
+    .eq('user_id', userId)
+    .order('fine_date', { ascending: false });
+
+  if (error) { console.warn('fetchMyFines:', error.message); return []; }
+  return data || [];
+}
+
+export async function createFine({ consortiumId, unitId, userId, amount, reason, period, notes, appliedBy }) {
+  const { data, error } = await supabase
+    .from('fines')
+    .insert([{
+      consortium_id: consortiumId,
+      unit_id: unitId,
+      user_id: userId || null,
+      amount: Number(amount),
+      reason,
+      period: period || null,
+      notes: notes || null,
+      applied_by: appliedBy,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateFineStatus(fineId, status) {
+  const { data, error } = await supabase
+    .from('fines')
+    .update({ status })
+    .eq('id', fineId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteFine(fineId) {
+  const { error } = await supabase.from('fines').delete().eq('id', fineId);
+  if (error) throw error;
+}
+
+export async function fetchFinesSummaryByPeriod(consortiumId, period) {
+  const { data, error } = await supabase
+    .from('fines')
+    .select('amount')
+    .eq('consortium_id', consortiumId)
+    .eq('period', period)
+    .eq('status', 'active');
+
+  if (error) { console.warn('fetchFinesSummaryByPeriod:', error.message); return 0; }
+  return (data || []).reduce((sum, f) => sum + Number(f.amount), 0);
+}
+
+// ─── Tracking de lecturas de comunicados ──────────────────────────────────────
+
+export async function markAnnouncementRead(announcementId, userId) {
+  const { error } = await supabase
+    .from('announcement_reads')
+    .upsert(
+      { announcement_id: announcementId, user_id: userId },
+      { onConflict: 'announcement_id,user_id' }
+    );
+
+  if (error) console.warn('markAnnouncementRead:', error.message);
+}
+
+export async function fetchMyAnnouncementReads(userId) {
+  const { data, error } = await supabase
+    .from('announcement_reads')
+    .select('announcement_id')
+    .eq('user_id', userId);
+
+  if (error) { console.warn('fetchMyAnnouncementReads:', error.message); return []; }
+  return (data || []).map(r => r.announcement_id);
+}
+
+export async function fetchAnnouncementReadCount(announcementId) {
+  const { count, error } = await supabase
+    .from('announcement_reads')
+    .select('id', { count: 'exact', head: true })
+    .eq('announcement_id', announcementId);
+
+  if (error) { console.warn('fetchAnnouncementReadCount:', error.message); return 0; }
+  return count || 0;
+}
