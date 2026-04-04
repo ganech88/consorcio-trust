@@ -21,8 +21,68 @@ import {
   fetchFines, createFine, updateFineStatus, deleteFine,
   fetchAnnouncementReadCount,
   updateReminderSettings, fetchMpConfig, saveMpConfig,
+  fetchExpenseReport,
 } from '../services/data.service';
+import { exportToExcel, exportToPdf } from '../lib/export-utils';
 import { useToast } from './Toast';
+
+// ─── Exportar reporte de expensa ──────────────────────────────────────────────
+
+const EXPORT_COLUMNS = [
+  { header: 'Unidad',       key: 'unidad' },
+  { header: 'Propietario',  key: 'propietario' },
+  { header: 'Teléfono',     key: 'telefono' },
+  { header: 'Monto ($)',    key: 'monto' },
+  { header: '% del total',  key: 'porcentaje' },
+  { header: 'Estado',       key: 'estado' },
+  { header: 'Fecha pago',   key: 'fecha_pago' },
+  { header: 'Notas',        key: 'notas' },
+];
+
+function ExpenseExportButton({ expenseId, expenseTitle }) {
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+
+  async function handleExport(format) {
+    setLoading(true);
+    try {
+      const rows = await fetchExpenseReport(expenseId);
+      if (!rows.length) { toast.info('No hay pagos para exportar'); return; }
+      const fileName = `expensa-${expenseTitle.replace(/\s+/g, '-').toLowerCase()}`;
+      if (format === 'excel') {
+        await exportToExcel(rows, EXPORT_COLUMNS, fileName, 'Pagos');
+      } else {
+        await exportToPdf(rows, EXPORT_COLUMNS, `Reporte: ${expenseTitle}`, fileName);
+      }
+    } catch (err) {
+      toast.error(err.message, 'Error al exportar');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => handleExport('excel')}
+        disabled={loading}
+        title="Exportar Excel"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
+      >
+        {loading ? <Loader2 size={11} className="animate-spin" /> : null}
+        XLS
+      </button>
+      <button
+        onClick={() => handleExport('pdf')}
+        disabled={loading}
+        title="Exportar PDF"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
+      >
+        PDF
+      </button>
+    </div>
+  );
+}
 
 const TABS = [
   { id: 'usuarios',      label: 'Usuarios',       icon: Users },
@@ -530,9 +590,12 @@ function ExpensesTab({ session, userProfile }) {
 
                 {isExpanded && (
                   <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                      Pagos recibidos ({payments.length})
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Pagos recibidos ({payments.length})
+                      </p>
+                      <ExpenseExportButton expenseId={exp.id} expenseTitle={exp.title} />
+                    </div>
                     {payments.length === 0 ? (
                       <p className="text-xs text-slate-400 dark:text-slate-500">Sin pagos registrados</p>
                     ) : (

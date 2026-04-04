@@ -18,6 +18,7 @@ export const VIEWS = {
   BOARD: 'tablon',
   DOCUMENTS: 'documents',
   SUPPLIERS: 'proveedores',
+  SUPER_ADMIN: 'superadmin',
 };
 
 // --- Estados de reclamos ---

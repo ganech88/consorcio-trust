@@ -13,6 +13,7 @@ import BottomNav from './components/BottomNav';
 import NotificationsPanel from './components/NotificationsPanel';
 import Logo from './components/Logo';
 import { SkeletonCard, SkeletonChart, SkeletonList } from './components/Skeleton';
+import ConsortiumSwitcher from './components/ConsortiumSwitcher';
 
 // Lazy loading de las vistas — cada una carga su bundle solo cuando se necesita
 const Dashboard       = lazy(() => import('./components/Dashboard'));
@@ -34,6 +35,7 @@ const PackagesView    = lazy(() => import('./components/PackagesView'));
 const BoardView       = lazy(() => import('./components/BoardView'));
 const DocumentsView   = lazy(() => import('./components/DocumentsView'));
 const SuppliersView   = lazy(() => import('./components/SuppliersView'));
+const SuperAdminView  = lazy(() => import('./components/SuperAdminView'));
 
 const VIEW_TITLES = {
   [VIEWS.DASHBOARD]:     'Dashboard',
@@ -54,6 +56,7 @@ const VIEW_TITLES = {
   [VIEWS.BOARD]:         'Tablón',
   [VIEWS.DOCUMENTS]:     'Mis Documentos',
   [VIEWS.SUPPLIERS]:     'Proveedores',
+  [VIEWS.SUPER_ADMIN]:   'Super Admin',
 };
 
 function ViewSkeleton() {
@@ -223,7 +226,16 @@ function AppContent() {
             <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{VIEW_TITLES[view]}</h2>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {['admin','super_admin'].includes(userProfile?.role) && (
+              <ConsortiumSwitcher
+                userProfile={userProfile}
+                onSwitch={(updated) => {
+                  setUserProfile(updated);
+                  loadData(session.user.id);
+                }}
+              />
+            )}
             <button
               onClick={toggleTheme}
               className="text-slate-400 dark:text-slate-500 hover:text-accent-500 dark:hover:text-accent-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -321,6 +333,9 @@ function AppContent() {
                 )}
                 {view === VIEWS.SUPPLIERS && (
                   <SuppliersView session={session} userProfile={userProfile} />
+                )}
+                {view === VIEWS.SUPER_ADMIN && (
+                  <SuperAdminView session={session} userProfile={userProfile} />
                 )}
               </Suspense>
             )}

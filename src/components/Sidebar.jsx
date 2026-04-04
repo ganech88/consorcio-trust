@@ -1,7 +1,7 @@
 import {
   Home, AlertCircle, Calendar, FileText, LogOut, X, Megaphone, Phone,
   User, ShieldCheck, Receipt, MessageSquare, Vote, CalendarDays, DoorOpen,
-  TrendingUp, PackageSearch, LayoutList,
+  TrendingUp, PackageSearch, LayoutList, Store, Crown,
 } from 'lucide-react';
 import { VIEWS, NAV_ITEMS, NAV_SECTIONS } from '../lib/constants';
 import { useData } from '../context/DataContext';
@@ -10,11 +10,12 @@ import Logo from './Logo';
 const ICON_MAP = {
   Home, AlertCircle, Calendar, FileText, Megaphone, Phone,
   Receipt, MessageSquare, Vote, CalendarDays, DoorOpen, TrendingUp,
-  PackageSearch, LayoutList,
+  PackageSearch, LayoutList, Store,
 };
 
 export default function Sidebar({ session, userProfile, currentView, onNavigate, isOpen, onClose, onLogout }) {
   const isAdmin = userProfile?.role === 'admin';
+  const isSuperAdmin = userProfile?.role === 'super_admin';
   const { unreadChatCount } = useData();
 
   // Build a map from view id to NAV_ITEM for quick lookup
@@ -129,26 +130,43 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
           ))}
 
           {/* Admin panel — shown only for admins, at bottom of nav */}
-          {isAdmin && (
+          {(isAdmin || isSuperAdmin) && (
             <div>
               <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-500 px-3 mb-1.5">
                 Admin
               </p>
-              <button
-                onClick={() => onNavigate(VIEWS.ADMIN)}
-                className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-[3px] ${
-                  currentView === VIEWS.ADMIN
-                    ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-sm border-slate-500'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100 border-transparent'
-                }`}
-                aria-current={currentView === VIEWS.ADMIN ? 'page' : undefined}
-              >
-                <ShieldCheck
-                  className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.ADMIN ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}
-                  size={18}
-                />
-                Panel Admin
-              </button>
+              {(isAdmin || isSuperAdmin) && (
+                <button
+                  onClick={() => onNavigate(VIEWS.ADMIN)}
+                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-[3px] ${
+                    currentView === VIEWS.ADMIN
+                      ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-sm border-slate-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100 border-transparent'
+                  }`}
+                >
+                  <ShieldCheck
+                    className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.ADMIN ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                    size={18}
+                  />
+                  Panel Admin
+                </button>
+              )}
+              {isSuperAdmin && (
+                <button
+                  onClick={() => onNavigate(VIEWS.SUPER_ADMIN)}
+                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-[3px] mt-0.5 ${
+                    currentView === VIEWS.SUPER_ADMIN
+                      ? 'bg-brand-700 text-white shadow-sm border-brand-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-300 border-transparent'
+                  }`}
+                >
+                  <Crown
+                    className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.SUPER_ADMIN ? 'text-white' : 'text-brand-400 dark:text-brand-500'}`}
+                    size={18}
+                  />
+                  Super Admin
+                </button>
+              )}
             </div>
           )}
         </nav>
