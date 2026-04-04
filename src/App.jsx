@@ -299,7 +299,7 @@ function AppContent() {
                 {view === VIEWS.DOCS && <DocsView />}
                 {view === VIEWS.CONTACTS && <ContactsView />}
                 {view === VIEWS.PROFILE && (
-                  <ProfileView session={session} userProfile={userProfile} onProfileUpdate={setUserProfile} />
+                  <ProfileView session={session} userProfile={userProfile} onProfileUpdate={setUserProfile} onLogout={handleLogout} />
                 )}
                 {view === VIEWS.ADMIN && (
                   <AdminView session={session} userProfile={userProfile} />

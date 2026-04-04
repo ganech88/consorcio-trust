@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { User, Building, Phone, Mail, Shield, Edit3, Save, X } from 'lucide-react';
+import { User, Building, Phone, Mail, Shield, Edit3, Save, X, LogOut } from 'lucide-react';
 import { useToast } from './Toast';
 import { updateProfile } from '../services/data.service';
 
-export default function ProfileView({ session, userProfile, onProfileUpdate }) {
+export default function ProfileView({ session, userProfile, onProfileUpdate, onLogout }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -164,6 +164,16 @@ export default function ProfileView({ session, userProfile, onProfileUpdate }) {
           </div>
         </div>
       </div>
+
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold text-sm transition-colors"
+        >
+          <LogOut size={16} />
+          Cerrar Sesión
+        </button>
+      )}
     </div>
   );
 }

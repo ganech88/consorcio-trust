@@ -106,14 +106,22 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
             <User size={16} className="text-slate-400 dark:text-slate-500 shrink-0" />
           </button>
 
-          {isAdmin && (
-            <div className="mt-2">
+          <div className="mt-2 flex items-center gap-2">
+            {(isAdmin || isSuperAdmin) && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full">
-                <ShieldCheck size={10} />
-                Administrador
+                {isSuperAdmin ? <Crown size={10} /> : <ShieldCheck size={10} />}
+                {isSuperAdmin ? 'Super Admin' : 'Administrador'}
               </span>
-            </div>
-          )}
+            )}
+            <button
+              onClick={onLogout}
+              className="ml-auto flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-0.5 rounded-lg transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut size={12} />
+              Salir
+            </button>
+          </div>
         </div>
 
         {/* Grouped navigation */}
