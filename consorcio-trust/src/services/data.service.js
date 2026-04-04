@@ -1249,6 +1249,42 @@ export const updatePaymentStatus = async (paymentId, status, notes) => {
   return data;
 };
 
+// ─── WhatsApp notifications ────────────────────────────────────────────────────
+
+export const fetchWhatsappNotifications = async (consortiumId) => {
+  const { data, error } = await supabase
+    .from('whatsapp_notifications')
+    .select('*')
+    .eq('consortium_id', consortiumId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.warn('whatsapp_notifications:', error.message); return []; }
+  return data || [];
+};
+
+export const sendWhatsappNotification = async (phone, message, consortiumId, userId) => {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-notification`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ phone, message, consortium_id: consortiumId, user_id: userId }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Error al enviar mensaje de WhatsApp');
+  }
+
+  return res.json();
+};
+
 // ─── MercadoPago ───────────────────────────────────────────────────────────────
 
 export const createMercadoPagoPayment = async (expenseId, userId, amount) => {

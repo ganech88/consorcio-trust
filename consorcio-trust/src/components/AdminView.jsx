@@ -3,7 +3,7 @@ import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2, Pin,
   Receipt, Users, Wrench, Plus, CheckCircle, Building2, Copy, RefreshCw,
-  Eye, CreditCard,
+  Eye, CreditCard, MessageSquare, Send,
 } from 'lucide-react';
 import {
   fetchAllClaims, updateClaimStatus,
@@ -16,6 +16,7 @@ import {
   updateConsortium, fetchConsortiumMembers,
   fetchAllProfiles, updateProfileRole, regenerateInviteCode,
   fetchExpenses, createExpense, updateExpense, deleteExpense, updatePaymentStatus,
+  fetchWhatsappNotifications, sendWhatsappNotification,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -29,6 +30,7 @@ const TABS = [
   { id: 'documents',     label: 'Documentos',     icon: FileText },
   { id: 'maintenance',   label: 'Mantenimiento',  icon: Wrench },
   { id: 'consorcio',     label: 'Consorcio',      icon: Building2 },
+  { id: 'whatsapp',     label: 'WhatsApp',       icon: MessageSquare },
 ];
 
 const STATUS_LABELS = {
@@ -1824,6 +1826,142 @@ function EmptyState({ icon: Icon, text }) {
   );
 }
 
+// ─── WhatsApp tab ─────────────────────────────────────────────────────────────
+
+const WA_STATUS = {
+  sent:      { label: 'Enviado',    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  delivered: { label: 'Entregado',  color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  failed:    { label: 'Error',      color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+};
+
+function WhatsAppTab({ session, userProfile }) {
+  const toast = useToast();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [phone, setPhone]                 = useState('');
+  const [message, setMessage]             = useState('');
+  const [sending, setSending]             = useState(false);
+
+  useEffect(() => {
+    if (!userProfile?.consortium_id) return;
+    fetchWhatsappNotifications(userProfile.consortium_id)
+      .then(setNotifications)
+      .catch(e => toast.error(e.message, 'Error al cargar notificaciones'))
+      .finally(() => setLoading(false));
+  }, [userProfile?.consortium_id, toast]);
+
+  async function handleSend(e) {
+    e.preventDefault();
+    if (!phone.trim() || !message.trim()) {
+      toast.error('Teléfono y mensaje son requeridos');
+      return;
+    }
+    setSending(true);
+    try {
+      await sendWhatsappNotification(
+        phone.trim(),
+        message.trim(),
+        userProfile.consortium_id,
+        session?.user?.id
+      );
+      toast.success('Mensaje enviado correctamente');
+      setPhone('');
+      setMessage('');
+      // Refresh list
+      const updated = await fetchWhatsappNotifications(userProfile.consortium_id);
+      setNotifications(updated);
+    } catch (err) {
+      toast.error(err.message, 'Error al enviar');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Formulario de envío manual */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+          <Send size={16} className="text-emerald-500" />
+          Enviar mensaje manual
+        </h4>
+        <form onSubmit={handleSend} className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              Teléfono (formato E.164 sin +, ej: 5491112345678)
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="5491112345678"
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              Mensaje
+            </label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Ej: Recordatorio: vencimiento de expensas el 10/04..."
+              rows={3}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={sending}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          >
+            {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+            Enviar por WhatsApp
+          </button>
+        </form>
+      </div>
+
+      {/* Historial */}
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+          Historial de notificaciones ({notifications.length})
+        </h4>
+        {loading ? (
+          <LoadingSpinner />
+        ) : notifications.length === 0 ? (
+          <EmptyState icon={MessageSquare} text="No hay notificaciones enviadas todavía" />
+        ) : (
+          <div className="space-y-2">
+            {notifications.map(n => {
+              const st = WA_STATUS[n.status] ?? WA_STATUS.sent;
+              return (
+                <div key={n.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 flex items-start gap-3">
+                  <MessageSquare size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{n.phone}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{n.message}</p>
+                    {n.error_message && (
+                      <p className="text-xs text-red-500 mt-1 truncate">{n.error_message}</p>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">
+                    {new Date(n.created_at).toLocaleDateString('es-AR')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
 export default function AdminView({ session, userProfile }) {
@@ -1888,6 +2026,7 @@ export default function AdminView({ session, userProfile }) {
       {activeTab === 'documents'     && <DocumentsTab session={session} userProfile={userProfile} />}
       {activeTab === 'maintenance'   && <MaintenanceTab session={session} userProfile={userProfile} />}
       {activeTab === 'consorcio'     && <ConsorcioTab session={session} userProfile={userProfile} />}
+      {activeTab === 'whatsapp'      && <WhatsAppTab session={session} userProfile={userProfile} />}
     </div>
   );
 }
