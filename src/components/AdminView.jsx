@@ -31,6 +31,7 @@ import { useToast } from './Toast';
 const EXPORT_COLUMNS = [
   { header: 'Unidad',       key: 'unidad' },
   { header: 'Propietario',  key: 'propietario' },
+  { header: 'Email',        key: 'email' },
   { header: 'Teléfono',     key: 'telefono' },
   { header: 'Monto ($)',    key: 'monto' },
   { header: '% del total',  key: 'porcentaje' },

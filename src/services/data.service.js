@@ -1588,7 +1588,7 @@ export async function createConsortium(name, address, city) {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   const { data, error } = await supabase
     .from('consortia')
-    .insert([{ name, address: address || null, city: city || null, invite_code: code }])
+    .insert([{ name, address: address || '', city: city || null, invite_code: code }])
     .select()
     .single();
   if (error) throw error;
@@ -1598,7 +1598,7 @@ export async function createConsortium(name, address, city) {
 export async function fetchAllAdminAssignments() {
   const { data, error } = await supabase
     .from('admin_consortia')
-    .select('admin_id, consortium_id, granted_at, profiles(full_name, email: id), consortia(name)')
+    .select('admin_id, consortium_id, granted_at, profiles(full_name, email), consortia(name)')
     .order('granted_at', { ascending: false });
   if (error) throw error;
   return data || [];
@@ -1617,6 +1617,7 @@ export async function fetchExpenseReport(expenseId) {
       notes,
       profiles (
         full_name,
+        email,
         unit_id,
         phone
       )
@@ -1631,6 +1632,7 @@ export async function fetchExpenseReport(expenseId) {
   return rows.map(r => ({
     unidad:       r.profiles?.unit_id || '—',
     propietario:  r.profiles?.full_name || '—',
+    email:        r.profiles?.email || '—',
     telefono:     r.profiles?.phone || '—',
     monto:        Number(r.amount),
     porcentaje:   totalAmount > 0 ? ((Number(r.amount) / totalAmount) * 100).toFixed(2) + '%' : '—',
