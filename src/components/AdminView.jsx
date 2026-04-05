@@ -2420,7 +2420,7 @@ function FinesTab({ session, userProfile }) {
 export default function AdminView({ session, userProfile }) {
   const [activeTab, setActiveTab] = useState('usuarios');
 
-  if (!userProfile || userProfile.role !== 'admin') {
+  if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4 animate-fade-in">
         <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-2xl">
