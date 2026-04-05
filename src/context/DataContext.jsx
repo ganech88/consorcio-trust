@@ -17,22 +17,32 @@ export function DataProvider({ children }) {
   const loadData = useCallback(async (userId) => {
     setDataLoading(true);
     try {
-      const [claims, expenses, profile, userPayments] = await Promise.all([
+      const [claimsRes, expensesRes, profileRes, paymentsRes] = await Promise.allSettled([
         fetchClaims(),
         fetchExpenseItems(),
         userId ? fetchUserProfile(userId) : Promise.resolve(null),
         userId ? fetchPayments(userId) : Promise.resolve([]),
       ]);
-      setReclamos(claims);
-      setGastos(expenses);
+
+      if (claimsRes.status === 'fulfilled') setReclamos(claimsRes.value || []);
+      if (expensesRes.status === 'fulfilled') setGastos(expensesRes.value || []);
+      if (paymentsRes.status === 'fulfilled') setPayments(paymentsRes.value || []);
+
+      const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
       if (profile) {
         setUserProfile(profile);
         if (profile.consortium_id) {
-          const c = await fetchConsortium(profile.consortium_id);
-          if (c) setConsortium(c);
+          try {
+            const c = await fetchConsortium(profile.consortium_id);
+            if (c) setConsortium(c);
+          } catch (e) {
+            console.warn('Error cargando consorcio:', e.message);
+          }
         }
+      } else if (profileRes.status === 'rejected') {
+        console.error('Error cargando perfil:', profileRes.reason);
+        toast.error('No se pudo cargar tu perfil. Intentá nuevamente.');
       }
-      setPayments(userPayments);
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast.error('No se pudieron cargar los datos. Intentá nuevamente.');
