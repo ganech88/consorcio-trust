@@ -263,13 +263,29 @@ export async function cancelReservation(reservationId) {
 // ─── Reservas (admin) ─────────────────────────────────────────────────────────
 
 export async function fetchAllReservations() {
-  const { data, error } = await supabase
+  // reservations.user_id references auth.users, not profiles,
+  // so we cannot use an embedded join. Fetch separately and merge.
+  const { data: reservations, error } = await supabase
     .from('reservations')
-    .select('*, profiles(full_name, unit_id)')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  if (!reservations?.length) return [];
+
+  // Fetch profile info for each unique user_id
+  const userIds = [...new Set(reservations.map(r => r.user_id))];
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, unit_id')
+    .in('id', userIds);
+
+  const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+  return reservations.map(r => ({
+    ...r,
+    profiles: profileMap[r.user_id] || { full_name: 'Sin perfil', unit_id: null },
+  }));
 }
 
 export async function updateReservationStatus(reservationId, status, adminNote) {
@@ -289,10 +305,10 @@ export async function updateReservationStatus(reservationId, status, adminNote) 
 // ─── Comunicados ──────────────────────────────────────────────────────────────
 
 export async function fetchAnnouncements(consortiumId) {
+  // First try with pinned order; if column doesn't exist, fallback
   let query = supabase
     .from('announcements')
     .select('*')
-    .order('pinned', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (consortiumId) query = query.eq('consortium_id', consortiumId);
@@ -303,16 +319,19 @@ export async function fetchAnnouncements(consortiumId) {
 }
 
 export async function createAnnouncement({ title, body, type, pinned, consortiumId, createdBy }) {
+  const row = {
+    title,
+    body,
+    type: type || 'info',
+    consortium_id: consortiumId || null,
+    created_by: createdBy,
+  };
+  // Only include pinned if the column exists (added by migration 031)
+  if (pinned !== undefined) row.pinned = pinned;
+
   const { data, error } = await supabase
     .from('announcements')
-    .insert([{
-      title,
-      body,
-      type: type || 'info',
-      pinned: pinned || false,
-      consortium_id: consortiumId || null,
-      created_by: createdBy,
-    }])
+    .insert([row])
     .select();
 
   if (error) throw error;
@@ -393,9 +412,10 @@ export async function deleteConsortiumDocument(id, filePath) {
 // ─── Documentos de residentes (aprobaciones) ──────────────────────────────────
 
 export const fetchDocuments = async (consortiumId, userId, isAdmin = false) => {
+  // Specify FK hint: documents has two FKs to profiles (user_id and reviewed_by)
   let query = supabase
     .from('documents')
-    .select(isAdmin ? '*, profiles(full_name, unit_id)' : '*')
+    .select(isAdmin ? '*, profiles!documents_user_id_fkey(full_name, unit_id)' : '*')
     .eq('consortium_id', consortiumId)
     .order('created_at', { ascending: false });
   if (!isAdmin) query = query.eq('user_id', userId);
