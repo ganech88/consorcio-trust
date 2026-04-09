@@ -2428,4 +2428,60 @@ export default function AdminView({ session, userProfile }) {
         <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-2xl">
           <ShieldCheck size={48} className="text-red-400" />
         </div>
-        <h3 className="font-bold text-slate-800 dar
+        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Acceso restringido</h3>
+        <p className="text-slate-500 dark:text-slate-400 text-sm text-center max-w-xs">
+          Esta sección es exclusiva para administradores del consorcio. Tu cuenta no tiene permisos de administrador.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-6 rounded-2xl text-white shadow-lg">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <ShieldCheck size={24} />
+          Panel de Administrador
+        </h3>
+        <p className="text-slate-300 mt-1 text-sm">
+          Gestioná reclamos, expensas, liquidaciones, reservas, comunicados y documentos
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl overflow-x-auto">
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              <Icon size={14} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Contenido */}
+      {activeTab === 'usuarios'      && <UsersTab userProfile={userProfile} />}
+      {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}
+      {activeTab === 'expenses'      && <ExpensesTab session={session} userProfile={userProfile} />}
+      {activeTab === 'liquidacion'   && <LiquidacionTab session={session} userProfile={userProfile} />}
+      {activeTab === 'multas'        && <FinesTab session={session} userProfile={userProfile} />}
+      {activeTab === 'reservations'  && <ReservationsTab />}
+      {activeTab === 'announcements' && <AnnouncementsTab session={session} userProfile={userProfile} />}
+      {activeTab === 'documents'     && <DocumentsTab session={session} userProfile={userProfile} />}
+      {activeTab === 'maintenance'   && <MaintenanceTab session={session} userProfile={userProfile} />}
+      {activeTab === 'consorcio'     && <ConsorcioTab session={session} userProfile={userProfile} />}
+    </div>
+  );
+}
