@@ -1,0 +1,279 @@
+import { useState, useEffect } from 'react';
+import { Receipt, ChevronUp, ChevronDown, Loader2, Users } from 'lucide-react';
+import {
+  fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
+} from '../../services/data.service';
+import { useToast } from '../Toast';
+import { LoadingSpinner, EmptyState } from './shared';
+
+export default function LiquidacionTab({ session, userProfile }) {
+  const toast = useToast();
+  const [periods, setPeriods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+  const [periodItems, setPeriodItems] = useState({});
+  const [loadingItems, setLoadingItems] = useState(null);
+  const [form, setForm] = useState({
+    period: new Date().toISOString().slice(0, 7),
+    totalAmount: '',
+    dueDate: '',
+    amountPerUnit: '',
+  });
+
+  useEffect(() => {
+    fetchExpensePeriods(userProfile?.consortium_id)
+      .then(setPeriods)
+      .catch(e => toast.error(e.message, 'Error al cargar períodos'))
+      .finally(() => setLoading(false));
+  }, [userProfile?.consortium_id, toast]);
+
+  function setField(k, v) { setForm(prev => ({ ...prev, [k]: v })); }
+
+  async function handleCreatePeriod(e) {
+    e.preventDefault();
+    if (!form.period || !form.totalAmount || !form.dueDate) {
+      toast.error('Completá período, monto total y fecha de vencimiento');
+      return;
+    }
+    setSaving(true);
+    try {
+      const p = await createExpensePeriod({
+        period: form.period,
+        totalAmount: Number(form.totalAmount),
+        dueDate: form.dueDate,
+        consortiumId: userProfile?.consortium_id,
+        createdBy: session.user.id,
+      });
+      setPeriods(prev => [p, ...prev]);
+      toast.success('Período creado');
+      setForm({ period: new Date().toISOString().slice(0, 7), totalAmount: '', dueDate: '', amountPerUnit: '' });
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('ConsorcioTrust', {
+          body: `Nueva expensa publicada para el período ${form.period}`,
+          icon: '/favicon.ico',
+        });
+      }
+    } catch (e) {
+      toast.error(e.message, 'Error al crear período');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDistribute(period) {
+    const amount = Number(form.amountPerUnit);
+    if (!amount || amount <= 0) { toast.error('Ingresá el monto por unidad'); return; }
+    setSaving(period.id);
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, unit_id')
+        .eq('consortium_id', userProfile?.consortium_id)
+        .not('unit_id', 'is', null);
+
+      if (!profiles?.length) { toast.error('No se encontraron unidades en este consorcio'); return; }
+
+      const items = profiles.map(p => ({
+        period_id: period.id,
+        unit_id: p.unit_id,
+        user_id: p.id,
+        amount,
+      }));
+
+      await createPeriodItems(items);
+      toast.success(`Expensas distribuidas a ${items.length} unidades`);
+    } catch (e) {
+      toast.error(e.message, 'Error al distribuir');
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function handleExpand(period) {
+    const isOpen = expanded === period.id;
+    setExpanded(isOpen ? null : period.id);
+    if (!isOpen && !periodItems[period.id]) {
+      setLoadingItems(period.id);
+      try {
+        const items = await fetchPeriodItems(period.id);
+        setPeriodItems(prev => ({ ...prev, [period.id]: items }));
+      } catch (e) {
+        toast.error(e.message, 'Error al cargar ítems');
+      } finally {
+        setLoadingItems(null);
+      }
+    }
+  }
+
+  function formatPeriod(p) {
+    const [y, m] = p.split('-');
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Formulario de nueva liquidación */}
+      <form onSubmit={handleCreatePeriod} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Nueva liquidación mensual</h4>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Período</label>
+            <input
+              type="month"
+              value={form.period}
+              onChange={e => setField('period', e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto total ($)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.totalAmount}
+              onChange={e => setField('totalAmount', e.target.value)}
+              placeholder="Ej: 500000"
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha de vencimiento</label>
+            <input
+              type="date"
+              value={form.dueDate}
+              onChange={e => setField('dueDate', e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto por unidad (para distribución automática)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.amountPerUnit}
+              onChange={e => setField('amountPerUnit', e.target.value)}
+              placeholder="Ej: 25000"
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div className="pt-6">
+            <button
+              type="submit"
+              disabled={saving === true}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            >
+              {saving === true ? <Loader2 size={14} className="animate-spin" /> : <Receipt size={14} />}
+              Publicar
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* Lista de períodos */}
+      {loading ? (
+        <LoadingSpinner />
+      ) : periods.length === 0 ? (
+        <EmptyState icon={Receipt} text="No hay liquidaciones publicadas aún" />
+      ) : (
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+            Períodos publicados ({periods.length})
+          </h4>
+          {periods.map(period => {
+            const isOpen = expanded === period.id;
+            const items = periodItems[period.id] ?? [];
+            return (
+              <div key={period.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                <button
+                  onClick={() => handleExpand(period)}
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                >
+                  <Receipt size={18} className="text-blue-500 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">{formatPeriod(period.period)}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      Total: ${Number(period.total_amount).toLocaleString('es-AR')} · Vence: {new Date(period.due_date).toLocaleDateString('es-AR')}
+                    </p>
+                  </div>
+                  {isOpen ? <ChevronUp size={16} className="text-slate-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-400 shrink-0" />}
+                </button>
+
+                {isOpen && (
+                  <div className="border-t border-slate-100 dark:border-slate-700 p-4 space-y-3">
+                    {/* Distribuir */}
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.amountPerUnit}
+                        onChange={e => setField('amountPerUnit', e.target.value)}
+                        placeholder="Monto por unidad"
+                        className="flex-1 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                      <button
+                        onClick={() => handleDistribute(period)}
+                        disabled={saving === period.id}
+                        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
+                      >
+                        {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <Users size={12} />}
+                        Distribuir
+                      </button>
+                    </div>
+
+                    {/* Ítems */}
+                    {loadingItems === period.id ? (
+                      <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
+                    ) : items.length === 0 ? (
+                      <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">Sin ítems distribuidos aún</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {items.map(item => (
+                          <div key={item.id} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                            <div>
+                              <span className="font-medium text-slate-700 dark:text-slate-300">
+                                Unidad {item.unit_id}
+                              </span>
+                              {item.profiles?.full_name && (
+                                <span className="text-slate-400 dark:text-slate-500 ml-2">({item.profiles.full_name})</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-slate-800 dark:text-slate-100">
+                                ${Number(item.amount).toLocaleString('es-AR')}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                item.status === 'paid'
+                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                              }`}>
+                                {item.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

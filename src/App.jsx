@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Bell, Sun, Moon } from 'lucide-react';
 import { VIEWS } from './lib/constants';
 import { ToastProvider, useToast } from './components/Toast';
@@ -14,6 +15,7 @@ import NotificationsPanel from './components/NotificationsPanel';
 import Logo from './components/Logo';
 import { SkeletonCard, SkeletonChart, SkeletonList } from './components/Skeleton';
 import ConsortiumSwitcher from './components/ConsortiumSwitcher';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loading de las vistas — cada una carga su bundle solo cuando se necesita
 const Dashboard       = lazy(() => import('./components/Dashboard'));
@@ -86,7 +88,9 @@ function showPushNotification(title, body) {
 function AppContent() {
   const { session, setSession, authLoading, authError, logout } = useAuth();
   const { reclamos, setReclamos, gastos, payments, userProfile, setUserProfile, dataLoading, loadData, resetData, unreadChatCount } = useData();
-  const [view, setView] = useState(VIEWS.DASHBOARD);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const view = location.pathname;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -132,11 +136,11 @@ function AppContent() {
   async function handleLogout() {
     await logout();
     resetData();
-    setView(VIEWS.DASHBOARD);
+    navigate(VIEWS.DASHBOARD);
   }
 
   function handleNavigate(viewId) {
-    setView(viewId);
+    navigate(viewId);
     setSidebarOpen(false);
   }
 
@@ -223,7 +227,7 @@ function AppContent() {
             >
               <Menu size={22} />
             </button>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{VIEW_TITLES[view]}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{VIEW_TITLES[view] || 'Dashboard'}</h2>
           </div>
 
           <div className="flex items-center gap-2">
@@ -275,68 +279,52 @@ function AppContent() {
               <ViewSkeleton />
             ) : (
               <Suspense fallback={<ViewSkeleton />}>
-                {view === VIEWS.DASHBOARD && (
-                  <Dashboard
-                    reclamos={reclamos}
-                    gastos={gastos}
-                    payments={payments}
-                    session={session}
-                    userProfile={userProfile}
-                    onPaymentClick={() => setShowPayModal(true)}
-                    onNavigate={handleNavigate}
-                  />
-                )}
-                {view === VIEWS.CLAIMS && (
-                  <ClaimsView
-                    reclamos={reclamos}
-                    setReclamos={setReclamos}
-                    session={session}
-                    userProfile={userProfile}
-                  />
-                )}
-                {view === VIEWS.ANNOUNCEMENTS && <AnnouncementsView />}
-                {view === VIEWS.AMENITIES && <AmenitiesView session={session} userProfile={userProfile} />}
-                {view === VIEWS.DOCS && <DocsView />}
-                {view === VIEWS.CONTACTS && <ContactsView />}
-                {view === VIEWS.PROFILE && (
-                  <ProfileView session={session} userProfile={userProfile} onProfileUpdate={setUserProfile} onLogout={handleLogout} />
-                )}
-                {view === VIEWS.ADMIN && (
-                  <AdminView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.EXPENSES && (
-                  <ExpensesView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.CHAT && (
-                  <ChatView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.VOTING && (
-                  <VotingView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.CALENDAR && (
-                  <CalendarView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.ACCESS && (
-                  <AccessView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.FINANCE && (
-                  <FinanceView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.PACKAGES && (
-                  <PackagesView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.BOARD && (
-                  <BoardView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.DOCUMENTS && (
-                  <DocumentsView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.SUPPLIERS && (
-                  <SuppliersView session={session} userProfile={userProfile} />
-                )}
-                {view === VIEWS.SUPER_ADMIN && (
-                  <SuperAdminView session={session} userProfile={userProfile} />
-                )}
+                <Routes>
+                  <Route path={VIEWS.DASHBOARD} element={
+                    <Dashboard
+                      reclamos={reclamos}
+                      gastos={gastos}
+                      payments={payments}
+                      session={session}
+                      userProfile={userProfile}
+                      onPaymentClick={() => setShowPayModal(true)}
+                      onNavigate={handleNavigate}
+                    />
+                  } />
+                  <Route path={VIEWS.CLAIMS} element={
+                    <ClaimsView reclamos={reclamos} setReclamos={setReclamos} session={session} userProfile={userProfile} />
+                  } />
+                  <Route path={VIEWS.ANNOUNCEMENTS} element={<AnnouncementsView />} />
+                  <Route path={VIEWS.AMENITIES} element={<AmenitiesView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.DOCS} element={<DocsView />} />
+                  <Route path={VIEWS.CONTACTS} element={<ContactsView />} />
+                  <Route path={VIEWS.PROFILE} element={
+                    <ProfileView session={session} userProfile={userProfile} onProfileUpdate={setUserProfile} onLogout={handleLogout} />
+                  } />
+                  <Route path={VIEWS.ADMIN} element={<AdminView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.EXPENSES} element={<ExpensesView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.CHAT} element={<ChatView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.VOTING} element={<VotingView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.CALENDAR} element={<CalendarView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.ACCESS} element={<AccessView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.FINANCE} element={<FinanceView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.PACKAGES} element={<PackagesView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.BOARD} element={<BoardView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.DOCUMENTS} element={<DocumentsView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.SUPPLIERS} element={<SuppliersView session={session} userProfile={userProfile} />} />
+                  <Route path={VIEWS.SUPER_ADMIN} element={<SuperAdminView session={session} userProfile={userProfile} />} />
+                  <Route path="*" element={
+                    <Dashboard
+                      reclamos={reclamos}
+                      gastos={gastos}
+                      payments={payments}
+                      session={session}
+                      userProfile={userProfile}
+                      onPaymentClick={() => setShowPayModal(true)}
+                      onNavigate={handleNavigate}
+                    />
+                  } />
+                </Routes>
               </Suspense>
             )}
           </div>
@@ -355,14 +343,18 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <DataProvider>
-            <AppContent />
-          </DataProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <DataProvider>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </DataProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }

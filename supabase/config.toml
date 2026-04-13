@@ -4,3 +4,9 @@ port = 54321
 
 [functions.whatsapp-webhook]
 verify_jwt = false
+
+[functions.mp-webhook]
+verify_jwt = false
+
+[functions.mp-config]
+verify_jwt = false

@@ -3,11 +3,26 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 // --- Configuración ---
 const WHATSAPP_VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
 const WHATSAPP_ACCESS_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
+const WHATSAPP_APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") || "";
 const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+async function verifyWebhookSignature(rawBody: string, signatureHeader: string | null): Promise<boolean> {
+  if (!WHATSAPP_APP_SECRET || !signatureHeader) return false;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(WHATSAPP_APP_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody));
+  const expected = 'sha256=' + Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return signatureHeader === expected;
+}
 
 // =====================================================
 // PUNTO DE ENTRADA - Webhook de WhatsApp
@@ -21,7 +36,19 @@ Deno.serve(async (req) => {
 
     // POST = Mensaje entrante
     if (req.method === "POST") {
-      const body = await req.json();
+      const rawBody = await req.text();
+
+      // Verify Meta signature if app secret is configured
+      if (WHATSAPP_APP_SECRET) {
+        const signature = req.headers.get("X-Hub-Signature-256");
+        const valid = await verifyWebhookSignature(rawBody, signature);
+        if (!valid) {
+          console.error("Firma de webhook inválida");
+          return new Response("Forbidden", { status: 403 });
+        }
+      }
+
+      const body = JSON.parse(rawBody);
       await handleIncomingMessage(body);
       return new Response("OK", { status: 200 });
     }

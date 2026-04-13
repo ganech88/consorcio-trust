@@ -1,24 +1,24 @@
 // --- Vistas de navegación ---
 export const VIEWS = {
-  DASHBOARD: 'dashboard',
-  CLAIMS: 'reclamos',
-  ANNOUNCEMENTS: 'anuncios',
-  AMENITIES: 'amenities',
-  DOCS: 'docs',
-  CONTACTS: 'contactos',
-  PROFILE: 'perfil',
-  ADMIN: 'admin',
-  EXPENSES: 'expensas',
-  CHAT: 'chat',
-  VOTING: 'votaciones',
-  CALENDAR: 'calendario',
-  ACCESS: 'accesos',
-  FINANCE: 'finanzas',
-  PACKAGES: 'paqueteria',
-  BOARD: 'tablon',
-  DOCUMENTS: 'documents',
-  SUPPLIERS: 'proveedores',
-  SUPER_ADMIN: 'superadmin',
+  DASHBOARD: '/',
+  CLAIMS: '/reclamos',
+  ANNOUNCEMENTS: '/anuncios',
+  AMENITIES: '/amenities',
+  DOCS: '/docs',
+  CONTACTS: '/contactos',
+  PROFILE: '/perfil',
+  ADMIN: '/admin',
+  EXPENSES: '/expensas',
+  CHAT: '/chat',
+  VOTING: '/votaciones',
+  CALENDAR: '/calendario',
+  ACCESS: '/accesos',
+  FINANCE: '/finanzas',
+  PACKAGES: '/paqueteria',
+  BOARD: '/tablon',
+  DOCUMENTS: '/documents',
+  SUPPLIERS: '/proveedores',
+  SUPER_ADMIN: '/superadmin',
 };
 
 // --- Estados de reclamos ---
@@ -56,10 +56,10 @@ export const NAV_ITEMS = [
 
 // --- Secciones de navegación agrupadas ---
 export const NAV_SECTIONS = [
-  { label: 'Tu Hogar',   keys: ['dashboard', 'expensas', 'calendario', 'paqueteria'] },
-  { label: 'Comunidad',  keys: ['anuncios', 'reclamos', 'chat', 'votaciones', 'tablon'] },
-  { label: 'Espacios',   keys: ['amenities', 'accesos'] },
-  { label: 'Info',       keys: ['finanzas', 'proveedores', 'docs', 'documents', 'contactos'] },
+  { label: 'Tu Hogar',   keys: ['/', '/expensas', '/calendario', '/paqueteria'] },
+  { label: 'Comunidad',  keys: ['/anuncios', '/reclamos', '/chat', '/votaciones', '/tablon'] },
+  { label: 'Espacios',   keys: ['/amenities', '/accesos'] },
+  { label: 'Info',       keys: ['/finanzas', '/proveedores', '/docs', '/documents', '/contactos'] },
 ];
 
 // --- Amenities disponibles ---
