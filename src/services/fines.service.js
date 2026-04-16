@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 export async function fetchFines(consortiumId, { page, pageSize } = {}) {
   const query = supabase
     .from('fines')
-    .select('*, profiles(full_name, unit_id)', { count: 'exact' })
+    .select('*, profiles!fines_user_id_fkey(full_name, unit_id)', { count: 'exact' })
     .eq('consortium_id', consortiumId)
     .order('created_at', { ascending: false });
 
