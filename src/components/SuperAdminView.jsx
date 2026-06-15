@@ -13,11 +13,6 @@ import {
 } from '../services/data.service';
 import { useToast } from './Toast';
 
-function formatDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('es-AR');
-}
-
 // ─── Panel de consorcios ────────────────────────────────────────────────────────
 
 function ConsortiaPanel({ session }) {

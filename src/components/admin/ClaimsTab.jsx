@@ -15,7 +15,7 @@ export default function ClaimsTab({ session }) {
   const [saving, setSaving] = useState(null);
   const [noteInputs, setNoteInputs] = useState({});
   const [statusInputs, setStatusInputs] = useState({});
-  const [page, setPage] = useState(0);
+  const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
 
   const loadPage = useCallback((p) => {

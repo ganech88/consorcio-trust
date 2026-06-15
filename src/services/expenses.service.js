@@ -1,10 +1,14 @@
 import { supabase } from '../lib/supabase';
 
-export async function fetchExpenseItems() {
-  const { data, error } = await supabase
+export async function fetchExpenseItems(consortiumId) {
+  let query = supabase
     .from('expense_items')
     .select('category, amount');
 
+  // Defensa en profundidad: acotar por consorcio ademas de RLS
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) throw error;
   if (!data) return [];
 

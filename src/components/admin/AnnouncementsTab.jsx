@@ -12,7 +12,7 @@ export default function AnnouncementsTab({ session, userProfile }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [form, setForm] = useState({ title: '', body: '', type: 'info', pinned: false });
-  const [page, setPage] = useState(0);
+  const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
 
   function setField(k, v) {

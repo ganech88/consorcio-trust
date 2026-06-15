@@ -11,7 +11,7 @@ import {
 import { useToast } from '../Toast';
 import { LoadingSpinner } from './shared';
 
-export default function ConsorcioTab({ session, userProfile }) {
+export default function ConsorcioTab({ userProfile }) {
   const toast = useToast();
   const [consortium, setConsortium] = useState(null);
   const [members, setMembers] = useState([]);

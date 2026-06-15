@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { Bell, CheckCircle, Clock, AlertCircle, X, MessageSquare } from 'lucide-react';
 
 function generateNotifications(reclamos, payments) {

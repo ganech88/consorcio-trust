@@ -337,7 +337,7 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
 
 // ─── Legacy Visitors ──────────────────────────────────────────────────────────
 
-function VisitorsSection({ session, userProfile, isAdmin }) {
+function VisitorsSection({ session, userProfile }) {
   const toast = useToast();
   const [visitors, setVisitors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -537,7 +537,6 @@ function PackagesSection({ session, userProfile, isAdmin }) {
   }
 
   const pending   = packages.filter(p => !p.delivered_at);
-  const delivered = packages.filter(p => p.delivered_at);
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">

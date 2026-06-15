@@ -16,7 +16,7 @@ export default function FinesTab({ session, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [page, setPage] = useState(0);
+  const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
   const currentPeriod = new Date().toISOString().slice(0, 7);
 

@@ -10,7 +10,7 @@ export default function UsersTab({ userProfile }) {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingRole, setSavingRole] = useState(null);
-  const [page, setPage] = useState(0);
+  const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
 
   const loadPage = useCallback((p) => {

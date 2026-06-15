@@ -30,7 +30,6 @@ export default function ChatView({ session, userProfile }) {
   const channelRef = useRef(null);
 
   const userId = session?.user?.id;
-  const isAdmin = userProfile?.role === 'admin';
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -157,7 +156,7 @@ export default function ChatView({ session, userProfile }) {
           </div>
         )}
 
-        {grouped.map((item, idx) => {
+        {grouped.map((item) => {
           if (item.type === 'date') {
             return (
               <div key={`date-${item.date}`} className="flex items-center gap-3 py-3">

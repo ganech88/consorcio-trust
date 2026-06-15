@@ -1,11 +1,15 @@
 import { supabase } from '../lib/supabase';
 
-export async function fetchClaims() {
-  const { data, error } = await supabase
+export async function fetchClaims(consortiumId) {
+  let query = supabase
     .from('claims')
     .select('*')
     .order('created_at', { ascending: false });
 
+  // Defensa en profundidad: acotar por consorcio ademas de RLS
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
@@ -24,12 +28,9 @@ export async function createClaim({ title, category, description, consortiumId, 
     .select();
 
   if (error) throw error;
-  return data?.[0] ?? {
-    title, category, description,
-    status: 'open',
-    created_at: new Date().toISOString(),
-    id: crypto.randomUUID(),
-  };
+  // No fabricar entidades en el cliente: si el insert no devuelve fila, es un fallo.
+  if (!data?.[0]) throw new Error('No se pudo crear el reclamo (sin fila devuelta).');
+  return data[0];
 }
 
 export async function fetchAllClaims({ page, pageSize } = {}) {

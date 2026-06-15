@@ -13,7 +13,7 @@ export default function DocumentsTab({ session, userProfile }) {
   const [saving, setSaving] = useState(null);
   const [noteInputs, setNoteInputs] = useState({});
   const [expanded, setExpanded] = useState(null);
-  const [page, setPage] = useState(0);
+  const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
 
   const loadPage = useCallback((p) => {

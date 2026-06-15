@@ -9,6 +9,16 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
     css: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -42,6 +52,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Excluir del precache las libs pesadas que ya cargan bajo demanda
+        // (export e/o graficos). Se sirven por red al usarse.
+        globIgnores: ['**/xlsx-*.js', '**/jspdf*.js', '**/CategoricalChart-*.js', '**/html2canvas*.js', '**/purify*.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/kldgbgxycmvywvvftuvi\.supabase\.co\/rest\/v1\/.*/i,

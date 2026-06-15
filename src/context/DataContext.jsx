@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { fetchClaims, fetchExpenseItems, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
@@ -17,32 +17,32 @@ export function DataProvider({ children }) {
   const loadData = useCallback(async (userId) => {
     setDataLoading(true);
     try {
-      const [claimsRes, expensesRes, profileRes, paymentsRes] = await Promise.allSettled([
-        fetchClaims(),
-        fetchExpenseItems(),
-        userId ? fetchUserProfile(userId) : Promise.resolve(null),
+      // Fase 1: resolver el perfil primero para conocer el consorcio activo.
+      let profile = null;
+      if (userId) {
+        try {
+          profile = await fetchUserProfile(userId);
+          if (profile) setUserProfile(profile);
+        } catch (e) {
+          console.error('Error cargando perfil:', e);
+          toast.error('No se pudo cargar tu perfil. Intentá nuevamente.');
+        }
+      }
+
+      const consortiumId = profile?.consortium_id || null;
+
+      // Fase 2: cargar datos acotados al consorcio, en paralelo.
+      const [claimsRes, expensesRes, paymentsRes, consortiumRes] = await Promise.allSettled([
+        fetchClaims(consortiumId),
+        fetchExpenseItems(consortiumId),
         userId ? fetchPayments(userId) : Promise.resolve([]),
+        consortiumId ? fetchConsortium(consortiumId) : Promise.resolve(null),
       ]);
 
       if (claimsRes.status === 'fulfilled') setReclamos(claimsRes.value || []);
       if (expensesRes.status === 'fulfilled') setGastos(expensesRes.value || []);
       if (paymentsRes.status === 'fulfilled') setPayments(paymentsRes.value || []);
-
-      const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
-      if (profile) {
-        setUserProfile(profile);
-        if (profile.consortium_id) {
-          try {
-            const c = await fetchConsortium(profile.consortium_id);
-            if (c) setConsortium(c);
-          } catch (e) {
-            console.warn('Error cargando consorcio:', e.message);
-          }
-        }
-      } else if (profileRes.status === 'rejected') {
-        console.error('Error cargando perfil:', profileRes.reason);
-        toast.error('No se pudo cargar tu perfil. Intentá nuevamente.');
-      }
+      if (consortiumRes.status === 'fulfilled' && consortiumRes.value) setConsortium(consortiumRes.value);
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast.error('No se pudieron cargar los datos. Intentá nuevamente.');
@@ -60,21 +60,19 @@ export function DataProvider({ children }) {
     setUnreadChatCount(0);
   }, []);
 
-  return (
-    <DataContext.Provider value={{
-      reclamos, setReclamos,
-      gastos,
-      payments, setPayments,
-      userProfile, setUserProfile,
-      consortium, setConsortium,
-      dataLoading,
-      loadData,
-      resetData,
-      unreadChatCount, setUnreadChatCount,
-    }}>
-      {children}
-    </DataContext.Provider>
-  );
+  const value = useMemo(() => ({
+    reclamos, setReclamos,
+    gastos,
+    payments, setPayments,
+    userProfile, setUserProfile,
+    consortium, setConsortium,
+    dataLoading,
+    loadData,
+    resetData,
+    unreadChatCount, setUnreadChatCount,
+  }), [reclamos, gastos, payments, userProfile, consortium, dataLoading, unreadChatCount, loadData, resetData]);
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
 
 export function useData() {
