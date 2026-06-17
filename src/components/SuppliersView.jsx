@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ComprobanteLink from './ComprobanteLink';
 import {
   Truck, Plus, Loader2, Trash2, X, CheckCircle, Clock,
   ChevronDown, ChevronUp, Building, Phone, Mail, CreditCard, Paperclip,
@@ -452,14 +453,12 @@ export default function SuppliersView({ session, userProfile }) {
                         {o.due_date && <span>Vence: {new Date(o.due_date).toLocaleDateString('es-AR')}</span>}
                         {o.paid_at && <span>Pagada: {new Date(o.paid_at).toLocaleDateString('es-AR')}</span>}
                         {o.attachment_url && (
-                          <a
-                            href={o.attachment_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <ComprobanteLink
+                            path={o.attachment_url}
                             className="flex items-center gap-0.5 text-brand-600 dark:text-brand-400 hover:underline"
                           >
                             <Paperclip size={10} /> Ver factura
-                          </a>
+                          </ComprobanteLink>
                         )}
                       </div>
                     </div>

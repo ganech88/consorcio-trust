@@ -52,11 +52,11 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
 
     setUploading(true);
     try {
-      const { publicUrl } = await uploadPaymentProof(payFile);
+      const { path } = await uploadPaymentProof(payFile);
 
       await savePaymentRecord({
         amount: parsedAmount,
-        proofUrl: publicUrl,
+        proofUrl: path,
         userId: session.user.id,
         unitId: userProfile?.unit_id,
       });

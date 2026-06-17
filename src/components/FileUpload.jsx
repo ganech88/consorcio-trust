@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Paperclip, X, Loader2, FileText, ExternalLink, Upload } from 'lucide-react';
-import { uploadAttachment } from '../services/data.service';
+import { uploadAttachment, getSignedComprobanteUrl } from '../services/data.service';
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 const MAX_MB = 10;
@@ -16,6 +16,14 @@ export default function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
+  const [displayUrl, setDisplayUrl] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    if (value) getSignedComprobanteUrl(value).then((u) => { if (alive) setDisplayUrl(u); });
+    else setDisplayUrl(null);
+    return () => { alive = false; };
+  }, [value]);
 
   const isPdf = value && value.toLowerCase().includes('.pdf');
   const isImage = value && !isPdf;
@@ -69,9 +77,9 @@ export default function FileUpload({
       ) : (
         <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl">
           {isImage ? (
-            <a href={value} target="_blank" rel="noopener noreferrer" className="shrink-0">
+            <a href={displayUrl || undefined} target="_blank" rel="noopener noreferrer" className="shrink-0">
               <img
-                src={value}
+                src={displayUrl || undefined}
                 alt="adjunto"
                 className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
               />
@@ -86,7 +94,7 @@ export default function FileUpload({
               {isPdf ? 'Documento PDF' : 'Imagen adjunta'}
             </p>
             <a
-              href={value}
+              href={displayUrl || undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5"

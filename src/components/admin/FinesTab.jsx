@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import ComprobanteLink from '../ComprobanteLink';
 import { Gavel, Plus, Loader2, CheckCircle, X, Trash2, Paperclip } from 'lucide-react';
 import {
   fetchFines, createFine, updateFineStatus, deleteFine,
@@ -315,14 +316,12 @@ export default function FinesTab({ session, userProfile }) {
                       <p className="text-xs text-slate-400 dark:text-slate-500 truncate italic">{fine.notes}</p>
                     )}
                     {fine.attachment_url && (
-                      <a
-                        href={fine.attachment_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <ComprobanteLink
+                        path={fine.attachment_url}
                         className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5 mt-0.5"
                       >
                         <Paperclip size={10} /> Ver adjunto
-                      </a>
+                      </ComprobanteLink>
                     )}
                   </div>
 

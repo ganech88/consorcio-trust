@@ -20,11 +20,8 @@ export async function uploadAttachment(file, folder = 'general') {
 
   if (uploadError) throw uploadError;
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('comprobantes')
-    .getPublicUrl(fileName);
-
-  return publicUrl;
+  // Bucket privado: guardamos el path; se accede con signed URLs.
+  return fileName;
 }
 
 export async function uploadPaymentProof(file) {
@@ -48,11 +45,17 @@ export async function uploadPaymentProof(file) {
 
   if (uploadError) throw uploadError;
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('comprobantes')
-    .getPublicUrl(fileName);
+  return { fileName, path: fileName };
+}
 
-  return { fileName, publicUrl };
+export async function getSignedComprobanteUrl(pathOrUrl, expiresIn = 3600) {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl; // compat con URLs viejas
+  const { data, error } = await supabase.storage
+    .from('comprobantes')
+    .createSignedUrl(pathOrUrl, expiresIn);
+  if (error) { console.warn('signed url:', error.message); return null; }
+  return data?.signedUrl ?? null;
 }
 
 export async function savePaymentRecord({ amount, proofUrl, userId, unitId }) {
