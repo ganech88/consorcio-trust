@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
-import { signIn, signUp } from '../services/auth.service';
+import { signIn, signUp, requestPasswordReset } from '../services/auth.service';
 import { useToast } from './Toast';
 import Logo from './Logo';
 
@@ -147,6 +147,26 @@ export default function LoginPage({ onLogin }) {
                 )}
               </button>
             </form>
+
+            {isLoginView && (
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email) { toast.error('Ingresá tu email arriba para recuperar la contraseña.'); return; }
+                    try {
+                      await requestPasswordReset(email);
+                      toast.success('Si el email existe, te enviamos un enlace para restablecer la contraseña.');
+                    } catch (err) {
+                      toast.error(err.message, 'No se pudo enviar el email');
+                    }
+                  }}
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 text-center">
               <button

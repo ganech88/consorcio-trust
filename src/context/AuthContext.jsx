@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -29,8 +30,10 @@ export function AuthProvider({ children }) {
       .catch((err) => { if (subscribed) setAuthError(err.message); })
       .finally(() => { if (subscribed) setAuthLoading(false); });
 
-    const subscription = onAuthStateChange((s) => {
-      if (subscribed) setSession(s);
+    const subscription = onAuthStateChange((event, s) => {
+      if (!subscribed) return;
+      setSession(s);
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
     });
 
     return () => {
@@ -51,7 +54,7 @@ export function AuthProvider({ children }) {
   }, [toast]);
 
   return (
-    <AuthContext.Provider value={{ session, setSession, authLoading, authError, logout }}>
+    <AuthContext.Provider value={{ session, setSession, authLoading, authError, logout, recoveryMode, exitRecovery: () => setRecoveryMode(false) }}>
       {children}
     </AuthContext.Provider>
   );

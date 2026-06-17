@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@sentry/react": "^10.58.0",
     "@supabase/supabase-js": "^2.89.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

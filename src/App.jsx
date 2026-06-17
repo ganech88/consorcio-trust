@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider, useData } from './context/DataContext';
 import { supabase } from './lib/supabase';
 import LoginPage from './components/LoginPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import ConsortiumOnboarding from './components/ConsortiumOnboarding';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
@@ -86,7 +87,7 @@ function showPushNotification(title, body) {
 }
 
 function AppContent() {
-  const { session, setSession, authLoading, authError, logout } = useAuth();
+  const { session, setSession, authLoading, authError, logout, recoveryMode, exitRecovery } = useAuth();
   const { reclamos, setReclamos, gastos, payments, userProfile, setUserProfile, dataLoading, loadData, resetData, unreadChatCount } = useData();
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,6 +180,10 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  if (recoveryMode) {
+    return <ResetPasswordPage onDone={() => { exitRecovery(); setSession(null); }} />;
   }
 
   if (!session) {

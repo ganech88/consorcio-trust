@@ -10,6 +10,7 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
+    import('../lib/sentry').then(({ captureError }) => captureError(error, { componentStack: errorInfo?.componentStack })).catch(() => {});
   }
 
   handleRetry = () => {

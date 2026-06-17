@@ -7,8 +7,8 @@ export async function getSession() {
 }
 
 export function onAuthStateChange(callback) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
   });
   return subscription;
 }
@@ -27,5 +27,16 @@ export async function signUp(email, password) {
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
+export async function requestPasswordReset(email) {
+  const redirectTo = `${window.location.origin}/`;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) throw error;
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }
