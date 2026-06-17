@@ -73,6 +73,11 @@ export default function LoginPage({ onLogin }) {
             </div>
 
             <p className="text-brand-300 text-xs">© 2026 ConsorcioTrust. Todos los derechos reservados.</p>
+            <p className="text-brand-300/80 text-xs mt-1">
+              <a href="/terminos.html" className="hover:underline">Términos</a>
+              {' · '}
+              <a href="/privacidad.html" className="hover:underline">Privacidad</a>
+            </p>
           </div>
 
           {/* Right panel — form */}
