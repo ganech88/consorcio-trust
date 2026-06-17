@@ -79,7 +79,7 @@ export default function UsersTab({ userProfile }) {
 
               {/* Unidad */}
               <span className="text-sm text-slate-500 dark:text-slate-400 sm:text-left">
-                {p.unit_id ? `Unidad ${p.unit_id}` : '—'}
+                {p.unit_label ? `Unidad ${p.unit_label}` : (p.unit_id ? 'Unidad asignada' : '—')}
               </span>
 
               {/* Fecha registro */}

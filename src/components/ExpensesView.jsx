@@ -180,7 +180,7 @@ export default function ExpensesView({ session, userProfile }) {
           </div>
           <div className="bg-white/15 rounded-xl p-3">
             <p className="text-white/70 text-xs font-medium mb-1">Unidad</p>
-            <p className="text-2xl font-bold">{userProfile?.unit_id ?? '—'}</p>
+            <p className="text-2xl font-bold">{userProfile?.unit_label ?? userProfile?.unit_id ?? '—'}</p>
           </div>
         </div>
       </div>

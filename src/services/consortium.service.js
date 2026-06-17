@@ -61,14 +61,20 @@ export async function fetchAllProfiles(consortiumId, { page, pageSize } = {}) {
     .eq('consortium_id', consortiumId)
     .order('unit_id');
 
+  // Mapa id->nombre de unidad para mostrar etiqueta legible (unit_id es UUID)
+  const { data: units } = await supabase.from('units').select('id, name').eq('consortium_id', consortiumId);
+  const unitName = Object.fromEntries((units || []).map(u => [u.id, u.name]));
+  const withLabel = (rows) => (rows || []).map(r => ({ ...r, unit_label: r.unit_id ? (unitName[r.unit_id] ?? null) : null }));
+
   if (page != null) {
     const { paginateQuery } = await import('../lib/pagination');
-    return paginateQuery(query, page, pageSize);
+    const res = await paginateQuery(query, page, pageSize);
+    return { ...res, data: withLabel(res.data) };
   }
 
   const { data, error } = await query;
   if (error) { console.warn('fetchAllProfiles:', error.message); return []; }
-  return data || [];
+  return withLabel(data);
 }
 
 export async function updateProfileRole(profileId, role) {
