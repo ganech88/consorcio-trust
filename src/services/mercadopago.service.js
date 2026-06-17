@@ -19,9 +19,9 @@ export async function saveMpConfig(consortiumId, config) {
   return data;
 }
 
-export async function createMpPreference(expenseId, userId, amount, consortiumId) {
+export async function createMpPreference(expenseId, userId, amount, consortiumId, title) {
   const { data, error } = await supabase.functions.invoke('mercadopago-create-preference', {
-    body: { expenseId, userId, amount, consortiumId },
+    body: { expenseId, userId, amount, consortiumId, title },
   });
   if (error) throw error;
   return data;

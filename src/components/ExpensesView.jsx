@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
-import { fetchExpenses, createExpensePayment, fetchMyFines } from '../services/data.service';
+import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
@@ -121,16 +121,19 @@ export default function ExpensesView({ session, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [payTarget, setPayTarget] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [mpEnabled, setMpEnabled] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
     Promise.all([
       fetchExpenses(userProfile.consortium_id),
       fetchMyFines(session?.user?.id),
+      fetchMpConfig(userProfile.consortium_id),
     ])
-      .then(([exp, myFines]) => {
+      .then(([exp, myFines, mpCfg]) => {
         setExpenses(exp);
         setFines(myFines);
+        setMpEnabled(!!mpCfg?.enabled);
       })
       .catch(e => toast.error(e.message, 'Error al cargar expensas'))
       .finally(() => setLoading(false));
@@ -142,6 +145,17 @@ export default function ExpensesView({ session, userProfile }) {
         ? { ...e, expense_payments: [...(e.expense_payments || []), payment] }
         : e
     ));
+  }
+
+  async function handleMpPay(exp) {
+    try {
+      const res = await createMpPreference(exp.id, session?.user?.id, exp.amount, userProfile.consortium_id, exp.title);
+      const url = res?.init_point || res?.sandbox_init_point;
+      if (url) window.location.href = url;
+      else toast.error('No se pudo iniciar el pago con MercadoPago.');
+    } catch (e) {
+      toast.error(e.message || 'Error al iniciar el pago con MercadoPago.');
+    }
   }
 
   const currentPeriod = new Date().toISOString().slice(0, 7); // "YYYY-MM"
@@ -222,12 +236,22 @@ export default function ExpensesView({ session, userProfile }) {
                           {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
                         </span>
                       ) : canPay ? (
-                        <button
-                          onClick={() => setPayTarget(exp)}
-                          className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
-                        >
-                          <CreditCard size={12} /> Registrar pago
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setPayTarget(exp)}
+                            className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                          >
+                            <CreditCard size={12} /> Registrar pago
+                          </button>
+                          {mpEnabled && (
+                            <button
+                              onClick={() => handleMpPay(exp)}
+                              className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                            >
+                              <CreditCard size={12} /> Pagar con MercadoPago
+                            </button>
+                          )}
+                        </>
                       ) : null}
                     </div>
                   </div>
