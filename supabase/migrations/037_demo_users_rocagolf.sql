@@ -31,6 +31,10 @@ BEGIN
    (v_own2::text,  v_own2,  jsonb_build_object('sub',v_own2::text, 'email','propietario2@demo.consorciotrust.app','email_verified',true), 'email', now(), now()),
    (v_ten1::text,  v_ten1,  jsonb_build_object('sub',v_ten1::text, 'email','inquilino1@demo.consorciotrust.app','email_verified',true), 'email', now(), now());
 
+  -- GoTrue falla el login si estas columnas quedan en NULL: ponerlas en 
+  UPDATE auth.users SET confirmation_token='', recovery_token='', email_change='', email_change_token_new=''
+   WHERE id IN (v_admin, v_own1, v_own2, v_ten1);
+
   -- Unidades primero (profiles.unit_id es FK uuid a units)
   INSERT INTO public.units (id, consortium_id, name, floor, apartment, balance, owner_id, tenant_id)
   VALUES
