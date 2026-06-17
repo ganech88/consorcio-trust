@@ -287,7 +287,7 @@ export default function FinanceView({ session, userProfile }) {
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-4">Egresos mensuales</h4>
           <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="99%" height={192} minWidth={0}>
               <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis

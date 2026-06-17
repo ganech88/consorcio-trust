@@ -1,5 +1,12 @@
 import { supabase } from '../lib/supabase';
 
+// La tabla usa content/category/is_important; la UI usa body/type. Adaptamos.
+const mapAnnouncement = (r) => ({
+  ...r,
+  body: r.content ?? r.body ?? '',
+  type: r.is_important ? 'urgent' : (r.type || 'info'),
+});
+
 export async function fetchAnnouncements(consortiumId, { page, pageSize } = {}) {
   let query = supabase
     .from('announcements')
@@ -10,19 +17,21 @@ export async function fetchAnnouncements(consortiumId, { page, pageSize } = {}) 
 
   if (page != null) {
     const { paginateQuery } = await import('../lib/pagination');
-    return paginateQuery(query, page, pageSize);
+    const res = await paginateQuery(query, page, pageSize);
+    return { ...res, data: (res.data || []).map(mapAnnouncement) };
   }
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return (data || []).map(mapAnnouncement);
 }
 
 export async function createAnnouncement({ title, body, type, pinned, consortiumId, createdBy }) {
   const row = {
     title,
-    body,
-    type: type || 'info',
+    content: body,
+    category: type || 'general',
+    is_important: type === 'urgent',
     consortium_id: consortiumId || null,
     created_by: createdBy,
   };
@@ -34,7 +43,7 @@ export async function createAnnouncement({ title, body, type, pinned, consortium
     .select();
 
   if (error) throw error;
-  return data?.[0];
+  return data?.[0] ? mapAnnouncement(data[0]) : null;
 }
 
 export async function deleteAnnouncement(id) {

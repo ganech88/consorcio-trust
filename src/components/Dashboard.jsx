@@ -240,7 +240,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
 
         {gastos.length > 0 ? (
           <div className="h-72 cursor-pointer" onClick={() => onNavigate?.(VIEWS.FINANCE)}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="99%" height={288} minWidth={0}>
               <PieChart>
                 <Pie
                   data={gastos}

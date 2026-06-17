@@ -109,7 +109,7 @@ function AnnouncementCard({ announcement, isRead, onRead }) {
               {announcement.body}
             </p>
 
-            {announcement.body.length > 100 && (
+            {(announcement.body || '').length > 100 && (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1.5 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
