@@ -96,22 +96,16 @@ export async function regenerateInviteCode(consortiumId) {
   return data;
 }
 
-export async function createConsortiumForUser(name, address, city, userId) {
-  const { data: consortium, error: createError } = await supabase
-    .from('consortia')
-    .insert([{ name, address: address || null, city: city || null }])
-    .select()
-    .single();
-
-  if (createError) throw createError;
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ consortium_id: consortium.id, role: 'admin' })
-    .eq('id', userId);
-
-  if (updateError) throw updateError;
-  return consortium;
+export async function createConsortiumForUser(name, address, city) {
+  // RPC SECURITY DEFINER: crea el consorcio y deja al creador como su admin
+  // de forma atomica y segura (respeta el trigger anti-escalada de rol).
+  const { data, error } = await supabase.rpc('create_consortium_and_become_admin', {
+    p_name: name,
+    p_address: address || '',
+    p_city: city || null,
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function updateReminderSettings(consortiumId, settings) {

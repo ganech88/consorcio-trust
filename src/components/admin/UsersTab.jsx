@@ -27,6 +27,10 @@ export default function UsersTab({ userProfile }) {
 
   useEffect(() => { loadPage(0); }, [loadPage]);
 
+  // Un admin solo asigna propietario/inquilino; super_admin asigna cualquier rol.
+  const isSuper = userProfile?.role === 'super_admin';
+  const roleChoices = isSuper ? ROLE_OPTIONS : ROLE_OPTIONS.filter(r => r.value === 'resident' || r.value === 'owner');
+
   async function handleRoleChange(profileId, newRole) {
     setSavingRole(profileId);
     try {
@@ -90,11 +94,11 @@ export default function UsersTab({ userProfile }) {
                 </span>
                 <select
                   value={p.role ?? 'resident'}
-                  disabled={savingRole === p.id}
+                  disabled={savingRole === p.id || (!isSuper && (p.role === 'admin' || p.role === 'super_admin'))}
                   onChange={e => handleRoleChange(p.id, e.target.value)}
                   className="border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 text-xs bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-60 cursor-pointer"
                 >
-                  {ROLE_OPTIONS.map(r => (
+                  {roleChoices.map(r => (
                     <option key={r.value} value={r.value}>{r.label}</option>
                   ))}
                 </select>

@@ -34,7 +34,7 @@ export function DataProvider({ children }) {
       // Fase 2: cargar datos acotados al consorcio, en paralelo.
       const [claimsRes, expensesRes, paymentsRes, consortiumRes] = await Promise.allSettled([
         fetchClaims(consortiumId),
-        fetchExpenseItems(consortiumId),
+        fetchExpenseItems(),
         userId ? fetchPayments(userId) : Promise.resolve([]),
         consortiumId ? fetchConsortium(consortiumId) : Promise.resolve(null),
       ]);
