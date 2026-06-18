@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
-  Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle,
+  Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -16,10 +16,12 @@ import MaintenanceTab from './admin/MaintenanceTab';
 import InsuranceTab from './admin/InsuranceTab';
 import BudgetsTab from './admin/BudgetsTab';
 import CollectionsTab from './admin/CollectionsTab';
+import UnitsTab from './admin/UnitsTab';
 import ConsorcioTab from './admin/ConsorcioTab';
 
 const TABS = [
   { id: 'usuarios',      label: 'Usuarios',       icon: Users },
+  { id: 'unidades',      label: 'Unidades',       icon: Home },
   { id: 'claims',        label: 'Reclamos',       icon: AlertCircle },
   { id: 'expenses',      label: 'Expensas',       icon: DollarSign },
   { id: 'liquidacion',   label: 'Liquidación',    icon: Receipt },
@@ -88,6 +90,7 @@ export default function AdminView({ session, userProfile }) {
 
       {/* Contenido */}
       {activeTab === 'usuarios'      && <UsersTab userProfile={userProfile} />}
+      {activeTab === 'unidades'      && <UnitsTab userProfile={userProfile} />}
       {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}
       {activeTab === 'expenses'      && <ExpensesTab session={session} userProfile={userProfile} />}
       {activeTab === 'liquidacion'   && <LiquidacionTab session={session} userProfile={userProfile} />}

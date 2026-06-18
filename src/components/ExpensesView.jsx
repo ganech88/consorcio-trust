@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
-import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference } from '../services/data.service';
+import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
@@ -117,6 +117,7 @@ const FINE_STATUS_LABELS = {
 export default function ExpensesView({ session, userProfile }) {
   const toast = useToast();
   const [expenses, setExpenses] = useState([]);
+  const [periodItems, setPeriodItems] = useState([]);
   const [fines, setFines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payTarget, setPayTarget] = useState(null);
@@ -129,11 +130,13 @@ export default function ExpensesView({ session, userProfile }) {
       fetchExpenses(userProfile.consortium_id),
       fetchMyFines(session?.user?.id),
       fetchMpConfig(userProfile.consortium_id),
+      fetchUserPeriodItems(session?.user?.id),
     ])
-      .then(([exp, myFines, mpCfg]) => {
+      .then(([exp, myFines, mpCfg, items]) => {
         setExpenses(exp);
         setFines(myFines);
         setMpEnabled(!!mpCfg?.enabled);
+        setPeriodItems(items || []);
       })
       .catch(e => toast.error(e.message, 'Error al cargar expensas'))
       .finally(() => setLoading(false));
@@ -198,6 +201,38 @@ export default function ExpensesView({ session, userProfile }) {
           </div>
         </div>
       </div>
+
+      {/* Mi expensa por periodo (segun mi coeficiente) */}
+      {periodItems.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
+            Mi expensa por periodo (segun mi coeficiente)
+          </h4>
+          <div className="space-y-2">
+            {periodItems.map(it => (
+              <div key={it.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-400/[0.14] flex items-center justify-center shrink-0">
+                  <Receipt size={18} className="text-brand-600 dark:text-brand-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{formatPeriod(it.expense_periods?.period)}</p>
+                  <p className="text-xs text-slate-400 dark:text-ink-low">
+                    {it.expense_periods?.due_date ? `Vence ${new Date(it.expense_periods.due_date).toLocaleDateString('es-AR')}` : ''}
+                  </p>
+                </div>
+                <p className="font-bold text-slate-800 dark:text-ink-hi font-mono shrink-0">{formatCurrency(it.amount)}</p>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                  it.status === 'paid'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                }`}>
+                  {it.status === 'paid' ? 'Pagada' : 'Pendiente'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Período actual */}
       {currentExpenses.length > 0 && (

@@ -3,6 +3,7 @@ import { Receipt, ChevronUp, ChevronDown, Loader2, Users } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
 } from '../../services/data.service';
+import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState } from './shared';
 
@@ -63,28 +64,29 @@ export default function LiquidacionTab({ session, userProfile }) {
   }
 
   async function handleDistribute(period) {
-    const amount = Number(form.amountPerUnit);
-    if (!amount || amount <= 0) { toast.error('Ingresá el monto por unidad'); return; }
     setSaving(period.id);
     try {
-      const { supabase } = await import('../../lib/supabase');
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, unit_id')
-        .eq('consortium_id', userProfile?.consortium_id)
-        .not('unit_id', 'is', null);
+      const units = await fetchUnits(userProfile?.consortium_id);
+      if (!units.length) { toast.error('No hay unidades cargadas. Cargalas en la pestana Unidades.'); return; }
+      const withCoef = units.filter(u => u.coefficient != null && Number(u.coefficient) > 0);
+      if (!withCoef.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la pestana Unidades.'); return; }
 
-      if (!profiles?.length) { toast.error('No se encontraron unidades en este consorcio'); return; }
-
-      const items = profiles.map(p => ({
+      const total = Number(period.total_amount);
+      const items = withCoef.map(u => ({
         period_id: period.id,
-        unit_id: p.unit_id,
-        user_id: p.id,
-        amount,
+        unit_id: u.name,
+        user_id: u.owner_id || null,
+        amount: Math.round(total * Number(u.coefficient) / 100 * 100) / 100,
       }));
 
       await createPeriodItems(items);
-      toast.success(`Expensas distribuidas a ${items.length} unidades`);
+      const fresh = await fetchPeriodItems(period.id);
+      setPeriodItems(prev => ({ ...prev, [period.id]: fresh }));
+
+      const sumCoef = withCoef.reduce((s, u) => s + Number(u.coefficient), 0);
+      toast.success(Math.abs(sumCoef - 100) < 0.5
+        ? `Expensas distribuidas a ${items.length} unidades segun su coeficiente`
+        : `Distribuido a ${items.length} unidades. Atencion: los coeficientes suman ${sumCoef.toFixed(2)}% (no 100%)`);
     } catch (e) {
       toast.error(e.message, 'Error al distribuir');
     } finally {
@@ -156,29 +158,18 @@ export default function LiquidacionTab({ session, userProfile }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto por unidad (para distribución automática)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.amountPerUnit}
-              onChange={e => setField('amountPerUnit', e.target.value)}
-              placeholder="Ej: 25000"
-              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-          <div className="pt-6">
-            <button
-              type="submit"
-              disabled={saving === true}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            >
-              {saving === true ? <Loader2 size={14} className="animate-spin" /> : <Receipt size={14} />}
-              Publicar
-            </button>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-slate-400 dark:text-ink-low">
+            Al publicar, distribui el total entre las unidades segun su <strong className="text-slate-500 dark:text-ink-mid">coeficiente</strong> (pestana Unidades).
+          </p>
+          <button
+            type="submit"
+            disabled={saving === true}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shrink-0"
+          >
+            {saving === true ? <Loader2 size={14} className="animate-spin" /> : <Receipt size={14} />}
+            Publicar
+          </button>
         </div>
       </form>
 
@@ -213,24 +204,18 @@ export default function LiquidacionTab({ session, userProfile }) {
 
                 {isOpen && (
                   <div className="border-t border-slate-100 dark:border-white/[0.07] p-4 space-y-3">
-                    {/* Distribuir */}
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.amountPerUnit}
-                        onChange={e => setField('amountPerUnit', e.target.value)}
-                        placeholder="Monto por unidad"
-                        className="flex-1 border border-slate-200 dark:border-white/[0.09] rounded-lg px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
+                    {/* Distribuir por coeficiente */}
+                    <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
+                      <p className="text-xs text-slate-500 dark:text-ink-mid">
+                        Distribuye ${Number(period.total_amount).toLocaleString('es-AR')} entre las unidades segun su coeficiente.
+                      </p>
                       <button
                         onClick={() => handleDistribute(period)}
                         disabled={saving === period.id}
                         className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
                       >
                         {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <Users size={12} />}
-                        Distribuir
+                        Distribuir por coeficiente
                       </button>
                     </div>
 
