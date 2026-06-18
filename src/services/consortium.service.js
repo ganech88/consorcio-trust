@@ -157,3 +157,18 @@ export async function updateConsortiumBranding(consortiumId, fields) {
   if (error) throw error;
   return data;
 }
+
+// El admin crea un residente/propietario (edge function server-side) y lo
+// vincula a su unidad. Devuelve { ok, userId, created, tempPassword }.
+export async function createConsortiumMember({ email, fullName, consortiumId, unitId, role }) {
+  const { data, error } = await supabase.functions.invoke('provision-consortium-member', {
+    body: { email, fullName, consortiumId, unitId, role },
+  });
+  if (error) {
+    let msg = error.message;
+    try { const ctx = await error.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch { /* noop */ }
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
