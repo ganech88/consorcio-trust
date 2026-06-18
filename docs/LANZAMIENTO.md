@@ -31,10 +31,17 @@ Estado al 17/06/2026. Marca lo pendiente antes de abrir a consorcios reales.
 - Borrar la carpeta `consorcio-trust/` (≈271 MB, scaffold viejo) y los `.claude/worktrees/*` (copias completas del proyecto). Están gitignored pero ocupan espacio local.
 - Las migraciones `037`–`043` son **datos demo**. Antes de un reset de producción real, no las apliques (o moverlas a un `supabase/seed/` aparte) para no crear usuarios falsos.
 
-## 🏗️ Deuda técnica recomendada (refactors grandes — hacer deliberadamente, no apurar)
+## 🏗️ Refactors grandes — estado
 
-- **Consolidar el modelo de expensas**: hoy conviven `expenses`, `expense_periods`, `expenses_summary` y `expense_items`. Definir una sola fuente de verdad y, idealmente, expensas **por unidad** (hoy son a nivel consorcio).
-- **Migración gradual a TypeScript**: empezar por `src/services/` y `src/lib/`. Habría atrapado en compilación bugs como `body/content` o `unit_id` UUID.
+### Modelo de expensas (canónico definido + dashboard repuntado)
+- **Cargos / pagos a residentes**: `expenses` + `expense_payments` (lo usa la vista Expensas e Informar Pago). **Fuente de verdad.**
+- **Egresos del consorcio por categoría**: `expenses_log` (lo usa Finanzas y ahora el Dashboard "Destino de tus Fondos").
+- El Dashboard ya **no** usa el huérfano `expense_items`/`expenses_summary` (quedaron fuera del path activo).
+- **Pendiente**: retirar definitivamente `expense_periods`/`expense_period_items` (LiquidacionTab, modelo paralelo) y evaluar expensas **por unidad** (hoy `expenses` es a nivel consorcio). Es un cambio de esquema con migración de datos — hacer deliberadamente.
+
+### TypeScript (fundación lista, migración gradual)
+- `tsconfig` (allowJs), `database.types.ts` generado, cliente Supabase tipado, `lib/utils`, `lib/pagination` y `claims.service` en `.ts`. `npm run typecheck` (tsc) en CI.
+- **Pendiente**: ir migrando el resto de `src/services/` y los componentes a `.ts/.tsx` de a poco (cada archivo nuevo, en TS).
 
 ## ⚠️ Advisors de Supabase que quedan (aceptables / por diseño)
 

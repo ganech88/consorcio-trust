@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { fetchClaims, fetchExpenseItems, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
+import { fetchClaims, fetchExpenseBreakdown, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
 const DataContext = createContext(null);
@@ -34,7 +34,7 @@ export function DataProvider({ children }) {
       // Fase 2: cargar datos acotados al consorcio, en paralelo.
       const [claimsRes, expensesRes, paymentsRes, consortiumRes] = await Promise.allSettled([
         fetchClaims(consortiumId),
-        fetchExpenseItems(),
+        fetchExpenseBreakdown(consortiumId),
         userId ? fetchPayments(userId) : Promise.resolve([]),
         consortiumId ? fetchConsortium(consortiumId) : Promise.resolve(null),
       ]);

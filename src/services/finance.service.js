@@ -32,6 +32,21 @@ export async function addExpenseLog({ description, category, amount, date, provi
   return data;
 }
 
+// Egresos del consorcio agrupados por categoria (para el Dashboard 'Destino de tus Fondos').
+// Fuente canonica: expenses_log (reemplaza al antiguo expense_items/expenses_summary).
+export async function fetchExpenseBreakdown(consortiumId) {
+  let query = supabase.from('expenses_log').select('category, amount');
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+  const { data, error } = await query;
+  if (error) { console.warn('expense breakdown:', error.message); return []; }
+  const byCat = {};
+  (data || []).forEach((r) => {
+    const cat = r.category || 'Otros';
+    byCat[cat] = (byCat[cat] || 0) + Number(r.amount);
+  });
+  return Object.entries(byCat).map(([name, value]) => ({ name, value }));
+}
+
 export async function fetchMonthlyFinanceSummary(consortiumId) {
   let query = supabase
     .from('expenses_log')
