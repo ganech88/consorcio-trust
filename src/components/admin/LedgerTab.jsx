@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Receipt, Gavel } from 'lucide-react';
+import { Wallet, Receipt, Gavel, FileText } from 'lucide-react';
 import { fetchUnits } from '../../services/units.service';
 import { fetchUnitLedger } from '../../services/reports.service';
+import { fetchConsortium, fetchConsortiumMembers } from '../../services/data.service';
+import { generateDebtPdf } from '../../services/pdf.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState, fmtCurrency } from './shared';
 
@@ -18,10 +20,17 @@ export default function LedgerTab({ userProfile }) {
   const [ledger, setLedger] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingLedger, setLoadingLedger] = useState(false);
+  const [consortium, setConsortium] = useState(null);
+  const [owners, setOwners] = useState({});
 
   useEffect(() => {
-    fetchUnits(userProfile?.consortium_id)
-      .then(setUnits)
+    const cid = userProfile?.consortium_id;
+    Promise.all([fetchUnits(cid), fetchConsortium(cid), fetchConsortiumMembers(cid)])
+      .then(([u, c, members]) => {
+        setUnits(u);
+        setConsortium(c);
+        setOwners(Object.fromEntries((members || []).map(m => [m.id, m.full_name])));
+      })
       .catch(e => toast.error(e.message, 'Error al cargar unidades'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, toast]);
@@ -55,6 +64,21 @@ export default function LedgerTab({ userProfile }) {
   const totalFacturado = movements.reduce((s, m) => s + m.amount, 0);
   const totalPagado = movements.filter(m => m.status === 'paid').reduce((s, m) => s + m.amount, 0);
   const saldo = totalFacturado - totalPagado;
+
+  async function handlePdf(kind) {
+    const unit = units.find(u => u.id === selected);
+    if (!unit) return;
+    try {
+      await generateDebtPdf({
+        kind, unit,
+        ownerName: unit.owner_id ? owners[unit.owner_id] : null,
+        movements,
+        consortium: consortium || {},
+      });
+    } catch (e) {
+      toast.error(e.message, 'No se pudo generar el PDF');
+    }
+  }
 
   if (loading) return <LoadingSpinner />;
 
@@ -96,6 +120,18 @@ export default function LedgerTab({ userProfile }) {
               <p className={`font-bold font-mono text-sm ${saldo > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{fmtCurrency(saldo)}</p>
             </div>
           </div>
+
+          {/* Acciones PDF */}
+          {saldo > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => handlePdf('certificado')} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                <FileText size={14} /> Certificado de deuda (PDF)
+              </button>
+              <button onClick={() => handlePdf('intimacion')} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                <FileText size={14} /> Intimacion de pago (PDF)
+              </button>
+            </div>
+          )}
 
           {/* Movimientos */}
           {movements.length === 0 ? (
