@@ -60,6 +60,10 @@ export default function FinesTab({ session, userProfile }) {
       toast.error('Completá unidad, monto y motivo');
       return;
     }
+    if (Number(form.amount) <= 0) {
+      toast.error('El monto de la multa debe ser mayor a cero');
+      return;
+    }
     setSaving(true);
     try {
       const fine = await createFine({

@@ -60,7 +60,10 @@ export async function submitVote({ pollId, userId, optionIndex }) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === '23505') throw new Error('Ya votaste en esta encuesta.');
+    throw error;
+  }
   return data;
 }
 

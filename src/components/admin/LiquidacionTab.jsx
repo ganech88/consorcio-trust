@@ -39,6 +39,10 @@ export default function LiquidacionTab({ session, userProfile }) {
       toast.error('Completá período, monto total y fecha de vencimiento');
       return;
     }
+    if (Number(form.totalAmount) <= 0) {
+      toast.error('El monto total debe ser mayor a cero');
+      return;
+    }
     setSaving(true);
     try {
       const p = await createExpensePeriod({
@@ -92,6 +96,14 @@ export default function LiquidacionTab({ session, userProfile }) {
         user_id: u.owner_id || null,
         amount: Math.round(total * Number(u.coefficient) / 100 * 100) / 100,
       }));
+
+      // Ajuste de centavos: si por redondeo la suma no da el total exacto,
+      // corregimos la ultima unidad (solo si el desvio es chico, < $1).
+      const sumAmt = rows.reduce((s, r) => s + r.amount, 0);
+      const drift = Math.round((total - sumAmt) * 100) / 100;
+      if (rows.length > 0 && drift !== 0 && Math.abs(drift) < 1) {
+        rows[rows.length - 1].amount = Math.round((rows[rows.length - 1].amount + drift) * 100) / 100;
+      }
 
       await createPeriodItems(rows);
       const fresh = await fetchPeriodItems(period.id);

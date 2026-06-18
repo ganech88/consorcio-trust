@@ -224,9 +224,11 @@ export default function ExpensesView({ session, userProfile }) {
   );
   const activeFines = fines.filter(f => f.status === 'active');
   const totalFines = activeFines.reduce((s, f) => s + Number(f.amount), 0);
-  const totalPending = expenses
-    .filter(e => e.status === 'pending' || e.status === 'overdue')
-    .reduce((s, e) => s + Number(e.amount), 0) + totalFines;
+  const usePeriodModel = periodItems.length > 0;
+  const totalPending = (usePeriodModel
+    ? periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + Number(it.amount || 0), 0)
+    : expenses.filter(e => e.status === 'pending' || e.status === 'overdue').reduce((s, e) => s + Number(e.amount), 0)
+  ) + totalFines;
 
   if (loading) {
     return (
@@ -312,8 +314,8 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       )}
 
-      {/* Período actual */}
-      {currentExpenses.length > 0 && (
+      {/* Período actual (modelo simple: oculto si la unidad tiene expensas por coeficiente) */}
+      {!usePeriodModel && currentExpenses.length > 0 && (
         <div>
           <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
             Período actual — {formatPeriod(currentPeriod)}
@@ -323,7 +325,7 @@ export default function ExpensesView({ session, userProfile }) {
               const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
               const Icon = st.icon;
               const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
-              const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
+              const canPay = !usePeriodModel && !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
               return (
                 <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -396,7 +398,7 @@ export default function ExpensesView({ session, userProfile }) {
             {expenses.map(exp => {
               const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
               const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
-              const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
+              const canPay = !usePeriodModel && !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
               const isExpanded = expandedId === exp.id;
               return (
                 <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">

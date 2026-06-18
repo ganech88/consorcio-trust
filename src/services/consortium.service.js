@@ -38,10 +38,19 @@ export async function joinConsortiumByCode(inviteCode, userId) {
     .from('consortia')
     .select('id, name')
     .eq('invite_code', inviteCode.trim())
-    .single();
+    .maybeSingle();
 
   if (lookupError || !consortium) {
     throw new Error('Código de invitación inválido. Verificá el código e intentá de nuevo.');
+  }
+
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('consortium_id')
+    .eq('id', userId)
+    .maybeSingle();
+  if (prof?.consortium_id) {
+    throw new Error('Ya pertenecés a un consorcio. Pedile a la administración el cambio si corresponde.');
   }
 
   const { error: updateError } = await supabase

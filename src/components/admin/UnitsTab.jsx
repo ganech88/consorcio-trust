@@ -41,6 +41,8 @@ export default function UnitsTab({ userProfile }) {
       return v !== undefined && Number(v) !== Number(u.coefficient ?? NaN);
     });
     if (changed.length === 0) { toast.error('No hay cambios para guardar'); return; }
+    const invalido = changed.find(u => { const v = Number(edited[u.id]); return edited[u.id] !== '' && (isNaN(v) || v < 0); });
+    if (invalido) { toast.error('Los coeficientes deben ser números mayores o iguales a 0'); return; }
     setSaving(true);
     try {
       await Promise.all(changed.map(u =>
@@ -61,6 +63,9 @@ export default function UnitsTab({ userProfile }) {
   async function handleCreate(e) {
     e.preventDefault();
     if (!form.name.trim()) { toast.error('Ingresá el nombre/etiqueta de la unidad (Ej: 2A)'); return; }
+    if (form.coefficient !== '' && (isNaN(Number(form.coefficient)) || Number(form.coefficient) < 0)) {
+      toast.error('El coeficiente debe ser un número mayor o igual a 0'); return;
+    }
     setSaving(true);
     try {
       const unit = await createUnit(userProfile?.consortium_id, {
