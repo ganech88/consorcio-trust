@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
-  Receipt, Users, Wrench, Building2, Gavel,
+  Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -13,6 +13,9 @@ import ReservationsTab from './admin/ReservationsTab';
 import AnnouncementsTab from './admin/AnnouncementsTab';
 import DocumentsTab from './admin/DocumentsTab';
 import MaintenanceTab from './admin/MaintenanceTab';
+import InsuranceTab from './admin/InsuranceTab';
+import BudgetsTab from './admin/BudgetsTab';
+import CollectionsTab from './admin/CollectionsTab';
 import ConsorcioTab from './admin/ConsorcioTab';
 
 const TABS = [
@@ -25,6 +28,9 @@ const TABS = [
   { id: 'announcements', label: 'Comunicados',    icon: Megaphone },
   { id: 'documents',     label: 'Documentos',     icon: FileText },
   { id: 'maintenance',   label: 'Mantenimiento',  icon: Wrench },
+  { id: 'seguros',       label: 'Seguros',        icon: ShieldCheck },
+  { id: 'presupuestos',  label: 'Presupuestos',   icon: ClipboardList },
+  { id: 'cobranzas',     label: 'Cobranzas',      icon: HelpCircle },
   { id: 'consorcio',     label: 'Consorcio',      icon: Building2 },
 ];
 
@@ -90,6 +96,9 @@ export default function AdminView({ session, userProfile }) {
       {activeTab === 'announcements' && <AnnouncementsTab session={session} userProfile={userProfile} />}
       {activeTab === 'documents'     && <DocumentsTab session={session} userProfile={userProfile} />}
       {activeTab === 'maintenance'   && <MaintenanceTab session={session} userProfile={userProfile} />}
+      {activeTab === 'seguros'       && <InsuranceTab session={session} userProfile={userProfile} />}
+      {activeTab === 'presupuestos'  && <BudgetsTab session={session} userProfile={userProfile} />}
+      {activeTab === 'cobranzas'     && <CollectionsTab session={session} userProfile={userProfile} />}
       {activeTab === 'consorcio'     && <ConsorcioTab session={session} userProfile={userProfile} />}
     </div>
   );

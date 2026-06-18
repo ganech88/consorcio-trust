@@ -135,3 +135,16 @@ export async function fetchRemindersLog(consortiumId) {
   if (error) { console.warn('fetchRemindersLog:', error.message); return []; }
   return data || [];
 }
+
+// White-label: datos/logo/firma de la administracion (se muestran en
+// expensas, recibos y certificados generados).
+export async function updateConsortiumBranding(consortiumId, fields) {
+  const { data, error } = await supabase
+    .from('consortia')
+    .update(fields)
+    .eq('id', consortiumId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

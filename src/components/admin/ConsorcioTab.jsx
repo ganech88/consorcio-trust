@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
   Building2, Check, Copy, RefreshCw, Loader2, Users, Bell, Save,
-  CreditCard as MpIcon,
+  CreditCard as MpIcon, Palette,
 } from 'lucide-react';
 import {
   updateConsortium, fetchConsortiumMembers,
   regenerateInviteCode, updateReminderSettings,
-  fetchMpConfig, saveMpConfig,
+  fetchMpConfig, saveMpConfig, updateConsortiumBranding,
 } from '../../services/data.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner } from './shared';
@@ -24,6 +24,8 @@ export default function ConsorcioTab({ userProfile }) {
   const [savingReminder, setSavingReminder] = useState(false);
   const [mpForm, setMpForm] = useState({ access_token: '', public_key: '', enabled: false, hasToken: false });
   const [savingMp, setSavingMp] = useState(false);
+  const [brandForm, setBrandForm] = useState({ admin_name: '', admin_phone: '', admin_address: '', admin_logo_url: '', admin_signature_url: '' });
+  const [savingBrand, setSavingBrand] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) { setLoading(false); return; }
@@ -39,6 +41,11 @@ export default function ConsorcioTab({ userProfile }) {
           enabled: c.reminder_enabled ?? false,
           days_before: c.reminder_days_before_due ?? 3,
           days_after: c.reminder_days_after_due ?? 2,
+        });
+        setBrandForm({
+          admin_name: c.admin_name || '', admin_phone: c.admin_phone || '',
+          admin_address: c.admin_address || '', admin_logo_url: c.admin_logo_url || '',
+          admin_signature_url: c.admin_signature_url || '',
         });
       }
       setMembers(m);
@@ -104,6 +111,26 @@ export default function ConsorcioTab({ userProfile }) {
       toast.error(err.message, 'Error al guardar');
     } finally {
       setSavingReminder(false);
+    }
+  }
+
+  async function handleSaveBranding(e) {
+    e.preventDefault();
+    setSavingBrand(true);
+    try {
+      const updated = await updateConsortiumBranding(userProfile.consortium_id, {
+        admin_name: brandForm.admin_name.trim() || null,
+        admin_phone: brandForm.admin_phone.trim() || null,
+        admin_address: brandForm.admin_address.trim() || null,
+        admin_logo_url: brandForm.admin_logo_url.trim() || null,
+        admin_signature_url: brandForm.admin_signature_url.trim() || null,
+      });
+      setConsortium(prev => ({ ...prev, ...updated }));
+      toast.success('Datos de la administracion guardados');
+    } catch (err) {
+      toast.error(err.message, 'Error al guardar');
+    } finally {
+      setSavingBrand(false);
     }
   }
 
@@ -179,7 +206,47 @@ export default function ConsorcioTab({ userProfile }) {
         </button>
       </form>
 
-      {/* Código de invitación */}
+      {/* Marca de la administracion (white-label) */}
+      <form onSubmit={handleSaveBranding} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2">
+          <Palette size={16} className="text-brand-500" />
+          Marca de la administracion
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-ink-mid">
+          Estos datos aparecen en las expensas, recibos y certificados que generas (white-label).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Nombre de la administracion</label>
+            <input type="text" value={brandForm.admin_name} onChange={e => setBrandForm(p => ({ ...p, admin_name: e.target.value }))} placeholder="Ej: Administracion Lopez" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Telefono</label>
+            <input type="text" value={brandForm.admin_phone} onChange={e => setBrandForm(p => ({ ...p, admin_phone: e.target.value }))} placeholder="+54 9 11 ..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Direccion</label>
+            <input type="text" value={brandForm.admin_address} onChange={e => setBrandForm(p => ({ ...p, admin_address: e.target.value }))} placeholder="Calle 123, CABA" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Logo (URL)</label>
+            <input type="url" value={brandForm.admin_logo_url} onChange={e => setBrandForm(p => ({ ...p, admin_logo_url: e.target.value }))} placeholder="https://..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Firma (URL de imagen)</label>
+            <input type="url" value={brandForm.admin_signature_url} onChange={e => setBrandForm(p => ({ ...p, admin_signature_url: e.target.value }))} placeholder="https://..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none font-mono" />
+          </div>
+        </div>
+        {brandForm.admin_logo_url && (
+          <img src={brandForm.admin_logo_url} alt="Logo administracion" className="h-12 object-contain rounded-lg bg-white p-1 border border-slate-200 dark:border-white/[0.09]" />
+        )}
+        <button type="submit" disabled={savingBrand} className="flex items-center gap-2 bg-brand-500 hover:bg-brand-400 disabled:opacity-60 text-[#04201d] px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+          {savingBrand ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Guardar datos
+        </button>
+      </form>
+
+      {/* Codigo de invitacion */}
       {consortium?.invite_code && (
         <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
           <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm mb-3">Código de Invitación</h4>
