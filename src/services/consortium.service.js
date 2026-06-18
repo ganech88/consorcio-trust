@@ -155,3 +155,28 @@ export async function createConsortiumMember({ email, fullName, consortiumId, un
   if (data?.error) throw new Error(data.error);
   return data;
 }
+
+// Invitaciones por unidad: el admin genera un codigo atado a una unidad + rol;
+// al usarlo, la persona queda vinculada automaticamente a esa unidad.
+export async function createUnitInvite({ consortiumId, unitId, role, fullName }) {
+  const { data, error } = await supabase.rpc('create_unit_invite', {
+    p_consortium_id: consortiumId,
+    p_unit_id: unitId || null,
+    p_role: role,
+    p_full_name: fullName || null,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return { id: row?.invite_id, code: row?.code };
+}
+
+export async function fetchUnitInvites(consortiumId) {
+  if (!consortiumId) return [];
+  const { data, error } = await supabase
+    .from('consortium_invites')
+    .select('id, code, unit_id, role, full_name, used_at, created_at')
+    .eq('consortium_id', consortiumId)
+    .order('created_at', { ascending: false });
+  if (error) { console.warn('fetchUnitInvites:', error.message); return []; }
+  return data || [];
+}
