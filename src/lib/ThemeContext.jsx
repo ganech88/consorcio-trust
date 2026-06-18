@@ -6,7 +6,7 @@ export function ThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('ct-theme');
     if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return true; // dark-first: default oscuro si no hay preferencia guardada
   });
 
   useEffect(() => {

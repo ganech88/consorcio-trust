@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
         brand: {
@@ -36,6 +37,19 @@ export default {
           700: '#b45309',
           800: '#92400e',
           900: '#78350f',
+        },
+        surface: {
+          base:    '#0b0d12',
+          sidebar: '#0e1016',
+          panel:   '#14171e',
+          panel2:  '#181c25',
+          inset:   '#0f1219',
+        },
+        ink: {
+          hi:  '#eef1f6',
+          mid: '#98a2b3',
+          low: '#5c6675',
+          dim: '#4b5462',
         },
       },
       borderWidth: {

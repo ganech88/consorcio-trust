@@ -29,10 +29,10 @@ export const CLAIM_STATUS = {
 };
 
 // --- Colores para gráficos (light) ---
-export const CHART_COLORS = ['#0d9488', '#f59e0b', '#6366f1', '#ec4899', '#10b981', '#f97316', '#8b5cf6'];
+export const CHART_COLORS = ['#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#3a4452'];
 
 // --- Colores para gráficos (dark) ---
-export const CHART_COLORS_DARK = ['#2dd4bf', '#fbbf24', '#818cf8', '#f472b6', '#34d399', '#fb923c', '#a78bfa'];
+export const CHART_COLORS_DARK = ['#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#3a4452'];
 
 // --- Items de navegación ---
 export const NAV_ITEMS = [
