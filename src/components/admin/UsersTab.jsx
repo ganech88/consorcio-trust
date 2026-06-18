@@ -49,41 +49,41 @@ export default function UsersTab({ userProfile }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-slate-500 dark:text-ink-mid">
         {profiles.length} usuario{profiles.length !== 1 ? 's' : ''} registrado{profiles.length !== 1 ? 's' : ''} en el consorcio.
       </p>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
         {/* Header */}
-        <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Nombre</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Unidad</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Registro</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rol</span>
+        <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-slate-50 dark:bg-surface-inset border-b border-slate-100 dark:border-white/[0.07]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low">Nombre</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low">Unidad</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low">Registro</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low">Rol</span>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+        <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
           {profiles.map(p => (
-            <div key={p.id} className="flex flex-col sm:grid sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div key={p.id} className="flex flex-col sm:grid sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors">
               {/* Nombre */}
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-400/[0.14] flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
                     {(p.full_name || '?').charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                <span className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">
                   {p.full_name || 'Sin nombre'}
                 </span>
               </div>
 
               {/* Unidad */}
-              <span className="text-sm text-slate-500 dark:text-slate-400 sm:text-left">
+              <span className="text-sm text-slate-500 dark:text-ink-mid sm:text-left">
                 {p.unit_label ? `Unidad ${p.unit_label}` : (p.unit_id ? 'Unidad asignada' : '—')}
               </span>
 
               {/* Fecha registro */}
-              <span className="text-xs text-slate-400 dark:text-slate-500">
+              <span className="text-xs text-slate-400 dark:text-ink-low">
                 {p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—'}
               </span>
 
@@ -96,7 +96,7 @@ export default function UsersTab({ userProfile }) {
                   value={p.role ?? 'resident'}
                   disabled={savingRole === p.id || (!isSuper && (p.role === 'admin' || p.role === 'super_admin'))}
                   onChange={e => handleRoleChange(p.id, e.target.value)}
-                  className="border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 text-xs bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-60 cursor-pointer"
+                  className="border border-slate-200 dark:border-white/[0.09] rounded-lg px-2 py-1 text-xs bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-60 cursor-pointer"
                 >
                   {roleChoices.map(r => (
                     <option key={r.value} value={r.value}>{r.label}</option>

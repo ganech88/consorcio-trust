@@ -7,12 +7,12 @@ import Modal from './Modal';
 const CATEGORIES = ['Venta', 'Búsqueda', 'Perdido/Encontrado', 'Servicios', 'Donación', 'Otro'];
 
 const CATEGORY_COLORS = {
-  'Venta':             'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  'Búsqueda':          'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+  'Venta':             'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+  'Búsqueda':          'bg-brand-100 text-brand-700 dark:bg-brand-400/[0.16] dark:text-brand-400',
   'Perdido/Encontrado':'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
   'Servicios':         'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
   'Donación':          'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
-  'Otro':              'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+  'Otro':              'bg-slate-100 text-slate-600 dark:bg-surface-panel2 dark:text-ink-mid',
 };
 
 function relativeTime(dateStr) {
@@ -113,7 +113,7 @@ export default function BoardView({ session, userProfile }) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20 flex items-center justify-between">
+      <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20 flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold flex items-center gap-2 mb-1">
             <LayoutList size={24} />
@@ -137,7 +137,7 @@ export default function BoardView({ session, userProfile }) {
           className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
             filter === 'all'
               ? 'bg-brand-600 text-white'
-              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              : 'bg-white dark:bg-surface-panel text-slate-600 dark:text-ink-mid border border-slate-200 dark:border-white/[0.07] hover:bg-slate-50 dark:hover:bg-white/[0.06]'
           }`}
         >
           Todos ({posts.length})
@@ -152,7 +152,7 @@ export default function BoardView({ session, userProfile }) {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                 filter === cat
                   ? 'bg-brand-600 text-white'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  : 'bg-white dark:bg-surface-panel text-slate-600 dark:text-ink-mid border border-slate-200 dark:border-white/[0.07] hover:bg-slate-50 dark:hover:bg-white/[0.06]'
               }`}
             >
               {cat} ({count})
@@ -167,7 +167,7 @@ export default function BoardView({ session, userProfile }) {
           <Loader2 size={28} className="animate-spin text-brand-500" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center text-slate-400 dark:text-ink-low">
           <LayoutList size={44} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium">No hay publicaciones</p>
           <p className="text-sm mt-1">Sé el primero en publicar algo</p>
@@ -181,15 +181,15 @@ export default function BoardView({ session, userProfile }) {
             return (
               <div
                 key={post.id}
-                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 transition-shadow"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${catColor}`}>
                       {post.category}
                     </span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">Unidad {unitNum}</span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">· {relativeTime(post.created_at)}</span>
+                    <span className="text-xs text-slate-400 dark:text-ink-low">Unidad {unitNum}</span>
+                    <span className="text-xs text-slate-400 dark:text-ink-low">· {relativeTime(post.created_at)}</span>
                   </div>
                   {(isOwner || isAdmin) && (
                     <button
@@ -205,16 +205,16 @@ export default function BoardView({ session, userProfile }) {
                   )}
                 </div>
 
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 mt-3 text-base">{post.title}</h4>
+                <h4 className="font-bold text-slate-800 dark:text-ink-hi mt-3 text-base">{post.title}</h4>
                 {post.body && (
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">{post.body}</p>
+                  <p className="text-sm text-slate-600 dark:text-ink-mid mt-1.5 leading-relaxed">{post.body}</p>
                 )}
 
                 <div className="flex items-center gap-3 mt-4">
                   <button
                     onClick={() => handleReact(post)}
                     disabled={reacting === post.id}
-                    className="flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-slate-400 dark:text-ink-low hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
                   >
                     <Heart size={16} className={reacting === post.id ? 'fill-pink-500 text-pink-500' : ''} />
                     <span className="font-medium">{post.reactions_count || 0}</span>
@@ -231,7 +231,7 @@ export default function BoardView({ session, userProfile }) {
         <Modal title="Nueva publicación" onClose={() => setShowModal(false)}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Categoría
               </label>
               <div className="flex flex-wrap gap-2">
@@ -243,7 +243,7 @@ export default function BoardView({ session, userProfile }) {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                       form.category === cat
                         ? 'bg-brand-600 border-brand-600 text-white'
-                        : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-brand-300'
+                        : 'border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid hover:border-brand-300'
                     }`}
                   >
                     <Tag size={11} />
@@ -254,7 +254,7 @@ export default function BoardView({ session, userProfile }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Título <span className="text-red-500">*</span>
               </label>
               <input
@@ -262,14 +262,14 @@ export default function BoardView({ session, userProfile }) {
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Ej: Vendo bicicleta — excelente estado"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
                 maxLength={120}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Detalle (opcional)
               </label>
               <textarea
@@ -277,7 +277,7 @@ export default function BoardView({ session, userProfile }) {
                 onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
                 placeholder="Agregá más información sobre tu publicación..."
                 rows={3}
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none"
               />
             </div>
 
@@ -285,7 +285,7 @@ export default function BoardView({ session, userProfile }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-gradient-to-r from-brand-600 to-brand-700 text-white py-3 rounded-xl font-bold hover:from-brand-700 hover:to-brand-800 flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
+                className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:from-brand-700 hover:to-brand-800 flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 {saving ? 'Publicando...' : 'Publicar'}
@@ -293,7 +293,7 @@ export default function BoardView({ session, userProfile }) {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-4 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                className="px-4 border border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-1"
               >
                 <X size={16} /> Cancelar
               </button>

@@ -77,37 +77,37 @@ export default function AnnouncementsTab({ session, userProfile }) {
   return (
     <div className="space-y-6">
       {/* Formulario */}
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Publicar nuevo comunicado</h4>
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm">Publicar nuevo comunicado</h4>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Título</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Título</label>
           <input
             type="text"
             value={form.title}
             onChange={e => setField('title', e.target.value)}
             placeholder="Título del comunicado"
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Contenido</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Contenido</label>
           <textarea
             value={form.body}
             onChange={e => setField('body', e.target.value)}
             placeholder="Redactá el comunicado..."
             rows={4}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none resize-none"
             required
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Categoría</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Categoría</label>
             <select
               value={form.type}
               onChange={e => setField('type', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="info">Informativo</option>
               <option value="event">Evento</option>
@@ -118,11 +118,11 @@ export default function AnnouncementsTab({ session, userProfile }) {
             <label className="flex items-center gap-2 cursor-pointer select-none pb-2.5">
               <div
                 onClick={() => setField('pinned', !form.pinned)}
-                className={`w-10 h-5 rounded-full transition-colors relative ${form.pinned ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`w-10 h-5 rounded-full transition-colors relative ${form.pinned ? 'bg-blue-600' : 'bg-slate-300 dark:bg-surface-panel2'}`}
               >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.pinned ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </div>
-              <span className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1">
+              <span className="text-sm text-slate-600 dark:text-ink-mid flex items-center gap-1">
                 <Pin size={13} /> Fijar
               </span>
             </label>
@@ -141,30 +141,30 @@ export default function AnnouncementsTab({ session, userProfile }) {
       {/* Lista */}
       {loading ? <LoadingSpinner /> : (
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1">
             Comunicados publicados ({announcements.length})
           </h4>
           {announcements.length === 0 ? (
             <EmptyState icon={Megaphone} text="No hay comunicados publicados aún" />
           ) : (
             announcements.map(a => (
-              <div key={a.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm flex items-start gap-3">
+              <div key={a.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">{a.title}</p>
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi">{a.title}</p>
                     {a.pinned && <Pin size={13} className="text-amber-500" />}
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      a.type === 'urgent' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
+                      a.type === 'urgent' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' :
                       a.type === 'event' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
-                      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400'
                     }`}>
                       {a.type === 'urgent' ? 'Urgente' : a.type === 'event' ? 'Evento' : 'Info'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     {new Date(a.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2">{a.body}</p>
+                  <p className="text-sm text-slate-600 dark:text-ink-mid mt-1.5 line-clamp-2">{a.body}</p>
                 </div>
                 <button
                   onClick={() => handleDelete(a.id)}

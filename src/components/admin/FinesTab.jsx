@@ -117,19 +117,19 @@ export default function FinesTab({ session, userProfile }) {
     <div className="space-y-4">
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total multas activas</p>
+        <div className="bg-white dark:bg-surface-panel rounded-xl border border-slate-100 dark:border-white/[0.07] p-4">
+          <p className="text-xs text-slate-400 dark:text-ink-low mb-1">Total multas activas</p>
           <p className="text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalActive)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Multas activas</p>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100">
+        <div className="bg-white dark:bg-surface-panel rounded-xl border border-slate-100 dark:border-white/[0.07] p-4">
+          <p className="text-xs text-slate-400 dark:text-ink-low mb-1">Multas activas</p>
+          <p className="text-xl font-bold text-slate-800 dark:text-ink-hi">
             {fines.filter(f => f.status === 'active').length}
           </p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total registradas</p>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100">{fines.length}</p>
+        <div className="bg-white dark:bg-surface-panel rounded-xl border border-slate-100 dark:border-white/[0.07] p-4">
+          <p className="text-xs text-slate-400 dark:text-ink-low mb-1">Total registradas</p>
+          <p className="text-xl font-bold text-slate-800 dark:text-ink-hi">{fines.length}</p>
         </div>
       </div>
 
@@ -148,22 +148,22 @@ export default function FinesTab({ session, userProfile }) {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 space-y-4"
+          className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4"
         >
-          <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
             <Gavel size={16} className="text-red-500" /> Aplicar multa
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Residente */}
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
                 Residente / Unidad *
               </label>
               <select
                 value={form.user_id}
                 onChange={e => handleMemberSelect(e.target.value)}
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
               >
                 <option value="">Seleccionar residente...</option>
                 {members.map(m => (
@@ -176,7 +176,7 @@ export default function FinesTab({ session, userProfile }) {
 
             {/* Unidad (se llena auto) */}
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
                 Unidad *
               </label>
               <input
@@ -184,14 +184,14 @@ export default function FinesTab({ session, userProfile }) {
                 value={form.unit_id}
                 onChange={e => setForm(prev => ({ ...prev, unit_id: e.target.value }))}
                 placeholder="Ej: 3B"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
                 required
               />
             </div>
 
             {/* Monto */}
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
                 Monto ($) *
               </label>
               <input
@@ -201,28 +201,28 @@ export default function FinesTab({ session, userProfile }) {
                 value={form.amount}
                 onChange={e => setForm(prev => ({ ...prev, amount: e.target.value }))}
                 placeholder="0.00"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
                 required
               />
             </div>
 
             {/* Período */}
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
                 Período (se suma a expensa)
               </label>
               <input
                 type="month"
                 value={form.period}
                 onChange={e => setForm(prev => ({ ...prev, period: e.target.value }))}
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
               />
             </div>
           </div>
 
           {/* Motivo */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
               Motivo *
             </label>
             <input
@@ -230,14 +230,14 @@ export default function FinesTab({ session, userProfile }) {
               value={form.reason}
               onChange={e => setForm(prev => ({ ...prev, reason: e.target.value }))}
               placeholder="Ej: Ruidos molestos en horario de silencio"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
               required
             />
           </div>
 
           {/* Notas */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
               Notas internas (opcional)
             </label>
             <textarea
@@ -245,13 +245,13 @@ export default function FinesTab({ session, userProfile }) {
               onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
               rows={2}
               placeholder="Detalles adicionales para el expediente..."
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-red-500 outline-none resize-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none resize-none"
             />
           </div>
 
           {/* Adjunto */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
               Adjunto (imagen de infracción o documento)
             </label>
             <FileUploadInline
@@ -265,7 +265,7 @@ export default function FinesTab({ session, userProfile }) {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
             >
               Cancelar
             </button>
@@ -285,35 +285,35 @@ export default function FinesTab({ session, userProfile }) {
       {fines.length === 0 ? (
         <EmptyState icon={Gavel} text="No hay multas registradas" />
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-2.5 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-2.5 bg-slate-50 dark:bg-surface-inset border-b border-slate-100 dark:border-white/[0.07] text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low">
             <span>Unidad</span>
             <span>Motivo</span>
             <span>Período</span>
             <span>Monto</span>
             <span>Estado</span>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {fines.map(fine => {
               const stCfg = FINE_STATUS_LABELS[fine.status] || FINE_STATUS_LABELS.active;
               return (
-                <div key={fine.id} className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div key={fine.id} className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-400/[0.12] flex items-center justify-center shrink-0">
                       <Gavel size={14} className="text-red-500 dark:text-red-400" />
                     </div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    <span className="text-sm font-bold text-slate-700 dark:text-ink-hi">
                       U. {fine.unit_id}
                     </span>
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{fine.reason}</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">{fine.reason}</p>
                     {fine.profiles?.full_name && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{fine.profiles.full_name}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low truncate">{fine.profiles.full_name}</p>
                     )}
                     {fine.notes && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate italic">{fine.notes}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low truncate italic">{fine.notes}</p>
                     )}
                     {fine.attachment_url && (
                       <ComprobanteLink
@@ -325,11 +325,11 @@ export default function FinesTab({ session, userProfile }) {
                     )}
                   </div>
 
-                  <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">
+                  <span className="text-xs text-slate-400 dark:text-ink-low shrink-0">
                     {fine.period || new Date(fine.fine_date).toLocaleDateString('es-AR')}
                   </span>
 
-                  <span className="font-bold text-slate-800 dark:text-slate-100 shrink-0">
+                  <span className="font-bold text-slate-800 dark:text-ink-hi shrink-0">
                     {formatCurrency(fine.amount)}
                   </span>
 
@@ -349,7 +349,7 @@ export default function FinesTab({ session, userProfile }) {
                         <button
                           onClick={() => handleStatusChange(fine.id, 'cancelled')}
                           title="Anular multa"
-                          className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
                         >
                           <X size={15} />
                         </button>

@@ -34,11 +34,11 @@ export default function AdminView({ session, userProfile }) {
   if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4 animate-fade-in">
-        <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-2xl">
+        <div className="bg-red-50 dark:bg-red-400/[0.12] p-5 rounded-2xl">
           <ShieldCheck size={48} className="text-red-400" />
         </div>
-        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Acceso restringido</h3>
-        <p className="text-slate-500 dark:text-slate-400 text-sm text-center max-w-xs">
+        <h3 className="font-bold text-slate-800 dark:text-ink-hi text-lg">Acceso restringido</h3>
+        <p className="text-slate-500 dark:text-ink-mid text-sm text-center max-w-xs">
           Esta sección es exclusiva para administradores del consorcio. Tu cuenta no tiene permisos de administrador.
         </p>
       </div>
@@ -59,7 +59,7 @@ export default function AdminView({ session, userProfile }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl overflow-x-auto">
+      <div className="flex gap-1 bg-slate-100 dark:bg-surface-panel p-1 rounded-2xl overflow-x-auto">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -69,8 +69,8 @@ export default function AdminView({ session, userProfile }) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 isActive
-                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-surface-panel2 text-slate-800 dark:text-ink-hi'
+                  : 'text-slate-500 dark:text-ink-mid hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
               <Icon size={14} />

@@ -10,9 +10,9 @@ const TOAST_ICONS = {
 };
 
 const TOAST_STYLES = {
-  success: 'bg-emerald-50 dark:bg-emerald-900/50 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200',
-  error: 'bg-red-50 dark:bg-red-900/50 border-red-200 dark:border-red-700 text-red-800 dark:text-red-200',
-  info: 'bg-blue-50 dark:bg-blue-900/50 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200',
+  success: 'bg-emerald-50 dark:bg-emerald-400/[0.14] border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200',
+  error: 'bg-red-50 dark:bg-red-400/[0.14] border-red-200 dark:border-red-700 text-red-800 dark:text-red-200',
+  info: 'bg-blue-50 dark:bg-brand-400/[0.14] border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200',
 };
 
 const TOAST_ICON_STYLES = {

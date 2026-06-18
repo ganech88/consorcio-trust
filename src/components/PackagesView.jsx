@@ -43,9 +43,9 @@ function AdminForm({ session, userProfile, onCreated }) {
   }
 
   return (
-    <div className="border-b border-slate-100 dark:border-slate-700">
+    <div className="border-b border-slate-100 dark:border-white/[0.07]">
       <div className="p-4 flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Panel administrador</p>
+        <p className="text-sm font-semibold text-slate-600 dark:text-ink-mid">Panel administrador</p>
         <button
           onClick={() => setShowForm(v => !v)}
           className="flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
@@ -56,26 +56,26 @@ function AdminForm({ session, userProfile, onCreated }) {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="px-4 pb-4 space-y-3 bg-slate-50 dark:bg-slate-700/50">
+        <form onSubmit={handleSubmit} className="px-4 pb-4 space-y-3 bg-slate-50 dark:bg-surface-inset">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Transportista</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Transportista</label>
               <input
                 type="text"
                 value={form.carrier}
                 onChange={e => setForm(p => ({ ...p, carrier: e.target.value }))}
                 placeholder="Ej: Andreani, OCA..."
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Descripción *</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Descripción *</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                 placeholder="Ej: Caja grande, MercadoLibre"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
@@ -147,7 +147,7 @@ export default function PackagesView({ session, userProfile }) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
+      <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2 mb-1">
           <PackageSearch size={24} />
           Paquetería
@@ -158,11 +158,11 @@ export default function PackagesView({ session, userProfile }) {
       </div>
 
       {/* Pending packages */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock size={18} className="text-amber-500" />
-            <h4 className="font-bold text-slate-800 dark:text-slate-100">
+            <h4 className="font-bold text-slate-800 dark:text-ink-hi">
               Paquetes pendientes
               {pending.length > 0 && (
                 <span className="ml-2 bg-amber-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
@@ -182,23 +182,23 @@ export default function PackagesView({ session, userProfile }) {
             <Loader2 size={24} className="animate-spin text-brand-500" />
           </div>
         ) : pending.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 dark:text-slate-500">
+          <div className="p-10 text-center text-slate-400 dark:text-ink-low">
             <PackageSearch size={40} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">No hay paquetes pendientes</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {pending.map(pkg => (
               <div key={pkg.id} className="p-4 flex items-start gap-3">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-400/[0.14] rounded-xl flex items-center justify-center shrink-0">
                   <Package size={18} className="text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{pkg.description}</p>
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{pkg.description}</p>
                   {pkg.carrier && (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">via {pkg.carrier}</p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">via {pkg.carrier}</p>
                   )}
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     Registrado: {formatDateTime(pkg.logged_at || pkg.created_at)}
                   </p>
                 </div>
@@ -221,20 +221,20 @@ export default function PackagesView({ session, userProfile }) {
 
       {/* Collected packages */}
       {collected.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+          <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center gap-2">
             <CheckCircle size={18} className="text-emerald-500" />
-            <h4 className="font-bold text-slate-800 dark:text-slate-100">Retirados</h4>
+            <h4 className="font-bold text-slate-800 dark:text-ink-hi">Retirados</h4>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {collected.map(pkg => (
               <div key={pkg.id} className="p-4 flex items-start gap-3 opacity-70">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-400/[0.14] rounded-xl flex items-center justify-center shrink-0">
                   <CheckCircle size={18} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{pkg.description}</p>
-                  {pkg.carrier && <p className="text-xs text-slate-400 dark:text-slate-500">via {pkg.carrier}</p>}
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{pkg.description}</p>
+                  {pkg.carrier && <p className="text-xs text-slate-400 dark:text-ink-low">via {pkg.carrier}</p>}
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
                     Retirado: {formatDateTime(pkg.collected_at)}
                   </p>

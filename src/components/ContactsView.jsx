@@ -40,11 +40,11 @@ const ICON_MAP = {
 };
 
 const COLOR_MAP = {
-  blue:    { bg: 'bg-blue-50 dark:bg-blue-900/30',    text: 'text-blue-600 dark:text-blue-400',     border: 'border-blue-100 dark:border-blue-800' },
-  slate:   { bg: 'bg-slate-50 dark:bg-slate-700',     text: 'text-slate-600 dark:text-slate-400',   border: 'border-slate-100 dark:border-slate-700' },
-  red:     { bg: 'bg-red-50 dark:bg-red-900/30',      text: 'text-red-600 dark:text-red-400',       border: 'border-red-100 dark:border-red-800' },
-  emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-100 dark:border-emerald-800' },
-  amber:   { bg: 'bg-amber-50 dark:bg-amber-900/30',  text: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-100 dark:border-amber-800' },
+  blue:    { bg: 'bg-blue-50 dark:bg-brand-400/[0.14]',    text: 'text-blue-600 dark:text-brand-400',     border: 'border-blue-100 dark:border-blue-800' },
+  slate:   { bg: 'bg-slate-50 dark:bg-surface-panel2',     text: 'text-slate-600 dark:text-ink-mid',   border: 'border-slate-100 dark:border-white/[0.07]' },
+  red:     { bg: 'bg-red-50 dark:bg-red-400/[0.14]',      text: 'text-red-600 dark:text-red-400',       border: 'border-red-100 dark:border-red-800' },
+  emerald: { bg: 'bg-emerald-50 dark:bg-emerald-400/[0.14]', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-100 dark:border-emerald-800' },
+  amber:   { bg: 'bg-amber-50 dark:bg-amber-400/[0.14]',  text: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-100 dark:border-amber-800' },
 };
 
 // Convierte número local argentino a formato internacional para tel: links
@@ -65,8 +65,8 @@ function ContactCard({ contact }) {
   const Icon = ICON_MAP[contact.color] || Shield;
 
   return (
-    <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all ${
-      contact.emergency ? `${colors.border} border-2` : 'border-slate-100 dark:border-slate-700'
+    <div className={`bg-white dark:bg-surface-panel p-5 rounded-2xl border transition-all ${
+      contact.emergency ? `${colors.border} border-2` : 'border-slate-100 dark:border-white/[0.07]'
     }`}>
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-xl ${colors.bg} shrink-0`}>
@@ -74,20 +74,20 @@ function ContactCard({ contact }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-bold text-slate-800 dark:text-slate-100">{contact.name}</h4>
+            <h4 className="font-bold text-slate-800 dark:text-ink-hi">{contact.name}</h4>
             {contact.emergency && (
-              <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              <span className="bg-red-100 dark:bg-red-400/[0.14] text-red-700 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                 Emergencia
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{contact.role}</p>
+          <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">{contact.role}</p>
 
           <div className="mt-3 space-y-1.5">
             {contact.phone && (
               <a
                 href={toTelHref(contact.phone)}
-                className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors group"
+                className="flex items-center gap-2 text-sm text-blue-600 dark:text-brand-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors group"
               >
                 <Phone size={14} />
                 {contact.phone}
@@ -97,14 +97,14 @@ function ContactCard({ contact }) {
             {contact.email && (
               <a
                 href={`mailto:${contact.email}`}
-                className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="flex items-center gap-2 text-sm text-slate-600 dark:text-ink-mid hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <Mail size={14} />
                 {contact.email}
               </a>
             )}
             {contact.hours && (
-              <p className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+              <p className="flex items-center gap-2 text-xs text-slate-400 dark:text-ink-low">
                 <Clock size={14} />
                 {contact.hours}
               </p>
@@ -144,13 +144,13 @@ export default function ContactsView() {
         <p className="text-slate-300 mt-1 text-sm">Teléfonos de la administración y servicios de emergencia</p>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
+      <div className="bg-white dark:bg-surface-panel p-5 rounded-2xl border border-slate-100 dark:border-white/[0.07] flex items-center gap-4">
         <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-xl shrink-0">
           <MapPin size={22} className="text-indigo-500 dark:text-indigo-400" />
         </div>
         <div>
-          <h4 className="font-bold text-slate-800 dark:text-slate-100">Dirección del edificio</h4>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Av. Ejemplo 1234, CABA, Buenos Aires</p>
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Dirección del edificio</h4>
+          <p className="text-sm text-slate-500 dark:text-ink-mid mt-0.5">Av. Ejemplo 1234, CABA, Buenos Aires</p>
         </div>
       </div>
 
@@ -162,7 +162,7 @@ export default function ContactsView() {
         <>
           {adminContacts.length > 0 && (
             <div>
-              <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1 mb-4">
+              <h4 className="text-sm font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1 mb-4">
                 Administración
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -175,7 +175,7 @@ export default function ContactsView() {
 
           {emergencyContacts.length > 0 && (
             <div>
-              <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1 mb-4">
+              <h4 className="text-sm font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1 mb-4">
                 Emergencias
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

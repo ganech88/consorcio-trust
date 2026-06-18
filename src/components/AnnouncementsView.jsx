@@ -6,10 +6,10 @@ import { useData } from '../context/DataContext';
 const TYPE_CONFIG = {
   urgent: {
     icon: AlertTriangle,
-    bg: 'bg-red-50 dark:bg-red-900/30',
+    bg: 'bg-red-50 dark:bg-red-400/[0.14]',
     border: 'border-red-200 dark:border-red-800',
     iconColor: 'text-red-500 dark:text-red-400',
-    badge: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+    badge: 'bg-red-100 dark:bg-red-400/[0.14] text-red-700 dark:text-red-400',
     label: 'Urgente',
   },
   event: {
@@ -22,10 +22,10 @@ const TYPE_CONFIG = {
   },
   info: {
     icon: Info,
-    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    bg: 'bg-blue-50 dark:bg-brand-400/[0.14]',
     border: 'border-blue-200 dark:border-blue-800',
-    iconColor: 'text-blue-500 dark:text-blue-400',
-    badge: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+    iconColor: 'text-blue-500 dark:text-brand-400',
+    badge: 'bg-blue-100 dark:bg-brand-400/[0.14] text-blue-700 dark:text-brand-400',
     label: 'Informativo',
   },
 };
@@ -68,8 +68,8 @@ function AnnouncementCard({ announcement, isRead, onRead }) {
   return (
     <div
       ref={cardRef}
-      className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-        announcement.pinned ? config.border : 'border-slate-100 dark:border-slate-700'
+      className={`bg-white dark:bg-surface-panel rounded-2xl border overflow-hidden transition-all ${
+        announcement.pinned ? config.border : 'border-slate-100 dark:border-white/[0.07]'
       }`}
     >
       {announcement.pinned && (
@@ -87,32 +87,32 @@ function AnnouncementCard({ announcement, isRead, onRead }) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-bold text-slate-800 dark:text-slate-100">{announcement.title}</h4>
+              <h4 className="font-bold text-slate-800 dark:text-ink-hi">{announcement.title}</h4>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${config.badge}`}>
                 {config.label}
               </span>
               {newItem && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-400/[0.14] text-emerald-700 dark:text-emerald-400">
                   Nuevo
                 </span>
               )}
               {isRead && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500">
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-surface-panel2 text-slate-400 dark:text-ink-low">
                   <CheckCheck size={10} /> Leído
                 </span>
               )}
             </div>
 
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formattedDate}</p>
+            <p className="text-xs text-slate-400 dark:text-ink-low mt-1">{formattedDate}</p>
 
-            <p className={`text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed ${!expanded && 'line-clamp-2'}`}>
+            <p className={`text-sm text-slate-600 dark:text-ink-mid mt-2 leading-relaxed ${!expanded && 'line-clamp-2'}`}>
               {announcement.body}
             </p>
 
             {(announcement.body || '').length > 100 && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1.5 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                className="text-xs text-blue-600 dark:text-brand-400 font-medium mt-1.5 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 {expanded ? 'Ver menos' : 'Ver más...'}
               </button>
@@ -158,7 +158,7 @@ export default function AnnouncementsView() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 rounded-2xl text-white shadow-lg shadow-orange-500/20">
+      <div className="bg-amber-500 p-6 rounded-2xl text-white shadow-lg shadow-orange-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <Megaphone size={24} />
           Novedades del Consorcio
@@ -180,15 +180,15 @@ export default function AnnouncementsView() {
       )}
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-5 text-center">
+        <div className="bg-red-50 dark:bg-red-400/[0.12] border border-red-200 dark:border-red-800 rounded-2xl p-5 text-center">
           <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
       {!loading && !error && announcements.length === 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
-          <Megaphone size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">No hay comunicados publicados aún.</p>
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center">
+          <Megaphone size={48} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
+          <p className="text-slate-500 dark:text-ink-mid text-sm">No hay comunicados publicados aún.</p>
         </div>
       )}
 
@@ -207,7 +207,7 @@ export default function AnnouncementsView() {
 
       {!loading && rest.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+          <h4 className="text-sm font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1">
             {pinned.length > 0 ? 'Anteriores' : 'Comunicados'}
           </h4>
           {rest.map(a => (

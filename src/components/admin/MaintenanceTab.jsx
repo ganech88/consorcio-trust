@@ -79,81 +79,81 @@ export default function MaintenanceTab({ session, userProfile }) {
   }
 
   function urgencyClasses(days) {
-    if (days === null) return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
-    if (days < 0)  return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
-    if (days <= 7)  return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
-    if (days <= 14) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    if (days === null) return 'bg-slate-100 text-slate-600 dark:bg-surface-panel2 dark:text-ink-mid';
+    if (days < 0)  return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+    if (days <= 7)  return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+    if (days <= 14) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
+    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400';
   }
 
   return (
     <div className="space-y-6">
       {/* Create task form */}
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2">
           <Wrench size={16} className="text-amber-500" />
           Agregar tarea de mantenimiento
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Nombre de la tarea</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Nombre de la tarea</label>
             <input
               type="text"
               value={form.name}
               onChange={e => setField('name', e.target.value)}
               placeholder="Ej: Limpieza de tanques"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Categoría</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Categoría</label>
             <select
               value={form.category}
               onChange={e => setField('category', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
             >
               {MAINTENANCE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Recurrencia</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Recurrencia</label>
             <select
               value={form.recurrence}
               onChange={e => setField('recurrence', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
             >
               {RECURRENCES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Próximo vencimiento</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Próximo vencimiento</label>
             <input
               type="date"
               value={form.next_due}
               onChange={e => setField('next_due', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Costo estimado ($)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Costo estimado ($)</label>
             <input
               type="number"
               min="0"
               value={form.estimated_cost}
               onChange={e => setField('estimated_cost', e.target.value)}
               placeholder="Opcional"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Notas</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas</label>
             <input
               type="text"
               value={form.notes}
               onChange={e => setField('notes', e.target.value)}
               placeholder="Observaciones..."
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
             />
           </div>
         </div>
@@ -174,23 +174,23 @@ export default function MaintenanceTab({ session, userProfile }) {
         <EmptyState icon={Wrench} text="No hay tareas de mantenimiento registradas" />
       ) : (
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1">
             Tareas registradas ({tasks.length})
           </h4>
           {tasks.map(task => {
             const days = getDaysUntil(task.next_due);
             const urgency = urgencyClasses(days);
             return (
-              <div key={task.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex items-start gap-4">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
+              <div key={task.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-start gap-4">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-400/[0.14] rounded-xl flex items-center justify-center shrink-0">
                   <Wrench size={18} className="text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 flex-wrap">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">{task.name}</p>
-                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 px-1.5 py-0.5 rounded">{task.category}</span>
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi">{task.name}</p>
+                    <span className="text-[10px] bg-slate-100 dark:bg-surface-panel2 text-slate-500 px-1.5 py-0.5 rounded">{task.category}</span>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     {RECURRENCES.find(r => r.value === task.recurrence)?.label ?? task.recurrence}
                     {task.estimated_cost ? ` · Est. $${Number(task.estimated_cost).toLocaleString('es-AR')}` : ''}
                   </p>

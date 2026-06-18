@@ -65,7 +65,7 @@ export default function FileUpload({
             className="hidden"
             disabled={disabled || uploading}
           />
-          <div className="flex items-center gap-2 px-3 py-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2 px-3 py-2 border-2 border-dashed border-slate-300 dark:border-white/[0.09] rounded-xl hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors text-sm text-slate-500 dark:text-ink-mid">
             {uploading ? (
               <Loader2 size={15} className="animate-spin text-brand-500" />
             ) : (
@@ -75,22 +75,22 @@ export default function FileUpload({
           </div>
         </label>
       ) : (
-        <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl">
+        <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-surface-inset border border-slate-200 dark:border-white/[0.09] rounded-xl">
           {isImage ? (
             <a href={displayUrl || undefined} target="_blank" rel="noopener noreferrer" className="shrink-0">
               <img
                 src={displayUrl || undefined}
                 alt="adjunto"
-                className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
+                className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-white/[0.09]"
               />
             </a>
           ) : (
-            <div className="w-12 h-12 flex items-center justify-center bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 shrink-0">
+            <div className="w-12 h-12 flex items-center justify-center bg-red-50 dark:bg-red-400/[0.12] rounded-lg border border-red-200 dark:border-red-800 shrink-0">
               <FileText size={22} className="text-red-500" />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
+            <p className="text-xs font-semibold text-slate-700 dark:text-ink-mid truncate">
               {isPdf ? 'Documento PDF' : 'Imagen adjunta'}
             </p>
             <a

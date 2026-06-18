@@ -62,7 +62,7 @@ export default function ClaimsTab({ session }) {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               filter === s
                 ? 'bg-blue-600 text-white'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                : 'bg-white dark:bg-surface-panel text-slate-600 dark:text-ink-mid border border-slate-200 dark:border-white/[0.07] hover:bg-slate-50 dark:hover:bg-white/[0.06]'
             }`}
           >
             {s === 'all' ? 'Todos' : STATUS_LABELS[s]?.label ?? s}
@@ -85,7 +85,7 @@ export default function ClaimsTab({ session }) {
           const unitId = claim.profiles?.unit_id || '—';
 
           return (
-            <div key={claim.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div key={claim.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
               <button
                 onClick={() => {
                   setExpanded(isOpen ? null : claim.id);
@@ -94,18 +94,18 @@ export default function ClaimsTab({ session }) {
                     setNoteInputs(prev => ({ ...prev, [claim.id]: claim.admin_note || '' }));
                   }
                 }}
-                className="w-full p-4 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="w-full p-4 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors"
               >
                 <span className={`mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${st.color}`}>
                   {st.label}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">{claim.title}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi truncate">{claim.title}</p>
+                  <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     {userName} · Unidad {unitId} · {new Date(claim.created_at).toLocaleDateString('es-AR')}
                   </p>
                   {claim.category && (
-                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded mt-1 inline-block">
+                    <span className="text-[10px] bg-slate-100 dark:bg-surface-panel2 text-slate-500 dark:text-ink-mid px-1.5 py-0.5 rounded mt-1 inline-block">
                       {claim.category}
                     </span>
                   )}
@@ -114,19 +114,19 @@ export default function ClaimsTab({ session }) {
               </button>
 
               {isOpen && (
-                <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700 pt-3 space-y-3">
+                <div className="px-4 pb-4 border-t border-slate-100 dark:border-white/[0.07] pt-3 space-y-3">
                   {claim.description && (
-                    <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+                    <p className="text-sm text-slate-600 dark:text-ink-mid bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
                       {claim.description}
                     </p>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Estado</label>
+                      <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Estado</label>
                       <select
                         value={statusInputs[claim.id] ?? claim.status}
                         onChange={e => setStatusInputs(prev => ({ ...prev, [claim.id]: e.target.value }))}
-                        className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
                       >
                         <option value="open">Abierto</option>
                         <option value="pending">En proceso</option>
@@ -134,13 +134,13 @@ export default function ClaimsTab({ session }) {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Nota de respuesta</label>
+                      <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Nota de respuesta</label>
                       <input
                         type="text"
                         value={noteInputs[claim.id] ?? ''}
                         onChange={e => setNoteInputs(prev => ({ ...prev, [claim.id]: e.target.value }))}
                         placeholder="Mensaje para el propietario..."
-                        className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                     </div>
                   </div>

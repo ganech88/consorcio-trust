@@ -43,13 +43,13 @@ export default function ExportButtons({ data, columns, title, className = '' }) 
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
+      <span className="text-xs text-slate-400 dark:text-ink-low flex items-center gap-1">
         <Download size={12} /> Exportar:
       </span>
       <button
         onClick={handleExcel}
         disabled={loadingXls}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 transition-colors disabled:opacity-60"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-400/[0.12] dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 transition-colors disabled:opacity-60"
         title="Exportar a Excel"
       >
         {loadingXls
@@ -60,7 +60,7 @@ export default function ExportButtons({ data, columns, title, className = '' }) 
       <button
         onClick={handlePdf}
         disabled={loadingPdf}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-700 dark:text-red-400 transition-colors disabled:opacity-60"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 dark:bg-red-400/[0.12] dark:hover:bg-red-900/40 text-red-700 dark:text-red-400 transition-colors disabled:opacity-60"
         title="Exportar a PDF"
       >
         {loadingPdf

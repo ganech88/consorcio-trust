@@ -99,11 +99,11 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
   );
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+    <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+      <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DoorOpen size={18} className="text-brand-500" />
-          <h4 className="font-bold text-slate-800 dark:text-slate-100">Visitas pre-autorizadas</h4>
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Visitas pre-autorizadas</h4>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -116,16 +116,16 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
 
       {/* Admin: today's expected visitors */}
       {isAdmin && todayAuths.length > 0 && (
-        <div className="p-4 bg-brand-50 dark:bg-brand-900/20 border-b border-slate-100 dark:border-slate-700">
-          <p className="text-xs font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider mb-3">
+        <div className="p-4 bg-brand-50 dark:bg-brand-900/20 border-b border-slate-100 dark:border-white/[0.07]">
+          <p className="text-xs font-bold text-brand-700 dark:text-brand-400 uppercase tracking-wider mb-3">
             Visitas esperadas hoy ({todayAuths.length})
           </p>
           <div className="space-y-2">
             {todayAuths.map(a => (
-              <div key={a.id} className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl px-3 py-2.5">
+              <div key={a.id} className="flex items-center gap-3 bg-white dark:bg-surface-panel rounded-xl px-3 py-2.5">
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{a.visitor_name}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">{a.visitor_type}</p>
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{a.visitor_name}</p>
+                  <p className="text-xs text-slate-400 dark:text-ink-low">{a.visitor_type}</p>
                 </div>
                 {a.checked_in_at ? (
                   <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
@@ -149,28 +149,28 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
       )}
 
       {/* Authorizations list */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-700">
+      <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
         {loading ? (
           <div className="flex justify-center py-8">
             <Loader2 size={24} className="animate-spin text-brand-500" />
           </div>
         ) : authorizations.length === 0 ? (
           <div className="p-8 text-center">
-            <DoorOpen size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-            <p className="text-slate-400 dark:text-slate-500 text-sm">No tenés visitas pre-autorizadas</p>
+            <DoorOpen size={32} className="mx-auto text-slate-300 dark:text-ink-low mb-2" />
+            <p className="text-slate-400 dark:text-ink-low text-sm">No tenés visitas pre-autorizadas</p>
           </div>
         ) : (
           authorizations.map(auth => (
             <div key={auth.id} className="p-4 flex items-start gap-3">
-              <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 bg-brand-100 dark:bg-brand-400/[0.14] rounded-full flex items-center justify-center shrink-0">
                 <span className="text-sm font-bold text-brand-600 dark:text-brand-400">
                   {auth.visitor_name.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{auth.visitor_name}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">{auth.visitor_type}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{auth.visitor_name}</p>
+                <p className="text-xs text-slate-400 dark:text-ink-low">{auth.visitor_type}</p>
+                <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                   Válido: {formatDate(auth.valid_from)}{auth.valid_until ? ` → ${formatDate(auth.valid_until)}` : ' en adelante'}
                   {auth.time_from && auth.time_to ? ` · ${auth.time_from}–${auth.time_to}` : ''}
                 </p>
@@ -198,7 +198,7 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
         <Modal title="Pre-autorizar visita" onClose={() => setShowModal(false)}>
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Nombre del visitante <span className="text-red-500">*</span>
               </label>
               <input
@@ -206,13 +206,13 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
                 value={form.visitorName}
                 onChange={e => setForm(f => ({ ...f, visitorName: e.target.value }))}
                 placeholder="Nombre completo"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tipo de visita</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Tipo de visita</label>
               <div className="flex flex-wrap gap-2">
                 {VISITOR_TYPES.map(t => (
                   <button
@@ -222,7 +222,7 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                       form.visitorType === t
                         ? 'bg-brand-600 border-brand-600 text-white'
-                        : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300'
+                        : 'border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid'
                     }`}
                   >
                     {t}
@@ -233,54 +233,54 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Válido desde</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Válido desde</label>
                 <input
                   type="date"
                   value={form.validFrom}
                   onChange={e => setForm(f => ({ ...f, validFrom: e.target.value }))}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Válido hasta</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Válido hasta</label>
                 <input
                   type="date"
                   value={form.validUntil}
                   onChange={e => setForm(f => ({ ...f, validUntil: e.target.value }))}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Hora desde (opc.)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Hora desde (opc.)</label>
                 <input
                   type="time"
                   value={form.timeFrom}
                   onChange={e => setForm(f => ({ ...f, timeFrom: e.target.value }))}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Hora hasta (opc.)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Hora hasta (opc.)</label>
                 <input
                   type="time"
                   value={form.timeTo}
                   onChange={e => setForm(f => ({ ...f, timeTo: e.target.value }))}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nota (opc.)</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Nota (opc.)</label>
               <input
                 type="text"
                 value={form.note}
                 onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
                 placeholder="Ej: Trae muebles, es de confianza..."
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
               />
             </div>
 
@@ -288,7 +288,7 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-gradient-to-r from-brand-600 to-brand-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
+                className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <DoorOpen size={16} />}
                 {saving ? 'Guardando...' : 'Guardar autorización'}
@@ -296,7 +296,7 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-4 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="px-4 border border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors"
               >
                 Cancelar
               </button>
@@ -314,18 +314,18 @@ function PreAuthSection({ session, userProfile, isAdmin }) {
               alt="QR de autorización"
               width={180}
               height={180}
-              className="rounded-xl border border-slate-200 dark:border-slate-600 shadow"
+              className="rounded-xl border border-slate-200 dark:border-white/[0.09] shadow"
             />
             <div className="text-center">
-              <p className="font-bold text-slate-800 dark:text-slate-100">{showQr.visitor_name}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{showQr.visitor_type}</p>
+              <p className="font-bold text-slate-800 dark:text-ink-hi">{showQr.visitor_name}</p>
+              <p className="text-sm text-slate-500 dark:text-ink-mid">{showQr.visitor_type}</p>
               {showQr.valid_until && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                <p className="text-xs text-slate-400 dark:text-ink-low mt-1">
                   Válido hasta {formatDate(showQr.valid_until)}
                 </p>
               )}
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 text-center max-w-xs">
+            <p className="text-xs text-slate-400 dark:text-ink-low text-center max-w-xs">
               Mostrá este código en la recepción para registrar el ingreso de tu visita.
             </p>
           </div>
@@ -390,11 +390,11 @@ function VisitorsSection({ session, userProfile }) {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+    <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+      <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <UserCheck size={18} className="text-indigo-500" />
-          <h4 className="font-bold text-slate-800 dark:text-slate-100">Visitantes autorizados (simple)</h4>
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Visitantes autorizados (simple)</h4>
         </div>
         <button
           onClick={() => setShowForm(v => !v)}
@@ -406,27 +406,27 @@ function VisitorsSection({ session, userProfile }) {
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 space-y-3">
+        <form onSubmit={handleAdd} className="p-4 bg-slate-50 dark:bg-surface-inset border-b border-slate-100 dark:border-white/[0.07] space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Nombre</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Nombre</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                 placeholder="Nombre completo"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">DNI (opcional)</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">DNI (opcional)</label>
               <input
                 type="text"
                 value={form.docNumber}
                 onChange={e => setForm(p => ({ ...p, docNumber: e.target.value }))}
                 placeholder="Nº de documento"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
               />
             </div>
           </div>
@@ -441,15 +441,15 @@ function VisitorsSection({ session, userProfile }) {
         </form>
       )}
 
-      <div className="divide-y divide-slate-100 dark:divide-slate-700">
+      <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
         {loading ? (
           <div className="flex justify-center py-8">
             <Loader2 size={24} className="animate-spin text-brand-500" />
           </div>
         ) : visitors.length === 0 ? (
           <div className="p-8 text-center">
-            <UserCheck size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-            <p className="text-slate-400 dark:text-slate-500 text-sm">No tenés visitantes autorizados</p>
+            <UserCheck size={32} className="mx-auto text-slate-300 dark:text-ink-low mb-2" />
+            <p className="text-slate-400 dark:text-ink-low text-sm">No tenés visitantes autorizados</p>
           </div>
         ) : (
           visitors.map(v => (
@@ -460,9 +460,9 @@ function VisitorsSection({ session, userProfile }) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{v.name}</p>
-                {v.doc_number && <p className="text-xs text-slate-400 dark:text-slate-500">DNI: {v.doc_number}</p>}
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{v.name}</p>
+                {v.doc_number && <p className="text-xs text-slate-400 dark:text-ink-low">DNI: {v.doc_number}</p>}
+                <p className="text-xs text-slate-400 dark:text-ink-low">
                   Desde: {new Date(v.authorized_date).toLocaleDateString('es-AR')}
                 </p>
               </div>
@@ -539,11 +539,11 @@ function PackagesSection({ session, userProfile, isAdmin }) {
   const pending   = packages.filter(p => !p.delivered_at);
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+    <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+      <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Package size={18} className="text-amber-500" />
-          <h4 className="font-bold text-slate-800 dark:text-slate-100">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">
             Encomiendas
             {pending.length > 0 && (
               <span className="ml-2 bg-amber-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
@@ -564,27 +564,27 @@ function PackagesSection({ session, userProfile, isAdmin }) {
       </div>
 
       {isAdmin && showForm && (
-        <form onSubmit={handleRegister} className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 space-y-3">
+        <form onSubmit={handleRegister} className="p-4 bg-slate-50 dark:bg-surface-inset border-b border-slate-100 dark:border-white/[0.07] space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Unidad</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Unidad</label>
               <input
                 type="text"
                 value={form.unitId}
                 onChange={e => setForm(p => ({ ...p, unitId: e.target.value }))}
                 placeholder="Ej: 3B"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Descripción</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Descripción</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                 placeholder="Ej: Caja mediana, Amazon"
-                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
@@ -600,21 +600,21 @@ function PackagesSection({ session, userProfile, isAdmin }) {
         </form>
       )}
 
-      <div className="divide-y divide-slate-100 dark:divide-slate-700">
+      <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
         {loading ? (
           <div className="flex justify-center py-8">
             <Loader2 size={24} className="animate-spin text-brand-500" />
           </div>
         ) : packages.length === 0 ? (
           <div className="p-8 text-center">
-            <Package size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-            <p className="text-slate-400 dark:text-slate-500 text-sm">No hay encomiendas registradas</p>
+            <Package size={32} className="mx-auto text-slate-300 dark:text-ink-low mb-2" />
+            <p className="text-slate-400 dark:text-ink-low text-sm">No hay encomiendas registradas</p>
           </div>
         ) : (
           packages.map(pkg => (
             <div key={pkg.id} className="p-4 flex items-center gap-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                pkg.delivered_at ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'
+                pkg.delivered_at ? 'bg-emerald-100 dark:bg-emerald-400/[0.14]' : 'bg-amber-100 dark:bg-amber-400/[0.14]'
               }`}>
                 {pkg.delivered_at
                   ? <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400" />
@@ -622,8 +622,8 @@ function PackagesSection({ session, userProfile, isAdmin }) {
                 }
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{pkg.description}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{pkg.description}</p>
+                <p className="text-xs text-slate-400 dark:text-ink-low">
                   {isAdmin && pkg.unit_id ? `Unidad ${pkg.unit_id} · ` : ''}
                   Recibido: {formatDateTime(pkg.received_at)}
                 </p>
@@ -656,7 +656,7 @@ export default function AccessView({ session, userProfile }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
+      <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2 mb-1">
           <DoorOpen size={22} />
           Accesos y Encomiendas
