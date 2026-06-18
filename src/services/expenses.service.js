@@ -75,12 +75,20 @@ export async function createExpensePeriod({ period, totalAmount, dueDate, consor
 export async function fetchPeriodItems(periodId) {
   const { data, error } = await supabase
     .from('expense_period_items')
-    .select('*, profiles(full_name, unit_id)')
+    .select('*')
     .eq('period_id', periodId)
     .order('unit_id');
 
   if (error) throw error;
-  return data || [];
+  const items = data || [];
+  // No hay FK expense_period_items->profiles (user_id apunta a auth.users),
+  // asi que resolvemos el nombre del residente en una consulta aparte.
+  const ids = [...new Set(items.map((i) => i.user_id).filter(Boolean))];
+  if (ids.length === 0) return items;
+  const { data: profs } = await supabase
+    .from('profiles').select('id, full_name, unit_id').in('id', ids);
+  const byId = Object.fromEntries((profs || []).map((p) => [p.id, p]));
+  return items.map((i) => ({ ...i, profiles: i.user_id ? byId[i.user_id] || null : null }));
 }
 
 export async function fetchUserPeriodItems(userId) {
