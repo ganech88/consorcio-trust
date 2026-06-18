@@ -134,12 +134,12 @@ export default function ChatView({ session, userProfile }) {
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] animate-fade-in">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 mb-4 flex items-center gap-3 shrink-0">
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 mb-4 flex items-center gap-3 shrink-0">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
           <ShieldCheck size={18} className="text-white" />
         </div>
         <div>
-          <p className="font-semibold text-slate-800 dark:text-slate-100">Administración</p>
+          <p className="font-semibold text-slate-800 dark:text-ink-hi">Administración</p>
           <p className="text-xs text-emerald-500 font-medium">ConsorcioTrust</p>
         </div>
       </div>
@@ -148,9 +148,9 @@ export default function ChatView({ session, userProfile }) {
       <div className="flex-1 overflow-y-auto space-y-1 px-1 pb-2">
         {grouped.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <MessageSquare size={40} className="text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No hay mensajes aún</p>
-            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
+            <MessageSquare size={40} className="text-slate-300 dark:text-ink-low mb-3" />
+            <p className="text-slate-500 dark:text-ink-mid text-sm font-medium">No hay mensajes aún</p>
+            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">
               Enviá un mensaje para iniciar la conversación con la administración
             </p>
           </div>
@@ -160,11 +160,11 @@ export default function ChatView({ session, userProfile }) {
           if (item.type === 'date') {
             return (
               <div key={`date-${item.date}`} className="flex items-center gap-3 py-3">
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-surface-panel2" />
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-ink-low uppercase tracking-wider">
                   {formatDate(item.date)}
                 </span>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-surface-panel2" />
               </div>
             );
           }
@@ -185,12 +185,12 @@ export default function ChatView({ session, userProfile }) {
                   className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     isMine
                       ? 'bg-blue-600 text-white rounded-br-sm'
-                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-700 rounded-bl-sm shadow-sm'
+                      : 'bg-white dark:bg-surface-panel text-slate-800 dark:text-ink-hi border border-slate-100 dark:border-white/[0.07] rounded-bl-sm'
                   }`}
                 >
                   {msg.content}
                 </div>
-                <p className={`text-[10px] mt-0.5 text-slate-400 dark:text-slate-500 ${isMine ? 'text-right' : 'text-left'}`}>
+                <p className={`text-[10px] mt-0.5 text-slate-400 dark:text-ink-low ${isMine ? 'text-right' : 'text-left'}`}>
                   {formatTime(msg.created_at)}
                   {isMine && msg.read_at && (
                     <span className="ml-1 text-blue-400">✓✓</span>
@@ -211,7 +211,7 @@ export default function ChatView({ session, userProfile }) {
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="Escribí tu mensaje..."
-          className="flex-1 border border-slate-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+          className="flex-1 border border-slate-200 dark:border-white/[0.09] rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-panel dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
           maxLength={1000}
           disabled={sending}
         />

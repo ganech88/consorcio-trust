@@ -46,9 +46,9 @@ const CATEGORY_COLORS = {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg px-4 py-3">
-      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
-      <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
+    <div className="bg-white dark:bg-surface-panel border border-slate-200 dark:border-white/[0.07] rounded-xl shadow-lg px-4 py-3">
+      <p className="text-xs font-bold text-slate-500 dark:text-ink-mid mb-1">{label}</p>
+      <p className="text-lg font-bold text-slate-800 dark:text-ink-hi">
         {formatCurrency(payload[0].value)}
       </p>
     </div>
@@ -101,28 +101,28 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4"
+      className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4"
     >
-      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Registrar gasto</h4>
+      <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm">Registrar gasto</h4>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Descripción</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Descripción</label>
           <input
             type="text"
             value={form.description}
             onChange={e => setField('description', e.target.value)}
             placeholder="Ej: Reparación plomería"
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Categoría</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Categoría</label>
           <select
             value={form.category}
             onChange={e => setField('category', e.target.value)}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           >
             {FINANCE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -131,7 +131,7 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto ($)</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto ($)</label>
           <input
             type="number"
             min="0"
@@ -139,28 +139,28 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
             value={form.amount}
             onChange={e => setField('amount', e.target.value)}
             placeholder="0"
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Fecha</label>
           <input
             type="date"
             value={form.date}
             onChange={e => setField('date', e.target.value)}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Proveedor (opcional)</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Proveedor (opcional)</label>
           <input
             type="text"
             value={form.provider}
             onChange={e => setField('provider', e.target.value)}
             placeholder="Ej: Fontanería SA"
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
       </div>
@@ -246,11 +246,11 @@ export default function FinanceView({ session, userProfile }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
             <TrendingUp size={22} className="text-emerald-500" />
             Balance Financiero
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-ink-mid mt-0.5">
             Egresos del consorcio
           </p>
         </div>
@@ -267,13 +267,13 @@ export default function FinanceView({ session, userProfile }) {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">Este mes</p>
-          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(totalThisMonth)}</p>
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4">
+          <p className="text-xs font-semibold text-slate-400 dark:text-ink-low mb-1">Este mes</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-ink-hi">{formatCurrency(totalThisMonth)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">Este año</p>
-          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{formatCurrency(totalThisYear)}</p>
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4">
+          <p className="text-xs font-semibold text-slate-400 dark:text-ink-low mb-1">Este año</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-ink-hi">{formatCurrency(totalThisYear)}</p>
         </div>
       </div>
 
@@ -284,8 +284,8 @@ export default function FinanceView({ session, userProfile }) {
 
       {/* Gráfico mensual */}
       {chartData.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
-          <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-4">Egresos mensuales</h4>
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm mb-4">Egresos mensuales</h4>
           <div className="h-48">
             <ResponsiveContainer width="99%" height={192} minWidth={0}>
               <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
@@ -312,8 +312,8 @@ export default function FinanceView({ session, userProfile }) {
 
       {/* Por categoría */}
       {categoryList.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
-          <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-4">Por categoría</h4>
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm mb-4">Por categoría</h4>
           <div className="space-y-3">
             {categoryList.map(([cat, amount]) => {
               const maxAmount = categoryList[0][1];
@@ -322,10 +322,10 @@ export default function FinanceView({ session, userProfile }) {
               return (
                 <div key={cat}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{cat}</span>
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{formatCurrency(amount)}</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-ink-mid">{cat}</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-ink-hi">{formatCurrency(amount)}</span>
                   </div>
-                  <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-slate-100 dark:bg-surface-panel2 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{ width: `${pct}%`, backgroundColor: color }}
@@ -340,14 +340,14 @@ export default function FinanceView({ session, userProfile }) {
 
       {/* Lista de egresos */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
           Últimos egresos ({expenses.length})
         </h4>
 
         {expenses.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
-            <DollarSign size={40} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay egresos registrados</p>
+          <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center">
+            <DollarSign size={40} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
+            <p className="text-slate-500 dark:text-ink-mid text-sm">No hay egresos registrados</p>
             {isAdmin && (
               <button
                 onClick={() => setShowForm(true)}
@@ -364,27 +364,27 @@ export default function FinanceView({ session, userProfile }) {
               return (
                 <div
                   key={e.id}
-                  className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex items-center gap-4"
+                  className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-4"
                 >
                   <div
                     className="w-2.5 h-10 rounded-full shrink-0"
                     style={{ backgroundColor: color }}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{e.description}</p>
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{e.description}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-bold bg-slate-100 dark:bg-surface-panel2 text-slate-500 dark:text-ink-mid px-1.5 py-0.5 rounded">
                         {e.category}
                       </span>
                       {e.provider && (
-                        <span className="text-xs text-slate-400 dark:text-slate-500">{e.provider}</span>
+                        <span className="text-xs text-slate-400 dark:text-ink-low">{e.provider}</span>
                       )}
-                      <span className="text-xs text-slate-400 dark:text-slate-500">
+                      <span className="text-xs text-slate-400 dark:text-ink-low">
                         {new Date(e.date).toLocaleDateString('es-AR')}
                       </span>
                     </div>
                   </div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0 text-right">
+                  <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0 text-right">
                     {formatCurrency(e.amount)}
                   </p>
                 </div>

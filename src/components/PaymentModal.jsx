@@ -84,29 +84,29 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
       <div className="space-y-5">
         {/* Info de saldo */}
         <div className="bg-gradient-to-r from-blue-50 dark:from-blue-900/30 to-indigo-50 dark:to-indigo-900/30 p-4 rounded-xl border border-blue-100/50 dark:border-blue-800/50 flex gap-3">
-          <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg shrink-0">
-            <DollarSign className="text-blue-600 dark:text-blue-400" size={20} />
+          <div className="bg-blue-100 dark:bg-brand-400/[0.14] p-2 rounded-lg shrink-0">
+            <DollarSign className="text-blue-600 dark:text-brand-400" size={20} />
           </div>
           <div>
             <p className="text-sm font-bold text-blue-800 dark:text-blue-200">Saldo Pendiente: {expenseLabel}</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Expensas del mes vigente</p>
+            <p className="text-xs text-blue-600 dark:text-brand-400 mt-0.5">Expensas del mes vigente</p>
           </div>
         </div>
 
         {/* Monto del pago */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
             Monto pagado <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-semibold">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-ink-low font-semibold">$</span>
             <input
               type="text"
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0,00"
-              className="w-full pl-7 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-slate-50/50 dark:bg-slate-700 dark:text-slate-100"
+              className="w-full pl-7 pr-4 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi"
             />
           </div>
         </div>
@@ -118,10 +118,10 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer relative ${
             dragOver
-              ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+              ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-brand-400/[0.14]'
               : payFile
-                ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20'
-                : 'border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-400/[0.12]'
+                : 'border-slate-300 dark:border-white/[0.09] bg-slate-50/50 dark:bg-surface-panel hover:border-slate-400 dark:hover:border-white/25 hover:bg-slate-50 dark:hover:bg-white/[0.05]'
           }`}
         >
           <input
@@ -134,20 +134,20 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
           {payFile ? (
             <div className="flex flex-col items-center text-emerald-600 dark:text-emerald-400">
               <CheckCircle size={36} className="mb-2" />
-              <span className="font-bold text-sm truncate max-w-[250px] dark:text-emerald-300">{payFile.name}</span>
+              <span className="font-bold text-sm truncate max-w-[250px] dark:text-emerald-400">{payFile.name}</span>
               <span className="text-xs mt-1 text-emerald-500 dark:text-emerald-400">{fileSizeFormatted} - Clic para cambiar</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
+            <div className="flex flex-col items-center text-slate-400 dark:text-ink-low">
               <UploadCloud size={36} className="mb-2" />
-              <span className="font-semibold text-sm text-slate-600 dark:text-slate-300">Arrastra o toca para subir</span>
+              <span className="font-semibold text-sm text-slate-600 dark:text-ink-mid">Arrastra o toca para subir</span>
               <span className="text-xs mt-1">PDF o Imagen (max {MAX_FILE_SIZE_MB}MB)</span>
             </div>
           )}
         </div>
 
         {/* Advertencia */}
-        <div className="flex gap-2 items-start text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex gap-2 items-start text-xs text-slate-500 dark:text-ink-mid">
           <FileWarning size={14} className="shrink-0 mt-0.5" />
           <span>El comprobante será revisado por la administración. Recibirás una confirmación cuando sea aprobado.</span>
         </div>
@@ -159,7 +159,7 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
           className={`w-full py-3.5 rounded-xl font-bold text-white transition-all shadow-lg ${
             uploading || !payFile
               ? 'bg-slate-300 cursor-not-allowed shadow-none'
-              : 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-emerald-200'
+              : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-200'
           }`}
         >
           {uploading ? (

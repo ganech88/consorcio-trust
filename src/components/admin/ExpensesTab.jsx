@@ -53,7 +53,7 @@ function ExpenseExportButton({ expenseId, expenseTitle }) {
         onClick={() => handleExport('excel')}
         disabled={loading}
         title="Exportar Excel"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-400/[0.12] text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
       >
         {loading ? <Loader2 size={11} className="animate-spin" /> : null}
         XLS
@@ -62,7 +62,7 @@ function ExpenseExportButton({ expenseId, expenseTitle }) {
         onClick={() => handleExport('pdf')}
         disabled={loading}
         title="Exportar PDF"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-400/[0.12] text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 text-[11px] font-semibold transition-colors disabled:opacity-50"
       >
         PDF
       </button>
@@ -196,7 +196,7 @@ export default function ExpensesTab({ session, userProfile }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-slate-500 dark:text-ink-mid">
           {expenses.length} expensa{expenses.length !== 1 ? 's' : ''} registrada{expenses.length !== 1 ? 's' : ''}
         </p>
         <button
@@ -216,21 +216,21 @@ export default function ExpensesTab({ session, userProfile }) {
             const payments = exp.expense_payments || [];
             const isExpanded = expandedId === exp.id;
             return (
-              <div key={exp.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+              <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
                 <div className="p-4 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{exp.title}</p>
+                      <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{exp.title}</p>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">
                       {exp.period}{exp.due_date ? ` · Vence ${new Date(exp.due_date).toLocaleDateString('es-AR')}` : ''}
                     </p>
                     {exp.description && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{exp.description}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5 truncate">{exp.description}</p>
                     )}
                   </div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{fmtCurrency(exp.amount)}</p>
+                  <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{fmtCurrency(exp.amount)}</p>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : exp.id)}
@@ -242,7 +242,7 @@ export default function ExpensesTab({ session, userProfile }) {
                     <select
                       value={exp.status}
                       onChange={e => handleStatusChange(exp.id, e.target.value)}
-                      className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-1.5 py-1 bg-white dark:bg-slate-700 dark:text-slate-100 outline-none"
+                      className="text-xs border border-slate-200 dark:border-white/[0.09] rounded-lg px-1.5 py-1 bg-white dark:bg-surface-panel2 dark:text-ink-hi outline-none"
                     >
                       {Object.entries(EXPENSE_STATUS_LABELS).map(([val, { label }]) => (
                         <option key={val} value={val}>{label}</option>
@@ -266,15 +266,15 @@ export default function ExpensesTab({ session, userProfile }) {
                 </div>
 
                 {isExpanded && (
-                  <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
+                  <div className="border-t border-slate-100 dark:border-white/[0.07] px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-ink-mid uppercase tracking-wider">
                         Pagos recibidos ({payments.length})
                       </p>
                       <ExpenseExportButton expenseId={exp.id} expenseTitle={exp.title} />
                     </div>
                     {payments.length === 0 ? (
-                      <p className="text-xs text-slate-400 dark:text-slate-500">Sin pagos registrados</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low">Sin pagos registrados</p>
                     ) : (
                       <div className="space-y-2">
                         {payments.map(p => {
@@ -282,22 +282,22 @@ export default function ExpensesTab({ session, userProfile }) {
                           return (
                             <div key={p.id} className="flex items-center gap-3 text-xs">
                               <CreditCard size={12} className="text-slate-400 shrink-0" />
-                              <span className="flex-1 text-slate-700 dark:text-slate-300">{fmtCurrency(p.amount)}</span>
-                              <span className="text-slate-400 dark:text-slate-500">{new Date(p.paid_at).toLocaleDateString('es-AR')}</span>
+                              <span className="flex-1 text-slate-700 dark:text-ink-mid">{fmtCurrency(p.amount)}</span>
+                              <span className="text-slate-400 dark:text-ink-low">{new Date(p.paid_at).toLocaleDateString('es-AR')}</span>
                               <span className={`px-1.5 py-0.5 rounded-full font-bold text-[10px] ${pst.color}`}>{pst.label}</span>
                               {p.status === 'pending' && (
                                 <div className="flex gap-1">
                                   <button
                                     disabled={approvingId === p.id}
                                     onClick={() => handleApprovePayment(p.id, 'approved')}
-                                    className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 font-semibold disabled:opacity-60 transition-colors"
+                                    className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-400/[0.14] dark:text-emerald-400 font-semibold disabled:opacity-60 transition-colors"
                                   >
                                     {approvingId === p.id ? <Loader2 size={10} className="animate-spin" /> : 'Aprobar'}
                                   </button>
                                   <button
                                     disabled={approvingId === p.id}
                                     onClick={() => handleApprovePayment(p.id, 'rejected')}
-                                    className="px-2 py-0.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 font-semibold disabled:opacity-60 transition-colors"
+                                    className="px-2 py-0.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-400/[0.14] dark:text-red-400 font-semibold disabled:opacity-60 transition-colors"
                                   >
                                     Rechazar
                                   </button>
@@ -318,9 +318,9 @@ export default function ExpensesTab({ session, userProfile }) {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
-              <h4 className="font-bold text-slate-800 dark:text-slate-100">
+          <div className="bg-white dark:bg-surface-panel rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.07]">
+              <h4 className="font-bold text-slate-800 dark:text-ink-hi">
                 {editTarget ? 'Editar expensa' : 'Nueva expensa'}
               </h4>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
@@ -329,28 +329,28 @@ export default function ExpensesTab({ session, userProfile }) {
             </div>
             <form onSubmit={handleSave} className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Título *</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Título *</label>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="Ej: Expensas Marzo 2026"
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Descripción</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Descripción</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Detalle opcional..."
                   rows={2}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto ($) *</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto ($) *</label>
                   <input
                     type="number"
                     min="0"
@@ -358,29 +358,29 @@ export default function ExpensesTab({ session, userProfile }) {
                     value={form.amount}
                     onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                     placeholder="Ej: 15000"
-                    className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                    className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Período * (AAAA-MM)</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Período * (AAAA-MM)</label>
                   <input
                     value={form.period}
                     onChange={e => setForm(f => ({ ...f, period: e.target.value }))}
                     placeholder="Ej: 2026-03"
                     pattern="\d{4}-\d{2}"
-                    className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                    className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha vencimiento</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Fecha vencimiento</label>
                 <input
                   type="date"
                   value={form.due_date}
                   onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
               <button

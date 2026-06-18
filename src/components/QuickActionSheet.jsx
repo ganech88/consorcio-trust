@@ -20,7 +20,7 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
       label: 'Informar Pago',
       description: 'Enviá tu comprobante',
       icon: UploadCloud,
-      iconBg: 'bg-emerald-50 dark:bg-emerald-900/30',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-400/[0.14]',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
       onClick: () => { onPaymentClick?.(); onClose(); },
     },
@@ -36,7 +36,7 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
       label: 'Reservar Espacio',
       description: 'SUM, piscina, coworking...',
       icon: Calendar,
-      iconBg: 'bg-brand-50 dark:bg-brand-900/30',
+      iconBg: 'bg-brand-50 dark:bg-brand-400/[0.14]',
       iconColor: 'text-brand-600 dark:text-brand-400',
       onClick: () => { onNavigate?.(VIEWS.AMENITIES); onClose(); },
     },
@@ -52,17 +52,17 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-700 animate-fade-in-up">
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-surface-panel rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-white/[0.07] animate-fade-in-up">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full" />
+          <div className="w-10 h-1 bg-slate-200 dark:bg-surface-panel2 rounded-full" />
         </div>
 
         <div className="px-5 pb-2 pt-3 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Acciones rápidas</h3>
+          <h3 className="font-bold text-slate-800 dark:text-ink-hi text-lg">Acciones rápidas</h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
           >
             <X size={18} />
           </button>
@@ -75,14 +75,14 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
               <button
                 key={action.label}
                 onClick={action.onClick}
-                className="w-full flex items-center gap-4 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl px-4 py-4 transition-colors text-left"
+                className="w-full flex items-center gap-4 bg-slate-50 dark:bg-surface-inset hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-2xl px-4 py-4 transition-colors text-left"
               >
                 <div className={`w-12 h-12 ${action.iconBg} rounded-xl flex items-center justify-center shrink-0`}>
                   <Icon size={22} className={action.iconColor} />
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-800 dark:text-slate-100">{action.label}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{action.description}</p>
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi">{action.label}</p>
+                  <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">{action.description}</p>
                 </div>
               </button>
             );

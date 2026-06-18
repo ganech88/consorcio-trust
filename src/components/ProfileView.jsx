@@ -94,16 +94,16 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
         <InfoCard icon={Phone} label="Teléfono" value={form.phone || 'No registrado'} muted={!form.phone} />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Edit3 size={18} className="text-blue-600 dark:text-blue-400" />
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
+            <Edit3 size={18} className="text-blue-600 dark:text-brand-400" />
             Datos Personales
           </h3>
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              className="text-sm text-blue-600 dark:text-brand-400 font-medium hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30"
             >
               Editar
             </button>
@@ -142,7 +142,7 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
               </button>
               <button
                 onClick={handleCancel}
-                className="px-5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 py-2.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                className="px-5 border border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid py-2.5 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-2"
               >
                 <X size={16} /> Cancelar
               </button>
@@ -151,15 +151,15 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
         </div>
       </div>
 
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700">
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Información de la cuenta</h4>
+      <div className="bg-slate-50 dark:bg-surface-panel/70 rounded-2xl p-5 border border-slate-200/50 dark:border-white/[0.07]">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3">Información de la cuenta</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-slate-400">ID de usuario</span>
-            <span className="text-slate-700 dark:text-slate-300 font-mono text-xs">{session.user.id.substring(0, 12)}...</span>
+            <span className="text-slate-500 dark:text-ink-mid">ID de usuario</span>
+            <span className="text-slate-700 dark:text-ink-mid font-mono text-xs">{session.user.id.substring(0, 12)}...</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-slate-400">Email verificado</span>
+            <span className="text-slate-500 dark:text-ink-mid">Email verificado</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sí</span>
           </div>
         </div>
@@ -180,13 +180,13 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
 
 function InfoCard({ icon: Icon, label, value, muted }) {
   return (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
-      <div className="bg-slate-50 dark:bg-slate-700 p-2.5 rounded-lg">
-        <Icon size={18} className="text-slate-400 dark:text-slate-500" />
+    <div className="bg-white dark:bg-surface-panel p-4 rounded-xl border border-slate-100 dark:border-white/[0.07] flex items-center gap-3">
+      <div className="bg-slate-50 dark:bg-surface-panel2 p-2.5 rounded-lg">
+        <Icon size={18} className="text-slate-400 dark:text-ink-low" />
       </div>
       <div>
-        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{label}</p>
-        <p className={`text-sm font-semibold ${muted ? 'text-slate-300 dark:text-slate-600 italic' : 'text-slate-800 dark:text-slate-200'}`}>{value}</p>
+        <p className="text-xs text-slate-400 dark:text-ink-low font-medium">{label}</p>
+        <p className={`text-sm font-semibold ${muted ? 'text-slate-300 dark:text-ink-low italic' : 'text-slate-800 dark:text-ink-hi'}`}>{value}</p>
       </div>
     </div>
   );
@@ -195,7 +195,7 @@ function InfoCard({ icon: Icon, label, value, muted }) {
 function FormField({ label, value, onChange, disabled, placeholder, hint }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">{label}</label>
       <input
         type="text"
         value={value}
@@ -204,11 +204,11 @@ function FormField({ label, value, onChange, disabled, placeholder, hint }) {
         placeholder={placeholder}
         className={`w-full px-4 py-2.5 border rounded-xl outline-none transition-all ${
           disabled
-            ? 'bg-slate-50 dark:bg-slate-700 border-slate-100 dark:border-slate-600 text-slate-600 dark:text-slate-300 cursor-default'
-            : 'border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 dark:text-slate-100'
+            ? 'bg-slate-50 dark:bg-surface-panel2 border-slate-100 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid cursor-default'
+            : 'border-slate-200 dark:border-white/[0.09] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-surface-panel2 dark:text-ink-hi'
         }`}
       />
-      {hint && !disabled && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{hint}</p>}
+      {hint && !disabled && <p className="text-xs text-slate-400 dark:text-ink-low mt-1">{hint}</p>}
     </div>
   );
 }

@@ -4,11 +4,11 @@ import { fetchEvents, createEvent, deleteEvent, fetchMaintenanceTasks } from '..
 import { useToast } from './Toast';
 
 const EVENT_TYPES = [
-  { value: 'general',        label: 'General',           color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',           dot: 'bg-blue-500' },
-  { value: 'mantenimiento',  label: 'Mantenimiento',     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',         dot: 'bg-amber-500' },
+  { value: 'general',        label: 'General',           color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400',           dot: 'bg-blue-500' },
+  { value: 'mantenimiento',  label: 'Mantenimiento',     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',         dot: 'bg-amber-500' },
   { value: 'reunion',        label: 'Reunión',           color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',     dot: 'bg-indigo-500' },
-  { value: 'corte',          label: 'Corte de servicio', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',                 dot: 'bg-red-500' },
-  { value: 'fumigacion',     label: 'Fumigación',        color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', dot: 'bg-emerald-500' },
+  { value: 'corte',          label: 'Corte de servicio', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',                 dot: 'bg-red-500' },
+  { value: 'fumigacion',     label: 'Fumigación',        color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400', dot: 'bg-emerald-500' },
 ];
 
 function getTypeConfig(type) {
@@ -43,10 +43,10 @@ function MiniCalendar({ year, month, events, selectedDay, onSelectDay }) {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
+    <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4">
       <div className="grid grid-cols-7 gap-0 mb-2">
         {DAYS.map(d => (
-          <div key={d} className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 py-1">
+          <div key={d} className="text-center text-[10px] font-bold text-slate-400 dark:text-ink-low py-1">
             {d}
           </div>
         ))}
@@ -65,10 +65,10 @@ function MiniCalendar({ year, month, events, selectedDay, onSelectDay }) {
               onClick={() => onSelectDay(date)}
               className={`relative w-full aspect-square flex flex-col items-center justify-center rounded-xl text-xs font-medium transition-all ${
                 isSelected
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-blue-600 text-white'
                   : isToday
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-brand-400 font-bold'
+                  : 'text-slate-700 dark:text-ink-mid hover:bg-slate-50 dark:hover:bg-white/[0.06]'
               }`}
             >
               {day}
@@ -123,28 +123,28 @@ function CreateEventForm({ session, userProfile, onCreated }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
-      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Crear evento</h4>
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+      <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm">Crear evento</h4>
 
       <div>
-        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Título</label>
+        <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Título</label>
         <input
           type="text"
           value={form.title}
           onChange={e => setField('title', e.target.value)}
           placeholder="Ej: Reunión de propietarios"
-          className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           required
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Tipo</label>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Tipo</label>
           <select
             value={form.type}
             onChange={e => setField('type', e.target.value)}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           >
             {EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
@@ -153,49 +153,49 @@ function CreateEventForm({ session, userProfile, onCreated }) {
           <label className="flex items-center gap-2 cursor-pointer select-none pb-2.5">
             <div
               onClick={() => setField('allDay', !form.allDay)}
-              className={`w-10 h-5 rounded-full transition-colors relative ${form.allDay ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+              className={`w-10 h-5 rounded-full transition-colors relative ${form.allDay ? 'bg-blue-600' : 'bg-slate-300 dark:bg-surface-panel2'}`}
             >
               <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </div>
-            <span className="text-sm text-slate-600 dark:text-slate-300">Todo el día</span>
+            <span className="text-sm text-slate-600 dark:text-ink-mid">Todo el día</span>
           </label>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
             Fecha {!form.allDay ? 'y hora ' : ''}de inicio
           </label>
           <input
             type={form.allDay ? 'date' : 'datetime-local'}
             value={form.startDate}
             onChange={e => setField('startDate', e.target.value)}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
             Fecha de fin (opcional)
           </label>
           <input
             type={form.allDay ? 'date' : 'datetime-local'}
             value={form.endDate}
             onChange={e => setField('endDate', e.target.value)}
-            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Descripción (opcional)</label>
+        <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Descripción (opcional)</label>
         <textarea
           value={form.description}
           onChange={e => setField('description', e.target.value)}
           placeholder="Detalles del evento..."
           rows={2}
-          className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+          className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none resize-none"
         />
       </div>
 
@@ -296,7 +296,7 @@ export default function CalendarView({ session, userProfile }) {
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <h3 className="text-xl font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
           <CalendarDays size={22} className="text-blue-500" />
           Calendario
         </h3>
@@ -324,16 +324,16 @@ export default function CalendarView({ session, userProfile }) {
       <div className="flex items-center justify-between px-1">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-500 dark:text-ink-mid transition-colors"
         >
           <ChevronLeft size={18} />
         </button>
-        <h4 className="font-bold text-slate-800 dark:text-slate-100">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi">
           {MONTHS[month]} {year}
         </h4>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-500 dark:text-ink-mid transition-colors"
         >
           <ChevronRight size={18} />
         </button>
@@ -351,28 +351,28 @@ export default function CalendarView({ session, userProfile }) {
       {/* Eventos del día seleccionado */}
       {selectedDay && (
         <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
             {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </h4>
           {dayEvents.length === 0 ? (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 text-center">
-              <p className="text-slate-400 dark:text-slate-500 text-sm">Sin eventos este día</p>
+            <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-6 text-center">
+              <p className="text-slate-400 dark:text-ink-low text-sm">Sin eventos este día</p>
             </div>
           ) : (
             <div className="space-y-2">
               {dayEvents.map(ev => {
                 const tc = getTypeConfig(ev.type);
                 return (
-                  <div key={ev.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex items-start gap-3">
+                  <div key={ev.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-start gap-3">
                     <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${tc.dot}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 dark:text-slate-100">{ev.title}</p>
+                      <p className="font-semibold text-slate-800 dark:text-ink-hi">{ev.title}</p>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tc.color}`}>{tc.label}</span>
                       {ev.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{ev.description}</p>
+                        <p className="text-xs text-slate-500 dark:text-ink-mid mt-1">{ev.description}</p>
                       )}
                       {!ev.all_day && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        <p className="text-xs text-slate-400 dark:text-ink-low mt-1">
                           {new Date(ev.start_date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                           {ev.end_date && ` — ${new Date(ev.end_date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`}
                         </p>
@@ -398,7 +398,7 @@ export default function CalendarView({ session, userProfile }) {
       {/* Próximos eventos */}
       {upcoming.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
             Próximos eventos
           </h4>
           <div className="space-y-2">
@@ -406,19 +406,19 @@ export default function CalendarView({ session, userProfile }) {
               const tc = getTypeConfig(ev.type);
               const evDate = new Date(ev.start_date);
               return (
-                <div key={ev.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex items-center gap-4">
+                <div key={ev.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-4">
                   <div className="text-center shrink-0 w-10">
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">{MONTHS[evDate.getMonth()].slice(0, 3)}</p>
-                    <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-none">{evDate.getDate()}</p>
+                    <p className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase">{MONTHS[evDate.getMonth()].slice(0, 3)}</p>
+                    <p className="text-xl font-bold text-slate-800 dark:text-ink-hi leading-none">{evDate.getDate()}</p>
                   </div>
                   <div className={`w-0.5 h-10 rounded-full ${tc.dot}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{ev.title}</p>
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{ev.title}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tc.color}`}>{tc.label}</span>
                   </div>
                   <button
                     onClick={() => { setSelectedDay(evDate); setYear(evDate.getFullYear()); setMonth(evDate.getMonth()); }}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                    className="text-xs text-blue-600 dark:text-brand-400 hover:underline shrink-0"
                   >
                     Ver
                   </button>

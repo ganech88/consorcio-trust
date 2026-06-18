@@ -17,9 +17,9 @@ const TIME_SLOTS = [
 ];
 
 const STATUS_CONFIG = {
-  pending:  { label: 'Pendiente', color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/30',   icon: Clock },
-  approved: { label: 'Aprobada',  color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30', icon: CheckCircle },
-  rejected: { label: 'Rechazada', color: 'text-red-600 dark:text-red-400',       bg: 'bg-red-50 dark:bg-red-900/30',       icon: AlertCircle },
+  pending:  { label: 'Pendiente', color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-400/[0.14]',   icon: Clock },
+  approved: { label: 'Aprobada',  color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-400/[0.14]', icon: CheckCircle },
+  rejected: { label: 'Rechazada', color: 'text-red-600 dark:text-red-400',       bg: 'bg-red-50 dark:bg-red-400/[0.14]',       icon: AlertCircle },
 };
 
 function getTodayString() {
@@ -119,7 +119,7 @@ export default function AmenitiesView({ session, userProfile }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
+      <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <Calendar size={24} />
           Reserva de Amenities
@@ -133,7 +133,7 @@ export default function AmenitiesView({ session, userProfile }) {
           return (
             <div
               key={amenity.id}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:border-brand-200 dark:hover:border-brand-600 hover:shadow-md transition-all group cursor-pointer overflow-hidden"
+              className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] hover:border-brand-200 dark:hover:border-brand-600 transition-all group cursor-pointer overflow-hidden"
               onClick={() => { setSelectedAmenity(amenity); setDate(''); setTimeSlot(''); }}
             >
               {/* Image with availability badge */}
@@ -152,12 +152,12 @@ export default function AmenitiesView({ session, userProfile }) {
               </div>
 
               <div className="p-5">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-700 dark:group-hover:text-brand-400 transition-colors">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi group-hover:text-brand-700 dark:group-hover:text-brand-400 transition-colors">
                   {amenity.name}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{amenity.description}</p>
+                <p className="text-sm text-slate-500 dark:text-ink-mid mt-1">{amenity.description}</p>
 
-                <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 dark:text-slate-500">
+                <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 dark:text-ink-low">
                   <span className="flex items-center gap-1">
                     <Users size={14} />
                     {amenity.capacity} personas
@@ -181,26 +181,26 @@ export default function AmenitiesView({ session, userProfile }) {
       </div>
 
       {/* Mis reservas */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-700">
-          <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-white/[0.07]">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
             <Calendar size={18} className="text-brand-600 dark:text-brand-400" />
             Mis Reservas
           </h4>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-slate-400 dark:text-slate-500">
+          <div className="p-8 text-center text-slate-400 dark:text-ink-low">
             <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
             <p className="text-sm">Cargando reservas...</p>
           </div>
         ) : reservations.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 dark:text-slate-500">
+          <div className="p-8 text-center text-slate-400 dark:text-ink-low">
             <Calendar size={36} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">No tenés reservas activas</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+          <div className="divide-y divide-slate-50 dark:divide-white/[0.06]/50">
             {reservations.map((res) => {
               const sc = STATUS_CONFIG[res.status] || STATUS_CONFIG.pending;
               const StatusIcon = sc.icon;
@@ -210,8 +210,8 @@ export default function AmenitiesView({ session, userProfile }) {
                     <StatusIcon size={16} className={sc.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{res.amenity_name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{res.amenity_name}</p>
+                    <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">
                       {formatDate(res.date)} · {res.time_slot}
                     </p>
                   </div>
@@ -243,16 +243,16 @@ export default function AmenitiesView({ session, userProfile }) {
       {selectedAmenity && (
         <Modal title={`Reservar ${selectedAmenity.name}`} onClose={() => setSelectedAmenity(null)}>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 flex items-center gap-3">
+            <div className="bg-slate-50 dark:bg-surface-inset rounded-xl p-4 flex items-center gap-3">
               <span className="text-3xl">{selectedAmenity.icon}</span>
               <div>
-                <p className="font-bold text-slate-800 dark:text-slate-100">{selectedAmenity.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{selectedAmenity.description}</p>
+                <p className="font-bold text-slate-800 dark:text-ink-hi">{selectedAmenity.name}</p>
+                <p className="text-xs text-slate-500 dark:text-ink-mid">{selectedAmenity.description}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Fecha <span className="text-red-500">*</span>
               </label>
               <input
@@ -261,12 +261,12 @@ export default function AmenitiesView({ session, userProfile }) {
                 min={getTodayString()}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white dark:bg-slate-700 dark:text-slate-100 transition-all"
+                className="w-full p-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white dark:bg-surface-panel2 dark:text-ink-hi transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                 Horario <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -277,8 +277,8 @@ export default function AmenitiesView({ session, userProfile }) {
                     onClick={() => setTimeSlot(slot)}
                     className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
                       timeSlot === slot
-                        ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
-                        : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-brand-300 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20'
+                        ? 'bg-brand-600 border-brand-600 text-white'
+                        : 'border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid hover:border-brand-300 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20'
                     }`}
                   >
                     {slot}
@@ -291,7 +291,7 @@ export default function AmenitiesView({ session, userProfile }) {
               <button
                 type="submit"
                 disabled={submitting || !date || !timeSlot}
-                className="flex-1 bg-gradient-to-r from-brand-600 to-brand-700 text-white py-3 rounded-xl font-bold hover:from-brand-700 hover:to-brand-800 flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:from-brand-700 hover:to-brand-800 flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -303,7 +303,7 @@ export default function AmenitiesView({ session, userProfile }) {
               <button
                 type="button"
                 onClick={() => setSelectedAmenity(null)}
-                className="px-4 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                className="px-4 border border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors flex items-center gap-2"
               >
                 <X size={16} /> Cancelar
               </button>

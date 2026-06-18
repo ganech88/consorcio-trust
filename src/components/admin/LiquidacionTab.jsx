@@ -117,22 +117,22 @@ export default function LiquidacionTab({ session, userProfile }) {
   return (
     <div className="space-y-6">
       {/* Formulario de nueva liquidación */}
-      <form onSubmit={handleCreatePeriod} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Nueva liquidación mensual</h4>
+      <form onSubmit={handleCreatePeriod} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm">Nueva liquidación mensual</h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Período</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Período</label>
             <input
               type="month"
               value={form.period}
               onChange={e => setField('period', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto total ($)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto total ($)</label>
             <input
               type="number"
               min="0"
@@ -140,17 +140,17 @@ export default function LiquidacionTab({ session, userProfile }) {
               value={form.totalAmount}
               onChange={e => setField('totalAmount', e.target.value)}
               placeholder="Ej: 500000"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha de vencimiento</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Fecha de vencimiento</label>
             <input
               type="date"
               value={form.dueDate}
               onChange={e => setField('dueDate', e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
               required
             />
           </div>
@@ -158,7 +158,7 @@ export default function LiquidacionTab({ session, userProfile }) {
 
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto por unidad (para distribución automática)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto por unidad (para distribución automática)</label>
             <input
               type="number"
               min="0"
@@ -166,7 +166,7 @@ export default function LiquidacionTab({ session, userProfile }) {
               value={form.amountPerUnit}
               onChange={e => setField('amountPerUnit', e.target.value)}
               placeholder="Ej: 25000"
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
           <div className="pt-6">
@@ -189,22 +189,22 @@ export default function LiquidacionTab({ session, userProfile }) {
         <EmptyState icon={Receipt} text="No hay liquidaciones publicadas aún" />
       ) : (
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider px-1">
             Períodos publicados ({periods.length})
           </h4>
           {periods.map(period => {
             const isOpen = expanded === period.id;
             const items = periodItems[period.id] ?? [];
             return (
-              <div key={period.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+              <div key={period.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
                 <button
                   onClick={() => handleExpand(period)}
-                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors"
                 >
                   <Receipt size={18} className="text-blue-500 shrink-0" />
                   <div className="flex-1">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">{formatPeriod(period.period)}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <p className="font-semibold text-slate-800 dark:text-ink-hi">{formatPeriod(period.period)}</p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low">
                       Total: ${Number(period.total_amount).toLocaleString('es-AR')} · Vence: {new Date(period.due_date).toLocaleDateString('es-AR')}
                     </p>
                   </div>
@@ -212,9 +212,9 @@ export default function LiquidacionTab({ session, userProfile }) {
                 </button>
 
                 {isOpen && (
-                  <div className="border-t border-slate-100 dark:border-slate-700 p-4 space-y-3">
+                  <div className="border-t border-slate-100 dark:border-white/[0.07] p-4 space-y-3">
                     {/* Distribuir */}
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
                       <input
                         type="number"
                         min="0"
@@ -222,7 +222,7 @@ export default function LiquidacionTab({ session, userProfile }) {
                         value={form.amountPerUnit}
                         onChange={e => setField('amountPerUnit', e.target.value)}
                         placeholder="Monto por unidad"
-                        className="flex-1 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 border border-slate-200 dark:border-white/[0.09] rounded-lg px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                       <button
                         onClick={() => handleDistribute(period)}
@@ -238,27 +238,27 @@ export default function LiquidacionTab({ session, userProfile }) {
                     {loadingItems === period.id ? (
                       <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
                     ) : items.length === 0 ? (
-                      <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">Sin ítems distribuidos aún</p>
+                      <p className="text-sm text-slate-400 dark:text-ink-low text-center py-4">Sin ítems distribuidos aún</p>
                     ) : (
                       <div className="space-y-2">
                         {items.map(item => (
-                          <div key={item.id} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                          <div key={item.id} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-50 dark:border-white/[0.07] last:border-0">
                             <div>
-                              <span className="font-medium text-slate-700 dark:text-slate-300">
+                              <span className="font-medium text-slate-700 dark:text-ink-mid">
                                 Unidad {item.unit_id}
                               </span>
                               {item.profiles?.full_name && (
-                                <span className="text-slate-400 dark:text-slate-500 ml-2">({item.profiles.full_name})</span>
+                                <span className="text-slate-400 dark:text-ink-low ml-2">({item.profiles.full_name})</span>
                               )}
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-bold text-slate-800 dark:text-slate-100">
+                              <span className="font-bold text-slate-800 dark:text-ink-hi">
                                 ${Number(item.amount).toLocaleString('es-AR')}
                               </span>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 item.status === 'paid'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
                               }`}>
                                 {item.status === 'paid' ? 'Pagado' : 'Pendiente'}
                               </span>

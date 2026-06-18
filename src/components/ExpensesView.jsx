@@ -4,16 +4,16 @@ import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, creat
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', icon: Clock },
-  partial: { label: 'Parcial',   color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',   icon: Clock },
-  paid:    { label: 'Pagado',    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', icon: CheckCircle },
-  overdue: { label: 'Vencido',   color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',        icon: AlertCircle },
+  pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400', icon: Clock },
+  partial: { label: 'Parcial',   color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400',   icon: Clock },
+  paid:    { label: 'Pagado',    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400', icon: CheckCircle },
+  overdue: { label: 'Vencido',   color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',        icon: AlertCircle },
 };
 
 const PAYMENT_STATUS_CONFIG = {
-  pending:  { label: 'Pendiente de aprobación', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
-  approved: { label: 'Aprobado',                color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
-  rejected: { label: 'Rechazado',               color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  pending:  { label: 'Pendiente de aprobación', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  approved: { label: 'Aprobado',                color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
+  rejected: { label: 'Rechazado',               color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
 };
 
 function formatCurrency(amount) {
@@ -57,9 +57,9 @@ function PaymentModal({ expense, userId, onClose, onPaid }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
-          <h4 className="font-bold text-slate-800 dark:text-slate-100">Registrar pago</h4>
+      <div className="bg-white dark:bg-surface-panel rounded-2xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.07]">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Registrar pago</h4>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <X size={20} />
           </button>
@@ -72,25 +72,25 @@ function PaymentModal({ expense, userId, onClose, onPaid }) {
             </p>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Monto a pagar ($)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto a pagar ($)</label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Notas (opcional)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas (opcional)</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Ej: Transferencia banco / número de operación..."
               rows={2}
-              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none"
             />
           </div>
           <button
@@ -182,7 +182,7 @@ export default function ExpensesView({ session, userProfile }) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-600 to-brand-700 p-6 rounded-2xl text-white shadow-lg">
+      <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg">
         <div className="flex items-center gap-3 mb-4">
           <Receipt size={24} />
           <h3 className="text-xl font-bold">Mis Expensas</h3>
@@ -202,7 +202,7 @@ export default function ExpensesView({ session, userProfile }) {
       {/* Período actual */}
       {currentExpenses.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
             Período actual — {formatPeriod(currentPeriod)}
           </h4>
           <div className="space-y-3">
@@ -212,17 +212,17 @@ export default function ExpensesView({ session, userProfile }) {
               const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
               const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
               return (
-                <div key={exp.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
+                <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${st.color}`}>
                         <Icon size={18} />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 dark:text-slate-100">{exp.title}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{formatCurrency(exp.amount)}</p>
+                        <p className="font-bold text-slate-800 dark:text-ink-hi">{exp.title}</p>
+                        <p className="text-sm text-slate-500 dark:text-ink-mid">{formatCurrency(exp.amount)}</p>
                         {exp.due_date && (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+                          <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5 flex items-center gap-1">
                             <AlertCircle size={11} />
                             Vence: {new Date(exp.due_date).toLocaleDateString('es-AR')}
                           </p>
@@ -256,7 +256,7 @@ export default function ExpensesView({ session, userProfile }) {
                     </div>
                   </div>
                   {exp.description && (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 pl-13">{exp.description}</p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low mt-3 pl-13">{exp.description}</p>
                   )}
                 </div>
               );
@@ -267,14 +267,14 @@ export default function ExpensesView({ session, userProfile }) {
 
       {/* Historial de todas las expensas */}
       <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+        <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
           Todas las expensas ({expenses.length})
         </h4>
         {expenses.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
-            <Receipt size={40} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay expensas registradas aún</p>
-            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
+          <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center">
+            <Receipt size={40} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
+            <p className="text-slate-500 dark:text-ink-mid text-sm">No hay expensas registradas aún</p>
+            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">
               El administrador publicará las liquidaciones mensualmente
             </p>
           </div>
@@ -286,16 +286,16 @@ export default function ExpensesView({ session, userProfile }) {
               const canPay = !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
               const isExpanded = expandedId === exp.id;
               return (
-                <div key={exp.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
                   <div className="p-4 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{exp.title}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                      <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{exp.title}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low">
                         {formatPeriod(exp.period)}
                         {exp.due_date ? ` · Vence ${new Date(exp.due_date).toLocaleDateString('es-AR')}` : ''}
                       </p>
                     </div>
-                    <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{formatCurrency(exp.amount)}</p>
+                    <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{formatCurrency(exp.amount)}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
                     {canPay && (
                       <button
@@ -315,20 +315,20 @@ export default function ExpensesView({ session, userProfile }) {
                     )}
                   </div>
                   {isExpanded && myPay && (
-                    <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    <div className="border-t border-slate-100 dark:border-white/[0.07] px-4 py-3">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-ink-mid uppercase tracking-wider mb-2">
                         Mi pago
                       </p>
                       <div className="flex items-center gap-3 text-xs">
                         <CreditCard size={12} className="text-slate-400" />
-                        <span className="text-slate-700 dark:text-slate-300">{formatCurrency(myPay.amount)}</span>
+                        <span className="text-slate-700 dark:text-ink-mid">{formatCurrency(myPay.amount)}</span>
                         <span className="text-slate-400">{new Date(myPay.paid_at).toLocaleDateString('es-AR')}</span>
                         <span className={`px-1.5 py-0.5 rounded-full font-bold text-[10px] ${PAYMENT_STATUS_CONFIG[myPay.status]?.color}`}>
                           {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
                         </span>
                       </div>
                       {myPay.notes && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 ml-5">{myPay.notes}</p>
+                        <p className="text-xs text-slate-400 dark:text-ink-low mt-1 ml-5">{myPay.notes}</p>
                       )}
                     </div>
                   )}
@@ -342,22 +342,22 @@ export default function ExpensesView({ session, userProfile }) {
       {/* Historial de mis pagos */}
       {myPayments.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-1">
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
             Mis pagos registrados ({myPayments.length})
           </h4>
           <div className="space-y-2">
             {myPayments.map(p => {
               const pst = PAYMENT_STATUS_CONFIG[p.status] || PAYMENT_STATUS_CONFIG.pending;
               return (
-                <div key={p.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 flex items-center gap-3">
+                <div key={p.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-3">
                   <CreditCard size={16} className="text-brand-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{p.expenseTitle}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">{p.expenseTitle}</p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low">
                       {formatPeriod(p.expensePeriod)} · {new Date(p.paid_at).toLocaleDateString('es-AR')}
                     </p>
                   </div>
-                  <p className="font-bold text-slate-800 dark:text-slate-100 shrink-0">{formatCurrency(p.amount)}</p>
+                  <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{formatCurrency(p.amount)}</p>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${pst.color}`}>{pst.label}</span>
                 </div>
               );
@@ -374,7 +374,7 @@ export default function ExpensesView({ session, userProfile }) {
           </h4>
           <div className="space-y-2">
             {activeFines.map(fine => (
-              <div key={fine.id} className="bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
+              <div key={fine.id} className="bg-red-50 dark:bg-red-400/[0.12] rounded-2xl border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
                 <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
                   <Gavel size={16} className="text-red-500 dark:text-red-400" />
                 </div>
@@ -389,16 +389,16 @@ export default function ExpensesView({ session, userProfile }) {
                   )}
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-bold text-red-700 dark:text-red-300">{formatCurrency(fine.amount)}</p>
+                  <p className="font-bold text-red-700 dark:text-red-400">{formatCurrency(fine.amount)}</p>
                   <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase">
                     {FINE_STATUS_LABELS[fine.status]}
                   </span>
                 </div>
               </div>
             ))}
-            <div className="flex items-center justify-between bg-red-100 dark:bg-red-900/30 rounded-xl px-4 py-2.5">
-              <span className="text-xs font-bold text-red-700 dark:text-red-300">Total multas</span>
-              <span className="font-bold text-red-700 dark:text-red-300">{formatCurrency(totalFines)}</span>
+            <div className="flex items-center justify-between bg-red-100 dark:bg-red-400/[0.14] rounded-xl px-4 py-2.5">
+              <span className="text-xs font-bold text-red-700 dark:text-red-400">Total multas</span>
+              <span className="font-bold text-red-700 dark:text-red-400">{formatCurrency(totalFines)}</span>
             </div>
           </div>
         </div>
