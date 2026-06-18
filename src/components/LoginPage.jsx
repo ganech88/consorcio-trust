@@ -42,7 +42,7 @@ export default function LoginPage({ onLogin }) {
 
       {/* Card — split layout on desktop */}
       <div className="relative w-full max-w-4xl animate-fade-in-up">
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/50 overflow-hidden flex flex-col md:flex-row">
+        <div className="bg-white/95 dark:bg-surface-panel/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/[0.07]/50 overflow-hidden flex flex-col md:flex-row">
 
           {/* Left panel — branding */}
           <div className="hidden md:flex flex-col justify-between bg-gradient-to-br from-brand-600 to-brand-800 p-10 w-[42%] shrink-0">
@@ -85,31 +85,31 @@ export default function LoginPage({ onLogin }) {
             {/* Mobile logo */}
             <div className="flex items-center gap-3 mb-8 md:hidden">
               <Logo size={38} />
-              <span className="font-bold text-xl text-slate-800 dark:text-slate-100 font-display">ConsorcioTrust</span>
+              <span className="font-bold text-xl text-slate-800 dark:text-ink-hi font-display">ConsorcioTrust</span>
             </div>
 
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-ink-hi tracking-tight font-display">
                 {isLoginView ? 'Bienvenido de nuevo' : 'Creá tu cuenta'}
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1.5 text-sm">
+              <p className="text-slate-500 dark:text-ink-mid mt-1.5 text-sm">
                 {isLoginView ? 'Ingresá tus credenciales para continuar' : 'Completá los datos para registrarte'}
               </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-ink-low" />
                   <input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-slate-700 dark:text-slate-100 hover:bg-white dark:hover:bg-slate-700"
+                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06]"
                     placeholder="tu@email.com"
                     required
                     autoComplete="email"
@@ -118,17 +118,17 @@ export default function LoginPage({ onLogin }) {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                   Contraseña
                 </label>
                 <div className="relative">
-                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-ink-low" />
                   <input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-slate-700 dark:text-slate-100 hover:bg-white dark:hover:bg-slate-700"
+                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06]"
                     placeholder="••••••••"
                     required
                     minLength={6}
@@ -140,7 +140,7 @@ export default function LoginPage({ onLogin }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full bg-brand-500 hover:bg-brand-400 text-[#04201d] font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -166,7 +166,7 @@ export default function LoginPage({ onLogin }) {
                       toast.error(err.message, 'No se pudo enviar el email');
                     }
                   }}
-                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+                  className="text-xs text-slate-500 dark:text-ink-mid hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>

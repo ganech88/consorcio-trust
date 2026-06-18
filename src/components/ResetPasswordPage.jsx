@@ -34,16 +34,16 @@ export default function ResetPasswordPage({ onDone }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-surface-base p-4">
+      <div className="w-full max-w-md bg-white dark:bg-surface-panel rounded-2xl shadow-xl border border-slate-100 dark:border-white/[0.07] p-8">
         <div className="flex justify-center mb-6"><Logo /></div>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 text-center">Nueva contraseña</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 text-center mt-1 mb-6">
+        <h1 className="text-xl font-bold text-slate-800 dark:text-ink-hi text-center">Nueva contraseña</h1>
+        <p className="text-sm text-slate-500 dark:text-ink-mid text-center mt-1 mb-6">
           Ingresá tu nueva contraseña para tu cuenta.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="new-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nueva contraseña</label>
+            <label htmlFor="new-password" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Nueva contraseña</label>
             <div className="relative">
               <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -53,13 +53,13 @@ export default function ResetPasswordPage({ onDone }) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.09] bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
           </div>
           <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Repetir contraseña</label>
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">Repetir contraseña</label>
             <div className="relative">
               <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -69,7 +69,7 @@ export default function ResetPasswordPage({ onDone }) {
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
-                className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.09] bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
                 required
               />
             </div>
@@ -77,7 +77,7 @@ export default function ResetPasswordPage({ onDone }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-400 text-[#04201d] py-2.5 rounded-xl font-bold transition-colors disabled:opacity-60"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <>Guardar contraseña <ArrowRight size={18} /></>}
           </button>
