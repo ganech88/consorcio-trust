@@ -6,10 +6,10 @@ import {
 import {
   fetchAllConsortia,
   createConsortium,
-  fetchAllProfiles,
+  fetchAllUsers,
   assignAdminToConsortium,
   revokeAdminFromConsortium,
-  fetchAdminConsortia,
+  fetchConsortiumAdmins,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -31,10 +31,10 @@ function ConsortiaPanel({ session }) {
   const [selectedAdmin, setSelectedAdmin] = useState('');
 
   useEffect(() => {
-    Promise.all([fetchAllConsortia(), fetchAllProfiles()])
+    Promise.all([fetchAllConsortia(), fetchAllUsers()])
       .then(([c, p]) => {
         setConsortia(c);
-        setAdmins(p.filter(pr => ['admin', 'super_admin'].includes(pr.role)));
+        setAdmins(p.filter(pr => pr.role !== 'super_admin'));
       })
       .catch(e => toast.error(e.message))
       .finally(() => setLoading(false));
@@ -43,14 +43,7 @@ function ConsortiaPanel({ session }) {
   async function loadAssignments(consortiumId) {
     if (assignments[consortiumId]) return;
     try {
-      const all = await fetchAllProfiles();
-      const assigned = [];
-      for (const profile of all) {
-        const consortia = await fetchAdminConsortia(profile.id);
-        if (consortia.some(c => c.id === consortiumId)) {
-          assigned.push(profile);
-        }
-      }
+      const assigned = await fetchConsortiumAdmins(consortiumId);
       setAssignments(prev => ({ ...prev, [consortiumId]: assigned }));
     } catch (e) {
       toast.error(e.message);

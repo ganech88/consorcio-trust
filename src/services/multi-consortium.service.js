@@ -24,6 +24,13 @@ export async function assignAdminToConsortium(adminId, consortiumId, grantedBy) 
     .from('admin_consortia')
     .upsert({ admin_id: adminId, consortium_id: consortiumId, granted_by: grantedBy }, { onConflict: 'admin_id,consortium_id' });
   if (error) throw error;
+  // Elevar al usuario a administrador de ese consorcio. Lo permite el super_admin
+  // (RLS 'super_admin manage all profiles' + trigger prevent_role_escalation).
+  const { error: roleErr } = await supabase
+    .from('profiles')
+    .update({ role: 'admin', consortium_id: consortiumId })
+    .eq('id', adminId);
+  if (roleErr) throw roleErr;
 }
 
 export async function revokeAdminFromConsortium(adminId, consortiumId) {
@@ -64,4 +71,24 @@ export async function fetchAllAdminAssignments() {
     .order('granted_at', { ascending: false });
   if (error) throw error;
   return data || [];
+}
+
+// Todos los usuarios (para que el super_admin elija a quien hacer admin).
+export async function fetchAllUsers() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, role')
+    .order('full_name');
+  if (error) { console.warn('fetchAllUsers:', error.message); return []; }
+  return data || [];
+}
+
+// Administradores asignados a un consorcio (para listar en el panel).
+export async function fetchConsortiumAdmins(consortiumId) {
+  const { data, error } = await supabase
+    .from('admin_consortia')
+    .select('admin_id, profiles(id, full_name, email)')
+    .eq('consortium_id', consortiumId);
+  if (error) { console.warn('fetchConsortiumAdmins:', error.message); return []; }
+  return (data || []).map(r => r.profiles).filter(Boolean);
 }
