@@ -35,3 +35,6 @@ dist-ssr
 
 # Empty nested scaffold
 consorcio-trust/
+
+# Backups locales de la base (datos personales, NO versionar)
+backups/
