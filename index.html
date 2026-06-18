@@ -6,7 +6,7 @@
     <meta name="description" content="ConsorcioTrust - Gestión inteligente para tu consorcio" />
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0d9488" />
+    <meta name="theme-color" content="#0b0d12" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ConsorcioTrust" />
@@ -26,5 +26,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Auto-reparación: si el service worker sirve una versión vieja y la app no monta,
+      // limpia SW + caché y recarga una sola vez (evita pantalla en blanco tras un deploy).
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.childElementCount === 0 && !sessionStorage.getItem('ct-healed')) {
+            sessionStorage.setItem('ct-healed', '1');
+            var reload = function () { location.reload(); };
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations()
+                .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })
+                .then(function () { return window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : null; })
+                .then(reload).catch(reload);
+            } else { reload(); }
+          }
+        }, 5000);
+      });
+    </script>
   </body>
 </html>

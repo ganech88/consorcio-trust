@@ -51,6 +51,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // Excluir del precache las libs pesadas que ya cargan bajo demanda
         // (export e/o graficos). Se sirven por red al usarse.
