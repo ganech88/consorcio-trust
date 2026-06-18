@@ -33,33 +33,16 @@ export async function fetchConsortiumMembers(consortiumId) {
   return data || [];
 }
 
-export async function joinConsortiumByCode(inviteCode, userId) {
-  const { data: consortium, error: lookupError } = await supabase
-    .from('consortia')
-    .select('id, name')
-    .eq('invite_code', inviteCode.trim())
-    .maybeSingle();
-
-  if (lookupError || !consortium) {
-    throw new Error('Código de invitación inválido. Verificá el código e intentá de nuevo.');
-  }
-
-  const { data: prof } = await supabase
-    .from('profiles')
-    .select('consortium_id')
-    .eq('id', userId)
-    .maybeSingle();
-  if (prof?.consortium_id) {
-    throw new Error('Ya pertenecés a un consorcio. Pedile a la administración el cambio si corresponde.');
-  }
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ consortium_id: consortium.id })
-    .eq('id', userId);
-
-  if (updateError) throw updateError;
-  return consortium;
+export async function joinConsortiumByCode(inviteCode, _userId) {
+  // El lookup por codigo y el alta se hacen en un RPC SECURITY DEFINER: las
+  // politicas RLS de `consortia` no permiten leer un consorcio del que todavia
+  // no sos miembro, asi que el select directo siempre fallaba con "invalido".
+  const { data, error } = await supabase.rpc('join_consortium_by_code', {
+    p_code: inviteCode.trim(),
+  });
+  if (error) throw new Error(error.message || 'No se pudo unir al consorcio. Intenta de nuevo.');
+  const row = Array.isArray(data) ? data[0] : data;
+  return { id: row?.consortium_id, name: row?.consortium_name };
 }
 
 export async function fetchAllProfiles(consortiumId, { page, pageSize } = {}) {
