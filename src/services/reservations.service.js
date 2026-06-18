@@ -25,7 +25,12 @@ export async function createReservation({ amenityId, amenityName, date, timeSlot
     }])
     .select();
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('Ese horario ya esta reservado para esa fecha. Elegi otro turno.');
+    }
+    throw error;
+  }
   return data?.[0];
 }
 

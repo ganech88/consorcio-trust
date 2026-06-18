@@ -92,7 +92,10 @@ export default function AmenitiesView({ session, userProfile }) {
         userId: session.user.id,
         consortiumId: userProfile?.consortium_id ?? null,
       });
-      if (newRes) setReservations((prev) => [newRes, ...prev]);
+      if (newRes) {
+        setReservations((prev) => [newRes, ...prev]);
+        setAllReservations((prev) => [newRes, ...prev]);
+      }
       toast.success(`Reserva de "${selectedAmenity.name}" enviada. El administrador la revisará.`);
       setSelectedAmenity(null);
       setDate('');
@@ -116,6 +119,12 @@ export default function AmenitiesView({ session, userProfile }) {
       setCancelling(null);
     }
   }
+
+  const takenForSelected = selectedAmenity && date
+    ? allReservations
+        .filter((r) => r.amenity_id === selectedAmenity.id && r.date === date && r.status !== 'rejected')
+        .map((r) => r.time_slot)
+    : [];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -270,20 +279,26 @@ export default function AmenitiesView({ session, userProfile }) {
                 Horario <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {TIME_SLOTS.map((slot) => (
+                {TIME_SLOTS.map((slot) => {
+                  const taken = takenForSelected.includes(slot);
+                  return (
                   <button
                     key={slot}
                     type="button"
+                    disabled={taken}
                     onClick={() => setTimeSlot(slot)}
                     className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
-                      timeSlot === slot
+                      taken
+                        ? 'border-slate-200 dark:border-white/[0.09] text-slate-300 dark:text-ink-low line-through opacity-50 cursor-not-allowed'
+                        : timeSlot === slot
                         ? 'bg-brand-600 border-brand-600 text-white'
                         : 'border-slate-200 dark:border-white/[0.09] text-slate-600 dark:text-ink-mid hover:border-brand-300 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20'
                     }`}
                   >
-                    {slot}
+                    {slot}{taken ? ' · Ocupado' : ''}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
