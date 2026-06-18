@@ -108,8 +108,21 @@ export async function createPeriodItems(items) {
     .insert(items)
     .select();
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('Esta liquidación ya fue distribuida (no se duplica).');
+    }
+    throw error;
+  }
   return data || [];
+}
+
+export async function deletePeriodItems(periodId) {
+  const { error } = await supabase
+    .from('expense_period_items')
+    .delete()
+    .eq('period_id', periodId);
+  if (error) throw error;
 }
 
 // El residente informa el pago de su expensa del periodo (queda 'reported').

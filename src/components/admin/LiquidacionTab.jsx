@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X } from 'lucide-react';
+import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
-  approvePeriodItem, rejectPeriodItem,
+  approvePeriodItem, rejectPeriodItem, deletePeriodItems,
 } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
@@ -65,30 +65,42 @@ export default function LiquidacionTab({ session, userProfile }) {
     }
   }
 
-  async function handleDistribute(period) {
+  async function handleDistribute(period, force = false) {
     setSaving(period.id);
     try {
+      const existing = periodItems[period.id] ?? await fetchPeriodItems(period.id);
+      if (existing.length > 0 && !force) {
+        toast.error('Esta liquidación ya fue distribuida.');
+        return;
+      }
+      if (existing.length > 0 && force) {
+        if (existing.some(i => i.status === 'paid' || i.status === 'reported')) {
+          toast.error('No se puede recalcular: ya hay pagos informados o aprobados.');
+          return;
+        }
+        await deletePeriodItems(period.id);
+      }
       const units = await fetchUnits(userProfile?.consortium_id);
       if (!units.length) { toast.error('No hay unidades cargadas. Cargalas en la pestana Unidades.'); return; }
       const withCoef = units.filter(u => u.coefficient != null && Number(u.coefficient) > 0);
       if (!withCoef.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la pestana Unidades.'); return; }
 
       const total = Number(period.total_amount);
-      const items = withCoef.map(u => ({
+      const rows = withCoef.map(u => ({
         period_id: period.id,
         unit_id: u.name,
         user_id: u.owner_id || null,
         amount: Math.round(total * Number(u.coefficient) / 100 * 100) / 100,
       }));
 
-      await createPeriodItems(items);
+      await createPeriodItems(rows);
       const fresh = await fetchPeriodItems(period.id);
       setPeriodItems(prev => ({ ...prev, [period.id]: fresh }));
 
       const sumCoef = withCoef.reduce((s, u) => s + Number(u.coefficient), 0);
       toast.success(Math.abs(sumCoef - 100) < 0.5
-        ? `Expensas distribuidas a ${items.length} unidades segun su coeficiente`
-        : `Distribuido a ${items.length} unidades. Atencion: los coeficientes suman ${sumCoef.toFixed(2)}% (no 100%)`);
+        ? `Expensas distribuidas a ${rows.length} unidades segun su coeficiente`
+        : `Distribuido a ${rows.length} unidades. Atencion: los coeficientes suman ${sumCoef.toFixed(2)}% (no 100%)`);
     } catch (e) {
       toast.error(e.message, 'Error al distribuir');
     } finally {
@@ -225,19 +237,38 @@ export default function LiquidacionTab({ session, userProfile }) {
                 {isOpen && (
                   <div className="border-t border-slate-100 dark:border-white/[0.07] p-4 space-y-3">
                     {/* Distribuir por coeficiente */}
-                    <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
-                      <p className="text-xs text-slate-500 dark:text-ink-mid">
-                        Distribuye ${Number(period.total_amount).toLocaleString('es-AR')} entre las unidades segun su coeficiente.
-                      </p>
-                      <button
-                        onClick={() => handleDistribute(period)}
-                        disabled={saving === period.id}
-                        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
-                      >
-                        {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <Users size={12} />}
-                        Distribuir por coeficiente
-                      </button>
-                    </div>
+                    {items.length > 0 ? (
+                      <div className="flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-200 dark:border-emerald-800 rounded-xl p-3">
+                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 size={14} /> Distribuida a {items.length} unidades segun coeficiente.
+                        </p>
+                        {items.every(i => i.status === 'pending') && (
+                          <button
+                            onClick={() => handleDistribute(period, true)}
+                            disabled={saving === period.id}
+                            title="Borra y recalcula (solo si nadie informo o pago aun)"
+                            className="flex items-center gap-1.5 bg-slate-200 dark:bg-surface-panel2 hover:bg-slate-300 dark:hover:bg-white/[0.1] disabled:opacity-60 text-slate-700 dark:text-ink-mid px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
+                          >
+                            {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                            Re-distribuir
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
+                        <p className="text-xs text-slate-500 dark:text-ink-mid">
+                          Distribuye ${Number(period.total_amount).toLocaleString('es-AR')} entre las unidades segun su coeficiente.
+                        </p>
+                        <button
+                          onClick={() => handleDistribute(period)}
+                          disabled={saving === period.id}
+                          className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
+                        >
+                          {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <Users size={12} />}
+                          Distribuir por coeficiente
+                        </button>
+                      </div>
+                    )}
 
                     {/* Ítems */}
                     {loadingItems === period.id ? (
