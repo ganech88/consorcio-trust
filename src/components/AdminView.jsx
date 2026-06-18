@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
-  Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home,
+  Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home, Wallet, BarChart3,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -17,6 +17,8 @@ import InsuranceTab from './admin/InsuranceTab';
 import BudgetsTab from './admin/BudgetsTab';
 import CollectionsTab from './admin/CollectionsTab';
 import UnitsTab from './admin/UnitsTab';
+import LedgerTab from './admin/LedgerTab';
+import RendicionTab from './admin/RendicionTab';
 import ConsorcioTab from './admin/ConsorcioTab';
 
 const TABS = [
@@ -25,6 +27,8 @@ const TABS = [
   { id: 'claims',        label: 'Reclamos',       icon: AlertCircle },
   { id: 'expenses',      label: 'Expensas',       icon: DollarSign },
   { id: 'liquidacion',   label: 'Liquidación',    icon: Receipt },
+  { id: 'ctacte',        label: 'Cta. Cte.',      icon: Wallet },
+  { id: 'rendicion',     label: 'Rendición',      icon: BarChart3 },
   { id: 'multas',        label: 'Multas',         icon: Gavel },
   { id: 'reservations',  label: 'Reservas',       icon: Calendar },
   { id: 'announcements', label: 'Comunicados',    icon: Megaphone },
@@ -94,6 +98,8 @@ export default function AdminView({ session, userProfile }) {
       {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}
       {activeTab === 'expenses'      && <ExpensesTab session={session} userProfile={userProfile} />}
       {activeTab === 'liquidacion'   && <LiquidacionTab session={session} userProfile={userProfile} />}
+      {activeTab === 'ctacte'        && <LedgerTab userProfile={userProfile} />}
+      {activeTab === 'rendicion'     && <RendicionTab userProfile={userProfile} />}
       {activeTab === 'multas'        && <FinesTab session={session} userProfile={userProfile} />}
       {activeTab === 'reservations'  && <ReservationsTab />}
       {activeTab === 'announcements' && <AnnouncementsTab session={session} userProfile={userProfile} />}
