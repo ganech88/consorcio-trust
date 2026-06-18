@@ -10,6 +10,7 @@ import {
   assignAdminToConsortium,
   revokeAdminFromConsortium,
   fetchConsortiumAdmins,
+  createAdminUser,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -29,6 +30,10 @@ function ConsortiaPanel({ session }) {
   const [assignments, setAssignments] = useState({}); // consortiumId -> [{id, full_name}]
   const [assigningTo, setAssigningTo] = useState(null);
   const [selectedAdmin, setSelectedAdmin] = useState('');
+  const [creatingFor, setCreatingFor] = useState(null);
+  const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '' });
+  const [creating, setCreating] = useState(false);
+  const [createdCreds, setCreatedCreds] = useState(null);
 
   useEffect(() => {
     Promise.all([fetchAllConsortia(), fetchAllUsers()])
@@ -97,6 +102,30 @@ function ConsortiaPanel({ session }) {
     }
   }
 
+  async function handleCreateAdmin(consortiumId) {
+    if (!newAdmin.email.trim()) { toast.error('Ingresá el email del administrador'); return; }
+    setCreating(true);
+    try {
+      const res = await createAdminUser({
+        email: newAdmin.email.trim(), fullName: newAdmin.fullName.trim(), consortiumId,
+      });
+      const fresh = await fetchConsortiumAdmins(consortiumId);
+      setAssignments(prev => ({ ...prev, [consortiumId]: fresh }));
+      if (res?.tempPassword) {
+        setCreatedCreds({ email: newAdmin.email.trim(), tempPassword: res.tempPassword });
+        toast.success('Administrador creado');
+      } else {
+        toast.success('Ese usuario ya existía: quedó asignado como administrador');
+      }
+      setCreatingFor(null);
+      setNewAdmin({ fullName: '', email: '' });
+    } catch (e) {
+      toast.error(e.message || 'No se pudo crear el administrador');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -124,6 +153,20 @@ function ConsortiaPanel({ session }) {
           {showForm ? 'Cancelar' : 'Nuevo consorcio'}
         </button>
       </div>
+
+      {createdCreds && (
+        <div className="bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-start gap-3">
+          <Check size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Administrador creado</p>
+            <p className="text-xs text-slate-600 dark:text-ink-mid mt-0.5">Compartile estas credenciales (puede cambiar la contraseña después):</p>
+            <p className="text-xs font-mono mt-1 text-slate-800 dark:text-ink-hi break-all">
+              {createdCreds.email} · contraseña: <span className="font-bold">{createdCreds.tempPassword}</span>
+            </p>
+          </div>
+          <button onClick={() => setCreatedCreds(null)} className="p-1 rounded text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]"><X size={14} /></button>
+        </div>
+      )}
 
       {showForm && (
         <form
@@ -278,13 +321,32 @@ function ConsortiaPanel({ session }) {
                           <X size={14} />
                         </button>
                       </div>
+                    ) : creatingFor === c.id ? (
+                      <div className="space-y-2 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
+                        <input type="text" value={newAdmin.fullName} onChange={e => setNewAdmin(p => ({ ...p, fullName: e.target.value }))} placeholder="Nombre del administrador" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-lg px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+                        <input type="email" value={newAdmin.email} onChange={e => setNewAdmin(p => ({ ...p, email: e.target.value }))} placeholder="email@administrador.com" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-lg px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+                        <div className="flex gap-2">
+                          <button onClick={() => handleCreateAdmin(c.id)} disabled={creating} className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                            {creating ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Crear y asignar
+                          </button>
+                          <button onClick={() => { setCreatingFor(null); setNewAdmin({ fullName: '', email: '' }); }} className="px-3 py-1.5 rounded-lg text-xs text-slate-500 dark:text-ink-mid hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">Cancelar</button>
+                        </div>
+                      </div>
                     ) : (
-                      <button
-                        onClick={() => setAssigningTo(c.id)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
-                      >
-                        <Plus size={12} /> Asignar administrador
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => setAssigningTo(c.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+                        >
+                          <Plus size={12} /> Asignar existente
+                        </button>
+                        <button
+                          onClick={() => setCreatingFor(c.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+                        >
+                          <Plus size={12} /> Crear admin nuevo
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}

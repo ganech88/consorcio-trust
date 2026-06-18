@@ -92,3 +92,18 @@ export async function fetchConsortiumAdmins(consortiumId) {
   if (error) { console.warn('fetchConsortiumAdmins:', error.message); return []; }
   return (data || []).map(r => r.profiles).filter(Boolean);
 }
+
+// El super_admin crea un usuario administrador (edge function server-side) y lo
+// asigna al consorcio. Devuelve { ok, userId, created, tempPassword }.
+export async function createAdminUser({ email, fullName, consortiumId }) {
+  const { data, error } = await supabase.functions.invoke('provision-consortium-admin', {
+    body: { email, fullName, consortiumId },
+  });
+  if (error) {
+    let msg = error.message;
+    try { const ctx = await error.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch { /* noop */ }
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
