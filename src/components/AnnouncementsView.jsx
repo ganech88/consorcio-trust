@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Megaphone, AlertTriangle, Info, Calendar, Pin, Loader2, CheckCheck } from 'lucide-react';
-import { fetchAnnouncements, markAnnouncementRead, fetchMyAnnouncementReads } from '../services/data.service';
+import { fetchAnnouncements, markAnnouncementRead, fetchMyAnnouncementReads, fetchUserPeriodItems } from '../services/data.service';
 import { useData } from '../context/DataContext';
 
 const TYPE_CONFIG = {
@@ -134,17 +134,28 @@ export default function AnnouncementsView() {
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
 
+    const role = userProfile.role;
     Promise.all([
       fetchAnnouncements(userProfile.consortium_id),
       fetchMyAnnouncementReads(userProfile.id),
+      fetchUserPeriodItems(userProfile.id),
     ])
-      .then(([ann, reads]) => {
-        setAnnouncements(ann);
+      .then(([ann, reads, items]) => {
+        const isDebtor = (items || []).some(it => it.status !== 'paid');
+        const visible = (ann || []).filter(a => {
+          const aud = a.audience || 'all';
+          if (role === 'admin' || role === 'super_admin' || aud === 'all') return true;
+          if (aud === 'owners') return role === 'owner';
+          if (aud === 'residents') return role === 'resident';
+          if (aud === 'debtors') return isDebtor;
+          return true;
+        });
+        setAnnouncements(visible);
         setReadIds(new Set(reads));
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, [userProfile?.consortium_id, userProfile?.id]);
+  }, [userProfile?.consortium_id, userProfile?.id, userProfile?.role]);
 
   function handleRead(announcementId) {
     if (readIds.has(announcementId)) return;

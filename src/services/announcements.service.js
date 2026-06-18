@@ -5,6 +5,7 @@ const mapAnnouncement = (r) => ({
   ...r,
   body: r.content ?? r.body ?? '',
   type: r.is_important ? 'urgent' : (r.type || 'info'),
+  audience: r.audience || 'all',
 });
 
 export async function fetchAnnouncements(consortiumId, { page, pageSize } = {}) {
@@ -26,12 +27,13 @@ export async function fetchAnnouncements(consortiumId, { page, pageSize } = {}) 
   return (data || []).map(mapAnnouncement);
 }
 
-export async function createAnnouncement({ title, body, type, pinned, consortiumId, createdBy }) {
+export async function createAnnouncement({ title, body, type, pinned, audience, consortiumId, createdBy }) {
   const row = {
     title,
     content: body,
     category: type || 'general',
     is_important: type === 'urgent',
+    audience: audience || 'all',
     consortium_id: consortiumId || null,
     created_by: createdBy,
   };

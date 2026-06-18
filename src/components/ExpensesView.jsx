@@ -256,6 +256,28 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       </div>
 
+      {(() => {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const due = periodItems.filter(it => it.status !== 'paid' && it.expense_periods?.due_date
+          && (new Date(it.expense_periods.due_date) - today) / 86400000 <= 7);
+        if (due.length === 0) return null;
+        const total = due.reduce((s, it) => s + Number(it.amount || 0), 0);
+        const overdue = due.some(it => new Date(it.expense_periods.due_date) < today);
+        return (
+          <div className={`rounded-2xl p-4 flex items-center gap-3 ${overdue ? 'bg-red-50 dark:bg-red-400/[0.12] border border-red-200 dark:border-red-800' : 'bg-amber-50 dark:bg-amber-400/[0.12] border border-amber-200 dark:border-amber-800'}`}>
+            <AlertCircle size={20} className={overdue ? 'text-red-500 dark:text-red-400 shrink-0' : 'text-amber-500 dark:text-amber-400 shrink-0'} />
+            <div>
+              <p className={`text-sm font-bold ${overdue ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                {overdue ? 'Tenés expensas vencidas' : 'Recordatorio de vencimiento'}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-ink-mid">
+                {due.length} expensa(s) por un total de {formatCurrency(total)}. Informá tu pago abajo.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Mi expensa por periodo (segun mi coeficiente) */}
       {periodItems.length > 0 && (
         <div>

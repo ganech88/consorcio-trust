@@ -11,7 +11,7 @@ export default function AnnouncementsTab({ session, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
-  const [form, setForm] = useState({ title: '', body: '', type: 'info', pinned: false });
+  const [form, setForm] = useState({ title: '', body: '', type: 'info', pinned: false, audience: 'all' });
   const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
 
@@ -46,6 +46,7 @@ export default function AnnouncementsTab({ session, userProfile }) {
         body: form.body.trim(),
         type: form.type,
         pinned: form.pinned,
+        audience: form.audience,
         consortiumId: userProfile?.consortium_id,
         createdBy: session.user.id,
       });
@@ -53,7 +54,7 @@ export default function AnnouncementsTab({ session, userProfile }) {
         setAnnouncements(prev => [created, ...prev]);
       }
       toast.success('Comunicado publicado');
-      setForm({ title: '', body: '', type: 'info', pinned: false });
+      setForm({ title: '', body: '', type: 'info', pinned: false, audience: 'all' });
     } catch (e) {
       toast.error(e.message, 'Error al publicar');
     } finally {
@@ -100,6 +101,19 @@ export default function AnnouncementsTab({ session, userProfile }) {
             className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none resize-none"
             required
           />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Destinatarios</label>
+          <select
+            value={form.audience}
+            onChange={e => setField('audience', e.target.value)}
+            className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="all">Todos</option>
+            <option value="owners">Solo propietarios</option>
+            <option value="residents">Solo inquilinos</option>
+            <option value="debtors">Solo morosos</option>
+          </select>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -160,6 +174,11 @@ export default function AnnouncementsTab({ session, userProfile }) {
                     }`}>
                       {a.type === 'urgent' ? 'Urgente' : a.type === 'event' ? 'Evento' : 'Info'}
                     </span>
+                    {a.audience && a.audience !== 'all' && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-600 dark:bg-surface-panel2 dark:text-ink-mid">
+                        {a.audience === 'owners' ? 'Propietarios' : a.audience === 'residents' ? 'Inquilinos' : 'Morosos'}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     {new Date(a.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
