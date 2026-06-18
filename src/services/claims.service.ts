@@ -1,6 +1,10 @@
 import { supabase } from '../lib/supabase';
+import { paginateQuery } from '../lib/pagination';
+import type { Database } from '../lib/database.types';
 
-export async function fetchClaims(consortiumId) {
+type ClaimUpdate = Database['public']['Tables']['claims']['Update'];
+
+export async function fetchClaims(consortiumId?: string) {
   let query = supabase
     .from('claims')
     .select('*')
@@ -14,7 +18,14 @@ export async function fetchClaims(consortiumId) {
   return data || [];
 }
 
-export async function createClaim({ title, category, description, consortiumId, userId }) {
+export async function createClaim(params: {
+  title: string;
+  category?: string | null;
+  description?: string | null;
+  consortiumId: string;
+  userId: string;
+}) {
+  const { title, category, description, consortiumId, userId } = params;
   const { data, error } = await supabase
     .from('claims')
     .insert([{
@@ -33,14 +44,13 @@ export async function createClaim({ title, category, description, consortiumId, 
   return data[0];
 }
 
-export async function fetchAllClaims({ page, pageSize } = {}) {
+export async function fetchAllClaims({ page, pageSize }: { page?: number; pageSize?: number } = {}) {
   const query = supabase
     .from('claims')
     .select('*, profiles(full_name, unit_id)', { count: 'exact' })
     .order('created_at', { ascending: false });
 
   if (page != null) {
-    const { paginateQuery } = await import('../lib/pagination');
     return paginateQuery(query, page, pageSize);
   }
 
@@ -49,8 +59,13 @@ export async function fetchAllClaims({ page, pageSize } = {}) {
   return data || [];
 }
 
-export async function updateClaimStatus(claimId, status, adminNote, adminUserId) {
-  const updates = {
+export async function updateClaimStatus(
+  claimId: string,
+  status: string,
+  adminNote?: string,
+  adminUserId?: string,
+) {
+  const updates: ClaimUpdate = {
     status,
     updated_at: new Date().toISOString(),
   };
