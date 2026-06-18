@@ -36,7 +36,7 @@ export default function ConsortiumSwitcher({ userProfile, onSwitch }) {
   if (!isMulti || consortia.length <= 1) {
     // Solo mostrar nombre, sin switcher
     return (
-      <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 px-2">
+      <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-ink-mid px-2">
         <Building2 size={13} />
         <span className="truncate max-w-[140px]">
           {consortia[0]?.name || userProfile?.consortium_id?.slice(0, 8) || 'Consorcio'}
@@ -65,7 +65,7 @@ export default function ConsortiumSwitcher({ userProfile, onSwitch }) {
     <div ref={ref} className="relative hidden sm:block">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors max-w-[200px]"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-surface-panel2 hover:bg-slate-200 dark:hover:bg-white/[0.07] text-xs font-semibold text-slate-700 dark:text-ink-hi transition-colors max-w-[200px]"
         disabled={switching}
       >
         {switching ? (
@@ -78,22 +78,22 @@ export default function ConsortiumSwitcher({ userProfile, onSwitch }) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pt-2.5 pb-1">
+        <div className="absolute left-0 top-full mt-1 w-64 bg-white dark:bg-surface-panel rounded-xl shadow-xl border border-slate-200 dark:border-white/[0.07] z-50 overflow-hidden">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-ink-low px-3 pt-2.5 pb-1">
             Tus consorcios
           </p>
           {consortia.map(c => (
             <button
               key={c.id}
               onClick={() => handleSelect(c)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors text-left"
             >
-              <div className="w-6 h-6 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-brand-100 dark:bg-brand-400/[0.14] flex items-center justify-center shrink-0">
                 <Building2 size={12} className="text-brand-600 dark:text-brand-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{c.name}</p>
-                {c.city && <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{c.city}</p>}
+                <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">{c.name}</p>
+                {c.city && <p className="text-xs text-slate-400 dark:text-ink-low truncate">{c.city}</p>}
               </div>
               {c.id === userProfile.consortium_id && (
                 <Check size={14} className="text-brand-600 dark:text-brand-400 shrink-0" />

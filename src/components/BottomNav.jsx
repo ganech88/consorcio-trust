@@ -39,7 +39,7 @@ export default function BottomNav({ currentView, onNavigate, unreadChatCount = 0
         className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
           isActive
             ? 'text-brand-600 dark:text-brand-400'
-            : 'text-slate-400 dark:text-slate-500'
+            : 'text-slate-400 dark:text-ink-low'
         }`}
       >
         <div className="relative">
@@ -59,14 +59,14 @@ export default function BottomNav({ currentView, onNavigate, unreadChatCount = 0
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-40 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-sidebar border-t border-slate-200 dark:border-white/[0.07] z-40 safe-area-bottom">
         <div className="flex justify-around items-center h-16 px-1">
           {leftItems.map(renderItem)}
 
           {/* Center FAB */}
           <button
             onClick={() => setSheetOpen(true)}
-            className="relative -top-4 w-14 h-14 bg-gradient-to-br from-brand-500 to-brand-700 rounded-full flex items-center justify-center shadow-lg shadow-brand-500/40 hover:shadow-brand-500/60 active:scale-95 transition-all shrink-0"
+            className="relative -top-4 w-14 h-14 bg-brand-500 text-[#04201d] rounded-full flex items-center justify-center shadow-lg shadow-brand-500/40 hover:shadow-brand-500/60 active:scale-95 transition-all shrink-0"
             aria-label="Acciones rápidas"
           >
             <Plus size={26} className="text-white" strokeWidth={2.5} />

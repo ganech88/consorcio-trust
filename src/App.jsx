@@ -200,7 +200,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex h-screen bg-slate-50 dark:bg-surface-base font-sans text-slate-900 dark:text-ink-hi transition-colors duration-300">
       <Suspense fallback={null}>
         {showPayModal && (
           <PaymentModal
@@ -223,16 +223,16 @@ function AppContent() {
       />
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200/80 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm transition-colors">
+        <header className="h-16 bg-white dark:bg-surface-sidebar border-b border-slate-200/80 dark:border-white/[0.07] flex items-center justify-between px-4 sm:px-6 shrink-0 transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="md:hidden text-slate-500 dark:text-ink-mid hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
               aria-label="Abrir menú"
             >
               <Menu size={22} />
             </button>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{VIEW_TITLES[view] || 'Dashboard'}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-ink-hi">{VIEW_TITLES[view] || 'Dashboard'}</h2>
           </div>
 
           <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ function AppContent() {
             )}
             <button
               onClick={toggleTheme}
-              className="text-slate-400 dark:text-slate-500 hover:text-accent-500 dark:hover:text-accent-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="text-slate-400 dark:text-ink-low hover:text-accent-500 dark:hover:text-accent-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
               aria-label={dark ? 'Modo claro' : 'Modo oscuro'}
             >
               {dark ? <Sun size={20} /> : <Moon size={20} />}
@@ -256,7 +256,7 @@ function AppContent() {
             <div className="relative">
               <button
                 onClick={handleOpenNotifications}
-                className="relative text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 p-2 rounded-lg hover:bg-brand-50 dark:hover:bg-slate-700 transition-colors"
+                className="relative text-slate-400 dark:text-ink-low hover:text-brand-600 dark:hover:text-brand-400 p-2 rounded-lg hover:bg-brand-50 dark:hover:bg-white/[0.06] transition-colors"
                 aria-label="Notificaciones"
               >
                 <Bell size={20} />

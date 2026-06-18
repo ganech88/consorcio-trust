@@ -39,13 +39,13 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
         onClick={() => onNavigate(item.id)}
         className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 relative ${
           isActive
-            ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 border-l-[3px] border-brand-500 shadow-sm'
-            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100 border-l-[3px] border-transparent'
+            ? 'bg-brand-500/10 text-brand-400 border-l-2 border-brand-400'
+            : 'text-slate-600 dark:text-ink-mid hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-slate-100 border-l-2 border-transparent'
         }`}
         aria-current={isActive ? 'page' : undefined}
       >
         <Icon
-          className={`mr-3 shrink-0 transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500'}`}
+          className={`mr-3 shrink-0 transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400 dark:text-ink-low'}`}
           size={18}
         />
         <span className="flex-1 text-left">{item.label}</span>
@@ -69,19 +69,19 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
       )}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 w-72 bg-white dark:bg-slate-800 border-r border-slate-200/80 dark:border-slate-700 transform ${
+        className={`fixed md:static inset-y-0 left-0 w-72 bg-white dark:bg-surface-sidebar border-r border-slate-200/80 dark:border-white/[0.07] transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 transition-transform duration-300 ease-out z-30 flex flex-col shadow-xl md:shadow-none`}
       >
         {/* Header / branding */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+        <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size={38} />
-            <span className="font-bold text-xl text-slate-800 dark:text-slate-100 tracking-tight font-display">ConsorcioTrust</span>
+            <span className="font-bold text-xl text-slate-800 dark:text-ink-hi tracking-tight font-display">ConsorcioTrust</span>
           </div>
           <button
             onClick={onClose}
-            className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
             aria-label="Cerrar menú"
           >
             <X size={20} />
@@ -92,23 +92,23 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
         <div className="px-4 py-4">
           <button
             onClick={() => onNavigate(VIEWS.PROFILE)}
-            className="w-full bg-gradient-to-r from-slate-50 to-brand-50/50 dark:from-slate-700 dark:to-slate-700/50 rounded-xl p-3 flex items-center gap-3 border border-slate-100 dark:border-slate-600 hover:border-brand-200 dark:hover:border-brand-500 transition-all text-left"
+            className="w-full bg-slate-50 dark:bg-white/[0.03] rounded-xl p-3 flex items-center gap-3 border border-slate-100 dark:border-white/[0.09] hover:border-brand-200 dark:hover:border-brand-500 transition-all text-left"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">
               {session.user.email.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+              <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">
                 {userProfile?.full_name || 'Mi Unidad'}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{session.user.email}</p>
+              <p className="text-xs text-slate-500 dark:text-ink-mid truncate">{session.user.email}</p>
             </div>
-            <User size={16} className="text-slate-400 dark:text-slate-500 shrink-0" />
+            <User size={16} className="text-slate-400 dark:text-ink-low shrink-0" />
           </button>
 
           <div className="mt-2 flex items-center gap-2">
             {(isAdmin || isSuperAdmin) && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-brand-100 dark:bg-brand-400/[0.16] text-brand-700 dark:text-brand-400 px-2 py-0.5 rounded-full">
                 {isSuperAdmin ? <Crown size={10} /> : <ShieldCheck size={10} />}
                 {isSuperAdmin ? 'Super Admin' : 'Administrador'}
               </span>
@@ -128,7 +128,7 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
         <nav className="flex-1 px-3 overflow-y-auto space-y-4 pb-2" role="navigation" aria-label="Menú principal">
           {sections.map((section) => (
             <div key={section.label}>
-              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-500 px-3 mb-1.5">
+              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-ink-low px-3 mb-1.5">
                 {section.label}
               </p>
               <div className="space-y-0.5">
@@ -140,20 +140,20 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
           {/* Admin panel — shown only for admins, at bottom of nav */}
           {(isAdmin || isSuperAdmin) && (
             <div>
-              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-500 px-3 mb-1.5">
+              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-ink-low px-3 mb-1.5">
                 Admin
               </p>
               {(isAdmin || isSuperAdmin) && (
                 <button
                   onClick={() => onNavigate(VIEWS.ADMIN)}
-                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-[3px] ${
+                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-2 ${
                     currentView === VIEWS.ADMIN
-                      ? 'bg-slate-700 dark:bg-slate-600 text-white shadow-sm border-slate-500'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100 border-transparent'
+                      ? 'bg-slate-700 dark:bg-surface-panel2 text-white shadow-sm border-slate-500'
+                      : 'text-slate-600 dark:text-ink-mid hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-slate-100 border-transparent'
                   }`}
                 >
                   <ShieldCheck
-                    className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.ADMIN ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                    className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.ADMIN ? 'text-white' : 'text-slate-400 dark:text-ink-low'}`}
                     size={18}
                   />
                   Panel Admin
@@ -162,10 +162,10 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
               {isSuperAdmin && (
                 <button
                   onClick={() => onNavigate(VIEWS.SUPER_ADMIN)}
-                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-[3px] mt-0.5 ${
+                  className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border-l-2 mt-0.5 ${
                     currentView === VIEWS.SUPER_ADMIN
-                      ? 'bg-brand-700 text-white shadow-sm border-brand-500'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-300 border-transparent'
+                      ? 'bg-brand-500/10 text-brand-400 border-brand-400'
+                      : 'text-slate-600 dark:text-ink-mid hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-300 border-transparent'
                   }`}
                 >
                   <Crown
@@ -180,7 +180,7 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-700">
+        <div className="p-4 border-t border-slate-100 dark:border-white/[0.07]">
           <button
             onClick={onLogout}
             className="flex items-center w-full px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors"
