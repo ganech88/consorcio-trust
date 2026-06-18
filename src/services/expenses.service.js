@@ -104,6 +104,48 @@ export async function createPeriodItems(items) {
   return data || [];
 }
 
+// El residente informa el pago de su expensa del periodo (queda 'reported').
+export async function reportPeriodItemPayment(itemId, { notes, receiptUrl, method } = {}) {
+  const { data, error } = await supabase
+    .from('expense_period_items')
+    .update({
+      status: 'reported',
+      reported_at: new Date().toISOString(),
+      payment_notes: notes || null,
+      receipt_url: receiptUrl || null,
+      payment_method: method || null,
+    })
+    .eq('id', itemId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// El admin aprueba el pago informado de un item de periodo.
+export async function approvePeriodItem(itemId, userId) {
+  const { data, error } = await supabase
+    .from('expense_period_items')
+    .update({ status: 'paid', paid_at: new Date().toISOString(), approved_by: userId, approved_at: new Date().toISOString() })
+    .eq('id', itemId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// El admin rechaza el pago informado (vuelve a 'pending').
+export async function rejectPeriodItem(itemId) {
+  const { data, error } = await supabase
+    .from('expense_period_items')
+    .update({ status: 'pending', reported_at: null })
+    .eq('id', itemId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function updatePeriodItemStatus(itemId, status) {
   const updates = { status };
   if (status === 'paid') updates.paid_at = new Date().toISOString();

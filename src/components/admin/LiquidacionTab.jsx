@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Receipt, ChevronUp, ChevronDown, Loader2, Users } from 'lucide-react';
+import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
+  approvePeriodItem, rejectPeriodItem,
 } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
@@ -15,6 +16,7 @@ export default function LiquidacionTab({ session, userProfile }) {
   const [expanded, setExpanded] = useState(null);
   const [periodItems, setPeriodItems] = useState({});
   const [loadingItems, setLoadingItems] = useState(null);
+  const [decidingItem, setDecidingItem] = useState(null);
   const [form, setForm] = useState({
     period: new Date().toISOString().slice(0, 7),
     totalAmount: '',
@@ -91,6 +93,24 @@ export default function LiquidacionTab({ session, userProfile }) {
       toast.error(e.message, 'Error al distribuir');
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function handleDecideItem(periodId, item, action) {
+    setDecidingItem(item.id);
+    try {
+      const updated = action === 'approve'
+        ? await approvePeriodItem(item.id, session.user.id)
+        : await rejectPeriodItem(item.id);
+      setPeriodItems(prev => ({
+        ...prev,
+        [periodId]: (prev[periodId] || []).map(it => it.id === item.id ? { ...it, ...updated } : it),
+      }));
+      toast.success(action === 'approve' ? 'Pago aprobado' : 'Pago rechazado');
+    } catch (e) {
+      toast.error(e.message, 'Error al actualizar el pago');
+    } finally {
+      setDecidingItem(null);
     }
   }
 
@@ -236,17 +256,25 @@ export default function LiquidacionTab({ session, userProfile }) {
                                 <span className="text-slate-400 dark:text-ink-low ml-2">({item.profiles.full_name})</span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-slate-800 dark:text-ink-hi">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800 dark:text-ink-hi font-mono">
                                 ${Number(item.amount).toLocaleString('es-AR')}
                               </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                item.status === 'paid'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                              }`}>
-                                {item.status === 'paid' ? 'Pagado' : 'Pendiente'}
-                              </span>
+                              {item.status === 'paid' ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Pagado</span>
+                              ) : item.status === 'reported' ? (
+                                <>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">Informado</span>
+                                  <button onClick={() => handleDecideItem(period.id, item, 'approve')} disabled={decidingItem === item.id} className="flex items-center bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white px-2 py-1 rounded-lg transition-colors" title="Aprobar pago">
+                                    {decidingItem === item.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                  </button>
+                                  <button onClick={() => handleDecideItem(period.id, item, 'reject')} disabled={decidingItem === item.id} className="flex items-center bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white px-2 py-1 rounded-lg transition-colors" title="Rechazar">
+                                    <X size={11} />
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">Pendiente</span>
+                              )}
                             </div>
                           </div>
                         ))}

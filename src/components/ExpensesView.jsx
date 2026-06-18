@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
-import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems } from '../services/data.service';
+import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems, reportPeriodItemPayment } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
@@ -107,6 +107,59 @@ function PaymentModal({ expense, userId, onClose, onPaid }) {
   );
 }
 
+function PeriodReportModal({ item, onClose, onReported }) {
+  const toast = useToast();
+  const [notes, setNotes] = useState('');
+  const [method, setMethod] = useState('Transferencia');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method });
+      toast.success('Pago informado. El administrador lo revisara.');
+      onReported(item.id);
+      onClose();
+    } catch (err) {
+      toast.error(err.message, 'Error al informar el pago');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-surface-panel rounded-2xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.07]">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Informar pago</h4>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
+            <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{formatPeriod(item.expense_periods?.period)}</p>
+            <p className="text-xs text-brand-600/70 dark:text-brand-400/70 mt-0.5">Tu parte: {formatCurrency(item.amount)}</p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Medio de pago</label>
+            <select value={method} onChange={e => setMethod(e.target.value)} className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none">
+              {['Transferencia','Deposito','Efectivo','MercadoPago','Otro'].map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas / N de operacion (opcional)</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Ej: Transferencia banco / comprobante..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none" />
+          </div>
+          <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+            Informar pago
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 const FINE_STATUS_LABELS = {
   active:    'Pendiente',
   paid:      'Pagada',
@@ -121,6 +174,7 @@ export default function ExpensesView({ session, userProfile }) {
   const [fines, setFines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payTarget, setPayTarget] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [mpEnabled, setMpEnabled] = useState(false);
 
@@ -221,13 +275,15 @@ export default function ExpensesView({ session, userProfile }) {
                   </p>
                 </div>
                 <p className="font-bold text-slate-800 dark:text-ink-hi font-mono shrink-0">{formatCurrency(it.amount)}</p>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                  it.status === 'paid'
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                }`}>
-                  {it.status === 'paid' ? 'Pagada' : 'Pendiente'}
-                </span>
+                {it.status === 'paid' ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Pagada</span>
+                ) : it.status === 'reported' ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">En revision</span>
+                ) : (
+                  <button onClick={() => setReportTarget(it)} className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0">
+                    <CreditCard size={11} /> Informar pago
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -445,6 +501,14 @@ export default function ExpensesView({ session, userProfile }) {
           userId={session.user.id}
           onClose={() => setPayTarget(null)}
           onPaid={handlePaid}
+        />
+      )}
+
+      {reportTarget && (
+        <PeriodReportModal
+          item={reportTarget}
+          onClose={() => setReportTarget(null)}
+          onReported={(itemId) => setPeriodItems(prev => prev.map(it => it.id === itemId ? { ...it, status: 'reported' } : it))}
         />
       )}
     </div>
