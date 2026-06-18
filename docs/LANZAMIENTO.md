@@ -47,3 +47,26 @@ Estado al 17/06/2026. Marca lo pendiente antes de abrir a consorcios reales.
 
 - `mp_config` sin policy y vista `mp_config_safe` SECURITY DEFINER: **intencional** — el `access_token` solo se accede server-side; los clientes leen la vista sin el token.
 - Funciones SECURITY DEFINER ejecutables por `authenticated`: necesarias para las policies RLS (`is_super_admin`, `current_consortium_id`, `is_consortium_admin`).
+
+
+## 🏆 Funciones competitivas (junio 2026)
+
+Cierre de gaps vs. competidores (Consorcio Abierto, Octopus, etc.). Migraciones 047-050 (aplicadas a la DB).
+
+- **Expensas por coeficiente**: cada unidad tiene su `coefficient` (% de copropiedad). La liquidacion reparte el total segun el coeficiente (no monto plano). Pestana **Unidades** para cargar/editar coeficientes con validacion de suma = 100%.
+- **Pago por coeficiente**: el residente ve su parte e informa el pago; el admin lo aprueba/rechaza desde Liquidacion.
+- **Polizas de seguro** con vencimientos y alertas.
+- **Presupuestos** con aprobacion/rechazo (consejo/admin).
+- **Cobranzas no identificadas**: registrar pago anonimo y asociarlo a una unidad.
+- **Cuenta corriente por unidad** (cargos, pagos, saldo).
+- **Rendicion anual** de egresos (por mes y categoria) con export a Excel.
+- **Certificado de deuda / intimacion** en PDF con logo y firma (white-label).
+- **White-label**: nombre, logo, telefono, direccion y firma de la administracion (Consorcio -> Marca).
+- **Comunicados segmentados** (todos / propietarios / inquilinos / morosos) + acuse de lectura.
+- **Recordatorios de vencimiento**: banner in-app + edge function `debt-reminders`.
+
+### Agendar recordatorios automaticos (debt-reminders)
+- La function `debt-reminders` esta desplegada (verify_jwt ON, usa expense_period_items).
+- Para que corra sola: agendar un cron (Supabase Scheduled Functions o un cron externo) que haga POST a `https://<PROJECT>.supabase.co/functions/v1/debt-reminders` con header `Authorization: Bearer <SERVICE_ROLE_KEY>`, 1 vez por dia.
+- WhatsApp: setear secrets `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID` (o `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID`). Sin eso, el recordatorio queda `in_app` en `debt_reminders_log` y se ve en el banner de la app.
+- Email automatico de expensas/recordatorios: requiere SMTP en Supabase Auth (pendiente).
