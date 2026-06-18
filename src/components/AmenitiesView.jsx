@@ -200,7 +200,7 @@ export default function AmenitiesView({ session, userProfile }) {
             <p className="text-sm">No tenés reservas activas</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50 dark:divide-white/[0.06]/50">
+          <div className="divide-y divide-slate-50 dark:divide-white/[0.06]">
             {reservations.map((res) => {
               const sc = STATUS_CONFIG[res.status] || STATUS_CONFIG.pending;
               const StatusIcon = sc.icon;

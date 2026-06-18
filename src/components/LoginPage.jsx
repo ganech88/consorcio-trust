@@ -42,7 +42,7 @@ export default function LoginPage({ onLogin }) {
 
       {/* Card — split layout on desktop */}
       <div className="relative w-full max-w-4xl animate-fade-in-up">
-        <div className="bg-white/95 dark:bg-surface-panel/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/[0.07]/50 overflow-hidden flex flex-col md:flex-row">
+        <div className="bg-white/95 dark:bg-surface-panel/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/[0.07] overflow-hidden flex flex-col md:flex-row">
 
           {/* Left panel — branding */}
           <div className="hidden md:flex flex-col justify-between bg-gradient-to-br from-brand-600 to-brand-800 p-10 w-[42%] shrink-0">

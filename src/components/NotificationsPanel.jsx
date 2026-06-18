@@ -79,7 +79,7 @@ export default function NotificationsPanel({ isOpen, onClose, reclamos = [], pay
             const Icon = n.icon;
             const timeAgo = n.time ? new Date(n.time).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : '';
             return (
-              <div key={n.id} className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors border-b border-slate-50 dark:border-white/[0.07]/50 last:border-0">
+              <div key={n.id} className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors border-b border-slate-50 dark:border-white/[0.07] last:border-0">
                 <div className="flex gap-3">
                   <div className={`p-2 rounded-lg ${n.bg} shrink-0`}>
                     <Icon size={16} className={n.color} />

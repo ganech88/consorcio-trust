@@ -204,7 +204,7 @@ function ConsortiaPanel({ session }) {
                     setExpanded(next);
                     if (next) loadAssignments(c.id);
                   }}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-white/[0.06]/40 transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors text-left"
                 >
                   <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center shrink-0">
                     <Building2 size={18} className="text-brand-600 dark:text-brand-400" />

@@ -30,7 +30,7 @@ export function SkeletonList({ rows = 4 }) {
       <div className="p-6">
         <div className="h-5 w-40 bg-slate-200 dark:bg-surface-panel2 rounded mb-4" />
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-50 dark:border-white/[0.07]/50 last:border-0">
+          <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-50 dark:border-white/[0.07] last:border-0">
             <div className="h-4 w-20 bg-slate-200 dark:bg-surface-panel2 rounded" />
             <div className="h-4 w-16 bg-slate-200 dark:bg-surface-panel2 rounded" />
             <div className="h-4 w-24 bg-slate-200 dark:bg-surface-panel2 rounded" />

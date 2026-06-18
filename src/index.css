@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  ::selection { background: #2dd4bf; color: #04201d; }
+  ::-moz-selection { background: #2dd4bf; color: #04201d; }
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

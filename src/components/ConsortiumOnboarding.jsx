@@ -50,7 +50,7 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-brand-700/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-md bg-white/95 dark:bg-surface-panel/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/[0.07]/50 p-8">
+      <div className="relative w-full max-w-md bg-white/95 dark:bg-surface-panel/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/[0.07] p-8">
         <div className="flex items-center gap-3 mb-6">
           <Logo size={36} />
           <span className="font-bold text-xl text-slate-800 dark:text-ink-hi">ConsorcioTrust</span>
