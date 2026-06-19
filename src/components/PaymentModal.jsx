@@ -50,6 +50,13 @@ export default function PaymentModal({ session, userProfile, gastos = [], onClos
       return;
     }
 
+    // payments.unit_id es NOT NULL: si el residente todavia no tiene una unidad
+    // vinculada, evitamos el error crudo de la base y le explicamos que hacer.
+    if (!userProfile?.unit_id) {
+      toast.error('Tu usuario no tiene una unidad asignada. Pedile al administrador que te vincule a tu unidad para poder informar pagos.');
+      return;
+    }
+
     setUploading(true);
     try {
       const { path } = await uploadPaymentProof(payFile);

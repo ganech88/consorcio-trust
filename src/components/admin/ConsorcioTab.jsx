@@ -10,6 +10,7 @@ import {
 } from '../../services/data.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner } from './shared';
+import UnitInviteCard from './UnitInviteCard';
 
 export default function ConsorcioTab({ userProfile }) {
   const toast = useToast();
@@ -280,6 +281,9 @@ export default function ConsorcioTab({ userProfile }) {
           </div>
         </div>
       )}
+
+      {/* Invitar a una unidad (codigo atado a unidad + rol) */}
+      <UnitInviteCard userProfile={userProfile} />
 
       {/* Recordatorios de deuda */}
       <form onSubmit={handleSaveReminder} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">

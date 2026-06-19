@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, Users, Plus } from 'lucide-react';
-import { fetchAllProfiles, updateProfileRole, createConsortiumMember } from '../../services/data.service';
+import { fetchAllProfiles, updateProfileRole, createConsortiumMember, assignMemberUnit } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
 import { ROLE_OPTIONS, ROLE_BADGE, LoadingSpinner, EmptyState } from './shared';
@@ -11,6 +11,7 @@ export default function UsersTab({ userProfile }) {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingRole, setSavingRole] = useState(null);
+  const [savingUnit, setSavingUnit] = useState(null);
   const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
   const [units, setUnits] = useState([]);
@@ -76,6 +77,22 @@ export default function UsersTab({ userProfile }) {
       toast.error(e.message, 'Error al cambiar rol');
     } finally {
       setSavingRole(null);
+    }
+  }
+
+  async function handleUnitChange(profileId, unitId) {
+    setSavingUnit(profileId);
+    try {
+      await assignMemberUnit({ userId: profileId, unitId: unitId || null });
+      const label = units.find(u => u.id === unitId)?.name ?? null;
+      setProfiles(prev => prev.map(p => p.id === profileId
+        ? { ...p, unit_id: unitId || null, unit_label: unitId ? label : null }
+        : p));
+      toast.success(unitId ? 'Unidad asignada' : 'Unidad quitada');
+    } catch (e) {
+      toast.error(e.message, 'Error al asignar unidad');
+    } finally {
+      setSavingUnit(null);
     }
   }
 
@@ -153,10 +170,23 @@ export default function UsersTab({ userProfile }) {
                 </span>
               </div>
 
-              {/* Unidad */}
-              <span className="text-sm text-slate-500 dark:text-ink-mid sm:text-left">
-                {p.unit_label ? `Unidad ${p.unit_label}` : (p.unit_id ? 'Unidad asignada' : '—')}
-              </span>
+              {/* Unidad (asignable por el admin) */}
+              {(p.role === 'owner' || p.role === 'resident') ? (
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={p.unit_id ?? ''}
+                    disabled={savingUnit === p.id}
+                    onChange={e => handleUnitChange(p.id, e.target.value)}
+                    className="border border-slate-200 dark:border-white/[0.09] rounded-lg px-2 py-1 text-xs bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none disabled:opacity-60 cursor-pointer max-w-[150px]"
+                  >
+                    <option value="">— Sin unidad —</option>
+                    {units.map(u => <option key={u.id} value={u.id}>Unidad {u.name}</option>)}
+                  </select>
+                  {savingUnit === p.id && <Loader2 size={13} className="animate-spin text-brand-500 shrink-0" />}
+                </div>
+              ) : (
+                <span className="text-sm text-slate-500 dark:text-ink-mid sm:text-left">—</span>
+              )}
 
               {/* Fecha registro */}
               <span className="text-xs text-slate-400 dark:text-ink-low">

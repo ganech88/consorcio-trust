@@ -180,3 +180,13 @@ export async function fetchUnitInvites(consortiumId) {
   if (error) { console.warn('fetchUnitInvites:', error.message); return []; }
   return data || [];
 }
+
+// El admin asigna (o cambia/saca) la unidad de un miembro YA existente.
+export async function assignMemberUnit({ userId, unitId }) {
+  const { error } = await supabase.rpc('assign_member_unit', {
+    p_user_id: userId,
+    p_unit_id: unitId || null,
+  });
+  if (error) throw error;
+  return true;
+}
