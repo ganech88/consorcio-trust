@@ -10,6 +10,7 @@ import { exportToExcel, exportToPdf } from '../../lib/export-utils';
 import { useToast } from '../Toast';
 import { EXPENSE_STATUS_LABELS, PAYMENT_STATUS_LABELS, fmtCurrency, LoadingSpinner, EmptyState } from './shared';
 import Pagination from './Pagination';
+import InformedPaymentsCard from './InformedPaymentsCard';
 
 // ─── Export button ───────────────────────────────────────────────────────────
 
@@ -195,6 +196,7 @@ export default function ExpensesTab({ session, userProfile }) {
 
   return (
     <div className="space-y-4">
+      <InformedPaymentsCard userProfile={userProfile} />
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-500 dark:text-ink-mid">
           {expenses.length} expensa{expenses.length !== 1 ? 's' : ''} registrada{expenses.length !== 1 ? 's' : ''}

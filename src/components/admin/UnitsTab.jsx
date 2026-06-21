@@ -176,7 +176,10 @@ export default function UnitsTab({ userProfile }) {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 dark:text-ink-hi">Unidad {u.name}</p>
                 <p className="text-xs text-slate-400 dark:text-ink-low truncate">
-                  {u.owner_id ? (owners[u.owner_id] || 'Propietario asignado') : 'Sin propietario'}
+                  {[
+                    u.owner_id ? `Prop.: ${owners[u.owner_id] || 'asignado'}` : null,
+                    u.tenant_id ? `Inq.: ${owners[u.tenant_id] || 'asignado'}` : null,
+                  ].filter(Boolean).join(' · ') || 'Sin asignar'}
                 </p>
               </div>
               <div className="shrink-0 w-28">

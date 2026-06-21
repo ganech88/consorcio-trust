@@ -85,3 +85,41 @@ export async function fetchPayments(userId) {
   if (error) throw error;
   return data || [];
 }
+
+// --- Aprobacion de pagos informados (tabla payments) por el admin ---
+// payments no tiene consortium_id; se scopea por la unidad. Devuelve los
+// pendientes del consorcio con nombre del que pago y etiqueta de unidad.
+export async function fetchInformedPayments(consortiumId) {
+  if (!consortiumId) return [];
+  const { data: units } = await supabase
+    .from('units').select('id, name').eq('consortium_id', consortiumId);
+  const unitIds = (units || []).map(u => u.id);
+  if (!unitIds.length) return [];
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, status, proof_url, created_at, unit_id, user_id')
+    .in('unit_id', unitIds)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const unitName = Object.fromEntries((units || []).map(u => [u.id, u.name]));
+  const userIds = [...new Set((data || []).map(p => p.user_id))];
+  let nameMap = {};
+  if (userIds.length) {
+    const { data: profs } = await supabase
+      .from('profiles').select('id, full_name').in('id', userIds);
+    nameMap = Object.fromEntries((profs || []).map(p => [p.id, p.full_name]));
+  }
+  return (data || []).map(p => ({
+    ...p,
+    unit_name: unitName[p.unit_id] || null,
+    payer_name: nameMap[p.user_id] || 'Residente',
+  }));
+}
+
+export async function setInformedPaymentStatus(paymentId, status) {
+  const { data, error } = await supabase
+    .from('payments').update({ status }).eq('id', paymentId).select();
+  if (error) throw error;
+  return data?.[0];
+}
