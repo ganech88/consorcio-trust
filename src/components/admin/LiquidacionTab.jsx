@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw, FileText } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
-  approvePeriodItem, rejectPeriodItem, deletePeriodItems,
+  approvePeriodItem, rejectPeriodItem, deletePeriodItems, getSignedComprobanteUrl,
 } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
@@ -308,6 +308,11 @@ export default function LiquidacionTab({ session, userProfile }) {
                               ) : item.status === 'reported' ? (
                                 <>
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">Informado</span>
+                                  {item.receipt_url && (
+                                    <button onClick={async () => { const u = await getSignedComprobanteUrl(item.receipt_url); if (u) window.open(u, '_blank', 'noopener'); }} className="flex items-center bg-slate-200 dark:bg-surface-panel2 text-slate-600 dark:text-ink-mid hover:bg-slate-300 px-2 py-1 rounded-lg transition-colors" title="Ver comprobante">
+                                      <FileText size={11} />
+                                    </button>
+                                  )}
                                   <button onClick={() => handleDecideItem(period.id, item, 'approve')} disabled={decidingItem === item.id} className="flex items-center bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white px-2 py-1 rounded-lg transition-colors" title="Aprobar pago">
                                     {decidingItem === item.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                                   </button>

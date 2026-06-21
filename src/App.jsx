@@ -26,7 +26,6 @@ const DocsView        = lazy(() => import('./components/DocsView'));
 const AnnouncementsView = lazy(() => import('./components/AnnouncementsView'));
 const ProfileView     = lazy(() => import('./components/ProfileView'));
 const ContactsView    = lazy(() => import('./components/ContactsView'));
-const PaymentModal    = lazy(() => import('./components/PaymentModal'));
 const AdminView       = lazy(() => import('./components/AdminView'));
 const ExpensesView    = lazy(() => import('./components/ExpensesView'));
 const ChatView        = lazy(() => import('./components/ChatView'));
@@ -93,7 +92,6 @@ function AppContent() {
   const location = useLocation();
   const view = location.pathname;
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showPayModal, setShowPayModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [realtimeBadge, setRealtimeBadge] = useState(0);
   const { dark, toggle: toggleTheme } = useTheme();
@@ -201,16 +199,6 @@ function AppContent() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-surface-base font-sans text-slate-900 dark:text-ink-hi transition-colors duration-300">
-      <Suspense fallback={null}>
-        {showPayModal && (
-          <PaymentModal
-            session={session}
-            userProfile={userProfile}
-            gastos={gastos}
-            onClose={() => setShowPayModal(false)}
-          />
-        )}
-      </Suspense>
 
       <Sidebar
         session={session}
@@ -293,7 +281,7 @@ function AppContent() {
                       payments={payments}
                       session={session}
                       userProfile={userProfile}
-                      onPaymentClick={() => setShowPayModal(true)}
+                      onPaymentClick={() => navigate(VIEWS.EXPENSES)}
                       onNavigate={handleNavigate}
                     />
                   } />
@@ -326,7 +314,7 @@ function AppContent() {
                       payments={payments}
                       session={session}
                       userProfile={userProfile}
-                      onPaymentClick={() => setShowPayModal(true)}
+                      onPaymentClick={() => navigate(VIEWS.EXPENSES)}
                       onNavigate={handleNavigate}
                     />
                   } />
@@ -341,7 +329,7 @@ function AppContent() {
         currentView={view}
         onNavigate={handleNavigate}
         unreadChatCount={unreadChatCount}
-        onPaymentClick={() => setShowPayModal(true)}
+        onPaymentClick={() => navigate(VIEWS.EXPENSES)}
       />
     </div>
   );

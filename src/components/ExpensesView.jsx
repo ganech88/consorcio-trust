@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
-import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium } from '../services/data.service';
+import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel, UploadCloud } from 'lucide-react';
+import { fetchExpenses, fetchMyFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof } from '../services/data.service';
 import { useToast } from './Toast';
 import { useData } from '../context/DataContext';
 
@@ -12,13 +12,14 @@ const STATUS_CONFIG = {
 };
 
 const PAYMENT_STATUS_CONFIG = {
-  pending:  { label: 'Pendiente de aprobación', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  pending:  { label: 'Pendiente de aprobacion', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  reported: { label: 'En revision',             color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400' },
   approved: { label: 'Aprobado',                color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
   rejected: { label: 'Rechazado',               color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
 };
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(amount || 0);
 }
 
 function formatPeriod(period) {
@@ -28,97 +29,23 @@ function formatPeriod(period) {
   return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 }
 
-function PaymentModal({ expense, userId, onClose, onPaid }) {
-  const toast = useToast();
-  const [amount, setAmount] = useState(String(expense.amount));
-  const [notes, setNotes] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      toast.error('Ingresá un monto válido');
-      return;
-    }
-    setSaving(true);
-    try {
-      const payment = await createExpensePayment(expense.id, userId, {
-        amount: Number(amount),
-        notes: notes.trim() || null,
-      });
-      toast.success('Pago registrado. El administrador lo revisará pronto.');
-      onPaid(expense.id, payment);
-      onClose();
-    } catch (err) {
-      toast.error(err.message, 'Error al registrar pago');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-surface-panel rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.07]">
-          <h4 className="font-bold text-slate-800 dark:text-ink-hi">Registrar pago</h4>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <div className="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
-            <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{expense.title}</p>
-            <p className="text-xs text-brand-600/70 dark:text-brand-400/70 mt-0.5">
-              {formatPeriod(expense.period)} · Total: {formatCurrency(expense.amount)}
-            </p>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto a pagar ($)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas (opcional)</label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Ej: Transferencia banco / número de operación..."
-              rows={2}
-              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
-          >
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
-            Registrar pago
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function PeriodReportModal({ item, onClose, onReported }) {
   const toast = useToast();
   const [notes, setNotes] = useState('');
   const [method, setMethod] = useState('Transferencia');
+  const [payFile, setPayFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     try {
-      await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method });
+      let receiptUrl = null;
+      if (payFile) {
+        const { path } = await uploadPaymentProof(payFile);
+        receiptUrl = path;
+      }
+      await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method, receiptUrl });
       toast.success('Pago informado. El administrador lo revisara.');
       onReported(item.id);
       onClose();
@@ -139,13 +66,21 @@ function PeriodReportModal({ item, onClose, onReported }) {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
             <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{formatPeriod(item.expense_periods?.period)}</p>
-            <p className="text-xs text-brand-600/70 dark:text-brand-400/70 mt-0.5">Tu parte: {formatCurrency(item.amount)}</p>
+            <p className="text-sm font-bold text-brand-700 dark:text-brand-400 mt-0.5">Tu parte: {formatCurrency(item.amount)}</p>
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Medio de pago</label>
             <select value={method} onChange={e => setMethod(e.target.value)} className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none">
               {['Transferencia','Deposito','Efectivo','MercadoPago','Otro'].map(m => <option key={m} value={m}>{m}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Comprobante (imagen o PDF)</label>
+            <label className={`flex items-center gap-2 cursor-pointer border-2 border-dashed rounded-xl px-3 py-3 text-sm transition-colors ${payFile ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-400/[0.10] text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-white/[0.09] text-slate-500 dark:text-ink-mid hover:border-slate-300'}`}>
+              <UploadCloud size={16} />
+              <span className="truncate">{payFile ? payFile.name : 'Adjuntar comprobante'}</span>
+              <input type="file" accept="image/*,application/pdf" className="hidden" onChange={e => setPayFile(e.target.files?.[0] || null)} />
+            </label>
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas / N de operacion (opcional)</label>
@@ -171,29 +106,25 @@ const FINE_STATUS_LABELS = {
 export default function ExpensesView({ session, userProfile }) {
   const toast = useToast();
   const { payments: informedPayments } = useData();
-  const [expenses, setExpenses] = useState([]);
+  const [consortiumExpenses, setConsortiumExpenses] = useState([]);
   const [periodItems, setPeriodItems] = useState([]);
   const [fines, setFines] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [payTarget, setPayTarget] = useState(null);
   const [reportTarget, setReportTarget] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
-  const [mpEnabled, setMpEnabled] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
+  const [showTotals, setShowTotals] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
     Promise.all([
       fetchExpenses(userProfile.consortium_id),
       fetchMyFines(session?.user?.id),
-      fetchMpConfig(userProfile.consortium_id),
       fetchUserPeriodItems(session?.user?.id),
       fetchConsortium(userProfile.consortium_id),
     ])
-      .then(([exp, myFines, mpCfg, items, cons]) => {
-        setExpenses(exp);
-        setFines(myFines);
-        setMpEnabled(!!mpCfg?.enabled);
+      .then(([exp, myFines, items, cons]) => {
+        setConsortiumExpenses(exp || []);
+        setFines(myFines || []);
         setPeriodItems(items || []);
         setPaymentInfo(cons || null);
       })
@@ -201,39 +132,10 @@ export default function ExpensesView({ session, userProfile }) {
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, session?.user?.id, toast]);
 
-  function handlePaid(expenseId, payment) {
-    setExpenses(prev => prev.map(e =>
-      e.id === expenseId
-        ? { ...e, expense_payments: [...(e.expense_payments || []), payment] }
-        : e
-    ));
-  }
-
-  async function handleMpPay(exp) {
-    try {
-      const res = await createMpPreference(exp.id, session?.user?.id, exp.amount, userProfile.consortium_id, exp.title);
-      const url = res?.init_point || res?.sandbox_init_point;
-      if (url) window.location.href = url;
-      else toast.error('No se pudo iniciar el pago con MercadoPago.');
-    } catch (e) {
-      toast.error(e.message || 'Error al iniciar el pago con MercadoPago.');
-    }
-  }
-
-  const currentPeriod = new Date().toISOString().slice(0, 7); // "YYYY-MM"
-  const currentExpenses = expenses.filter(e => e.period === currentPeriod);
-  const myPayments = expenses.flatMap(e =>
-    (e.expense_payments || [])
-      .filter(p => p.user_id === session?.user?.id)
-      .map(p => ({ ...p, expenseTitle: e.title, expensePeriod: e.period }))
-  );
   const activeFines = fines.filter(f => f.status === 'active');
   const totalFines = activeFines.reduce((s, f) => s + Number(f.amount), 0);
-  const usePeriodModel = periodItems.length > 0;
-  const totalPending = (usePeriodModel
-    ? periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + Number(it.amount || 0), 0)
-    : expenses.filter(e => e.status === 'pending' || e.status === 'overdue').reduce((s, e) => s + Number(e.amount), 0)
-  ) + totalFines;
+  const myPending = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + Number(it.amount || 0), 0);
+  const totalPending = myPending + totalFines;
 
   if (loading) {
     return (
@@ -245,7 +147,7 @@ export default function ExpensesView({ session, userProfile }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+      {/* Header: tu parte */}
       <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg">
         <div className="flex items-center gap-3 mb-4">
           <Receipt size={24} />
@@ -253,7 +155,7 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/15 rounded-xl p-3">
-            <p className="text-white/70 text-xs font-medium mb-1">Deuda pendiente</p>
+            <p className="text-white/70 text-xs font-medium mb-1">Lo que te toca pagar</p>
             <p className="text-2xl font-bold">{formatCurrency(totalPending)}</p>
           </div>
           <div className="bg-white/15 rounded-xl p-3">
@@ -263,6 +165,30 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       </div>
 
+      {/* Recordatorio de vencimiento */}
+      {(() => {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const due = periodItems.filter(it => it.status !== 'paid' && it.expense_periods?.due_date
+          && (new Date(it.expense_periods.due_date) - today) / 86400000 <= 7);
+        if (due.length === 0) return null;
+        const total = due.reduce((s, it) => s + Number(it.amount || 0), 0);
+        const overdue = due.some(it => new Date(it.expense_periods.due_date) < today);
+        return (
+          <div className={`rounded-2xl p-4 flex items-center gap-3 ${overdue ? 'bg-red-50 dark:bg-red-400/[0.12] border border-red-200 dark:border-red-800' : 'bg-amber-50 dark:bg-amber-400/[0.12] border border-amber-200 dark:border-amber-800'}`}>
+            <AlertCircle size={20} className={overdue ? 'text-red-500 dark:text-red-400 shrink-0' : 'text-amber-500 dark:text-amber-400 shrink-0'} />
+            <div>
+              <p className={`text-sm font-bold ${overdue ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                {overdue ? 'Tenes expensas vencidas' : 'Recordatorio de vencimiento'}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-ink-mid">
+                {due.length} expensa(s) por un total de {formatCurrency(total)}. Informa tu pago abajo.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Como pagar (medios de pago) */}
       {paymentInfo && (paymentInfo.payment_cbu || paymentInfo.payment_alias || paymentInfo.payment_instructions) && (
         <div className="bg-white dark:bg-surface-panel rounded-2xl border border-emerald-200 dark:border-emerald-800 p-5">
           <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2 mb-2">
@@ -270,7 +196,7 @@ export default function ExpensesView({ session, userProfile }) {
             Como pagar
           </h4>
           <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">
-            Transferi a estos datos y despues informa tu pago aca abajo con el comprobante.
+            Transferi a estos datos y despues informa tu pago con el comprobante.
           </p>
           <div className="space-y-1.5 text-sm">
             {paymentInfo.payment_cbu && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">CBU/CVU</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_cbu}</span></div>}
@@ -284,34 +210,18 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       )}
 
-      {(() => {
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const due = periodItems.filter(it => it.status !== 'paid' && it.expense_periods?.due_date
-          && (new Date(it.expense_periods.due_date) - today) / 86400000 <= 7);
-        if (due.length === 0) return null;
-        const total = due.reduce((s, it) => s + Number(it.amount || 0), 0);
-        const overdue = due.some(it => new Date(it.expense_periods.due_date) < today);
-        return (
-          <div className={`rounded-2xl p-4 flex items-center gap-3 ${overdue ? 'bg-red-50 dark:bg-red-400/[0.12] border border-red-200 dark:border-red-800' : 'bg-amber-50 dark:bg-amber-400/[0.12] border border-amber-200 dark:border-amber-800'}`}>
-            <AlertCircle size={20} className={overdue ? 'text-red-500 dark:text-red-400 shrink-0' : 'text-amber-500 dark:text-amber-400 shrink-0'} />
-            <div>
-              <p className={`text-sm font-bold ${overdue ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                {overdue ? 'Tenés expensas vencidas' : 'Recordatorio de vencimiento'}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-ink-mid">
-                {due.length} expensa(s) por un total de {formatCurrency(total)}. Informá tu pago abajo.
-              </p>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* Mi expensa por periodo (segun mi coeficiente) */}
-      {periodItems.length > 0 && (
-        <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
-            Mi expensa por periodo (segun mi coeficiente)
-          </h4>
+      <div>
+        <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
+          Mi expensa (segun mi coeficiente)
+        </h4>
+        {periodItems.length === 0 ? (
+          <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-8 text-center">
+            <Receipt size={36} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
+            <p className="text-slate-500 dark:text-ink-mid text-sm">Todavia no hay expensas liquidadas para tu unidad</p>
+            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">Cuando la administracion liquide el periodo, vas a ver aca tu parte para informar el pago.</p>
+          </div>
+        ) : (
           <div className="space-y-2">
             {periodItems.map(it => (
               <div key={it.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-4">
@@ -337,177 +247,10 @@ export default function ExpensesView({ session, userProfile }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Período actual (modelo simple: oculto si la unidad tiene expensas por coeficiente) */}
-      {!usePeriodModel && currentExpenses.length > 0 && (
-        <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
-            Período actual — {formatPeriod(currentPeriod)}
-          </h4>
-          <div className="space-y-3">
-            {currentExpenses.map(exp => {
-              const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
-              const Icon = st.icon;
-              const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
-              const canPay = !usePeriodModel && !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
-              return (
-                <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${st.color}`}>
-                        <Icon size={18} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800 dark:text-ink-hi">{exp.title}</p>
-                        <p className="text-sm text-slate-500 dark:text-ink-mid">{formatCurrency(exp.amount)}</p>
-                        {exp.due_date && (
-                          <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5 flex items-center gap-1">
-                            <AlertCircle size={11} />
-                            Vence: {new Date(exp.due_date).toLocaleDateString('es-AR')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
-                      {myPay ? (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PAYMENT_STATUS_CONFIG[myPay.status]?.color}`}>
-                          {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
-                        </span>
-                      ) : canPay ? (
-                        <>
-                          <button
-                            onClick={() => setPayTarget(exp)}
-                            className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
-                          >
-                            <CreditCard size={12} /> Registrar pago
-                          </button>
-                          {mpEnabled && (
-                            <button
-                              onClick={() => handleMpPay(exp)}
-                              className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
-                            >
-                              <CreditCard size={12} /> Pagar con MercadoPago
-                            </button>
-                          )}
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                  {exp.description && (
-                    <p className="text-xs text-slate-400 dark:text-ink-low mt-3 pl-13">{exp.description}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Historial de todas las expensas */}
-      <div>
-        <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
-          Todas las expensas ({expenses.length})
-        </h4>
-        {expenses.length === 0 ? (
-          <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center">
-            <Receipt size={40} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
-            <p className="text-slate-500 dark:text-ink-mid text-sm">No hay expensas registradas aún</p>
-            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">
-              El administrador publicará las liquidaciones mensualmente
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {expenses.map(exp => {
-              const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
-              const myPay = (exp.expense_payments || []).find(p => p.user_id === session?.user?.id);
-              const canPay = !usePeriodModel && !myPay && (exp.status === 'pending' || exp.status === 'overdue' || exp.status === 'partial');
-              const isExpanded = expandedId === exp.id;
-              return (
-                <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
-                  <div className="p-4 flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{exp.title}</p>
-                      <p className="text-xs text-slate-400 dark:text-ink-low">
-                        {formatPeriod(exp.period)}
-                        {exp.due_date ? ` · Vence ${new Date(exp.due_date).toLocaleDateString('es-AR')}` : ''}
-                      </p>
-                    </div>
-                    <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{formatCurrency(exp.amount)}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
-                    {canPay && (
-                      <button
-                        onClick={() => setPayTarget(exp)}
-                        className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
-                      >
-                        <CreditCard size={11} /> Pagar
-                      </button>
-                    )}
-                    {myPay && (
-                      <button
-                        onClick={() => setExpandedId(isExpanded ? null : exp.id)}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors shrink-0"
-                      >
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    )}
-                  </div>
-                  {isExpanded && myPay && (
-                    <div className="border-t border-slate-100 dark:border-white/[0.07] px-4 py-3">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-ink-mid uppercase tracking-wider mb-2">
-                        Mi pago
-                      </p>
-                      <div className="flex items-center gap-3 text-xs">
-                        <CreditCard size={12} className="text-slate-400" />
-                        <span className="text-slate-700 dark:text-ink-mid">{formatCurrency(myPay.amount)}</span>
-                        <span className="text-slate-400">{new Date(myPay.paid_at).toLocaleDateString('es-AR')}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full font-bold text-[10px] ${PAYMENT_STATUS_CONFIG[myPay.status]?.color}`}>
-                          {PAYMENT_STATUS_CONFIG[myPay.status]?.label}
-                        </span>
-                      </div>
-                      {myPay.notes && (
-                        <p className="text-xs text-slate-400 dark:text-ink-low mt-1 ml-5">{myPay.notes}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         )}
       </div>
 
-      {/* Historial de mis pagos */}
-      {myPayments.length > 0 && (
-        <div>
-          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
-            Mis pagos registrados ({myPayments.length})
-          </h4>
-          <div className="space-y-2">
-            {myPayments.map(p => {
-              const pst = PAYMENT_STATUS_CONFIG[p.status] || PAYMENT_STATUS_CONFIG.pending;
-              return (
-                <div key={p.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-3">
-                  <CreditCard size={16} className="text-brand-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">{p.expenseTitle}</p>
-                    <p className="text-xs text-slate-400 dark:text-ink-low">
-                      {formatPeriod(p.expensePeriod)} · {new Date(p.paid_at).toLocaleDateString('es-AR')}
-                    </p>
-                  </div>
-                  <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{formatCurrency(p.amount)}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${pst.color}`}>{pst.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Pagos informados (tabla payments) con su estado */}
+      {/* Mis pagos informados (estado) */}
       {informedPayments.length > 0 && (
         <div>
           <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
@@ -531,6 +274,37 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       )}
 
+      {/* Gastos del consorcio (informativo, sin opcion de pago) */}
+      {consortiumExpenses.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowTotals(v => !v)}
+            className="w-full flex items-center justify-between bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] px-4 py-3 text-sm font-semibold text-slate-600 dark:text-ink-mid hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors"
+          >
+            <span>Gastos del consorcio (informativo)</span>
+            {showTotals ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          {showTotals && (
+            <div className="space-y-2 mt-2">
+              <p className="text-xs text-slate-400 dark:text-ink-low px-1">Estos son los gastos totales del edificio. Tu parte segun coeficiente es la de arriba.</p>
+              {consortiumExpenses.map(exp => {
+                const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
+                return (
+                  <div key={exp.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{exp.title}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low">{formatPeriod(exp.period)}</p>
+                    </div>
+                    <p className="font-bold text-slate-800 dark:text-ink-hi font-mono shrink-0">{formatCurrency(exp.amount)}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Multas activas */}
       {activeFines.length > 0 && (
         <div>
@@ -547,17 +321,13 @@ export default function ExpensesView({ session, userProfile }) {
                   <p className="font-semibold text-red-800 dark:text-red-200 text-sm">{fine.reason}</p>
                   <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">
                     {new Date(fine.fine_date).toLocaleDateString('es-AR')}
-                    {fine.period ? ` · Período ${fine.period}` : ''}
+                    {fine.period ? ` · Periodo ${fine.period}` : ''}
                   </p>
-                  {fine.notes && (
-                    <p className="text-xs text-red-400 dark:text-red-500 mt-1">{fine.notes}</p>
-                  )}
+                  {fine.notes && (<p className="text-xs text-red-400 dark:text-red-500 mt-1">{fine.notes}</p>)}
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-red-700 dark:text-red-400">{formatCurrency(fine.amount)}</p>
-                  <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase">
-                    {FINE_STATUS_LABELS[fine.status]}
-                  </span>
+                  <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase">{FINE_STATUS_LABELS[fine.status]}</span>
                 </div>
               </div>
             ))}
@@ -567,15 +337,6 @@ export default function ExpensesView({ session, userProfile }) {
             </div>
           </div>
         </div>
-      )}
-
-      {payTarget && (
-        <PaymentModal
-          expense={payTarget}
-          userId={session.user.id}
-          onClose={() => setPayTarget(null)}
-          onPaid={handlePaid}
-        />
       )}
 
       {reportTarget && (
