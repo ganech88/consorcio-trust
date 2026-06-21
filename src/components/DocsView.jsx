@@ -31,13 +31,18 @@ export default function DocsView() {
 
   useEffect(() => {
     fetchConsortiumDocuments(userProfile?.consortium_id)
-      .then(setDocs)
+      .then(rows => setDocs((rows || []).map(d => ({
+        ...d,
+        name: d.name ?? d.title ?? 'Documento',
+        category: d.category ?? d.doc_type ?? 'general',
+        file_url: d.file_url ?? d.url ?? null,
+      }))))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = docs.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (doc.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeCategory === 'all' || doc.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
