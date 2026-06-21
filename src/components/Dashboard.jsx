@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import {
   DollarSign, AlertCircle, UploadCloud, TrendingUp, CheckCircle, Clock,
@@ -6,6 +7,7 @@ import {
 import { CHART_COLORS, CHART_COLORS_DARK, VIEWS } from '../lib/constants';
 import { formatDate, formatCurrency } from '../lib/utils';
 import { useTheme } from '../lib/ThemeContext';
+import { fetchUserPeriodItems } from '../services/data.service';
 
 const PAYMENT_STATUS = {
   approved: { label: 'Aprobado', icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-400/[0.14]', dot: 'bg-emerald-500' },
@@ -111,11 +113,23 @@ function PaymentTimeline({ payments }) {
 export default function Dashboard({ reclamos, gastos, payments = [], session, userProfile, onPaymentClick, onNavigate }) {
   const { dark } = useTheme();
   const chartColors = dark ? CHART_COLORS_DARK : CHART_COLORS;
+  const [periodItems, setPeriodItems] = useState([]);
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    fetchUserPeriodItems(session.user.id).then(setPeriodItems).catch(() => {});
+  }, [session?.user?.id]);
 
   const userClaimsCount = reclamos.filter((r) => r.user_id === session.user.id).length;
   const displayPayments = payments.slice(0, 6);
   const totalExpenses = gastos.reduce((sum, g) => sum + g.value, 0);
   const expenseLabel = totalExpenses > 0 ? `$${totalExpenses.toLocaleString('es-AR')}` : '$—';
+  const isResident = userProfile?.role === 'resident' || userProfile?.role === 'owner';
+  const myShare = periodItems.filter(it => it.status !== 'paid').reduce((sum, it) => sum + Number(it.amount || 0), 0);
+  const expenseCardLabel = isResident ? 'Lo que te toca pagar' : 'Gastos del consorcio';
+  const expenseCardValue = isResident ? (myShare > 0 ? `$${myShare.toLocaleString('es-AR')}` : '$0') : expenseLabel;
+  const expenseCardSubtitle = isResident
+    ? (myShare > 0 ? 'Tu parte segun coeficiente' : 'Pendiente de liquidacion')
+    : (totalExpenses > 0 ? 'Calculado de gastos registrados' : 'Sin datos de expensas');
 
   // Claims urgency color
   const claimsIconBg =
@@ -178,10 +192,10 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
           icon={DollarSign}
           iconBg="bg-emerald-50 dark:bg-emerald-400/[0.14]"
           iconColor="text-emerald-500"
-          label="Gastos del consorcio"
-          value={expenseLabel}
-          subtitle={totalExpenses > 0 ? 'Calculado de gastos registrados' : 'Sin datos de expensas'}
-          subtitleColor={totalExpenses > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}
+          label={expenseCardLabel}
+          value={expenseCardValue}
+          subtitle={expenseCardSubtitle}
+          subtitleColor={isResident ? (myShare > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400') : (totalExpenses > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400')}
           action={
             <button
               onClick={onPaymentClick}
