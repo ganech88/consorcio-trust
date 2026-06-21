@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home, Wallet, BarChart3,
+  LayoutDashboard,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -20,8 +21,11 @@ import UnitsTab from './admin/UnitsTab';
 import LedgerTab from './admin/LedgerTab';
 import RendicionTab from './admin/RendicionTab';
 import ConsorcioTab from './admin/ConsorcioTab';
+import AdminHome from './admin/AdminHome';
+import { fetchAdminPendingCounts } from '../services/data.service';
 
 const TABS = [
+  { id: 'inicio',        label: 'Inicio',         icon: LayoutDashboard },
   { id: 'usuarios',      label: 'Usuarios',       icon: Users },
   { id: 'unidades',      label: 'Unidades',       icon: Home },
   { id: 'claims',        label: 'Reclamos',       icon: AlertCircle },
@@ -41,7 +45,13 @@ const TABS = [
 ];
 
 export default function AdminView({ session, userProfile }) {
-  const [activeTab, setActiveTab] = useState('usuarios');
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [counts, setCounts] = useState({ reservas: 0, pagos: 0, reclamos: 0 });
+
+  useEffect(() => {
+    if (!userProfile?.consortium_id) return;
+    fetchAdminPendingCounts(userProfile.consortium_id).then(setCounts).catch(() => {});
+  }, [userProfile?.consortium_id, activeTab]);
 
   if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
     return (
@@ -75,6 +85,9 @@ export default function AdminView({ session, userProfile }) {
         {TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const badge = tab.id === 'reservations' ? counts.reservas
+            : tab.id === 'expenses' ? counts.pagos
+            : tab.id === 'claims' ? counts.reclamos : 0;
           return (
             <button
               key={tab.id}
@@ -87,12 +100,16 @@ export default function AdminView({ session, userProfile }) {
             >
               <Icon size={14} />
               {tab.label}
+              {badge > 0 && (
+                <span className="ml-1 min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold">{badge}</span>
+              )}
             </button>
           );
         })}
       </div>
 
       {/* Contenido */}
+      {activeTab === 'inicio'        && <AdminHome counts={counts} onGo={setActiveTab} userProfile={userProfile} />}
       {activeTab === 'usuarios'      && <UsersTab userProfile={userProfile} />}
       {activeTab === 'unidades'      && <UnitsTab userProfile={userProfile} />}
       {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}

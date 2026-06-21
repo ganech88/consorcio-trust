@@ -181,6 +181,24 @@ export async function fetchUnitInvites(consortiumId) {
   return data || [];
 }
 
+// Contadores de pendientes para el panel/Inicio del admin (reservas, pagos
+// informados, reclamos abiertos del consorcio).
+export async function fetchAdminPendingCounts(consortiumId) {
+  if (!consortiumId) return { reservas: 0, pagos: 0, reclamos: 0 };
+  const [resv, clm, units] = await Promise.all([
+    supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('consortium_id', consortiumId).eq('status', 'pending'),
+    supabase.from('claims').select('id', { count: 'exact', head: true }).eq('consortium_id', consortiumId).eq('status', 'open'),
+    supabase.from('units').select('id').eq('consortium_id', consortiumId),
+  ]);
+  let pagos = 0;
+  const unitIds = (units.data || []).map(u => u.id);
+  if (unitIds.length) {
+    const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('unit_id', unitIds).eq('status', 'pending');
+    pagos = count || 0;
+  }
+  return { reservas: resv.count || 0, pagos, reclamos: clm.count || 0 };
+}
+
 // El admin asigna (o cambia/saca) la unidad de un miembro YA existente.
 export async function assignMemberUnit({ userId, unitId }) {
   const { error } = await supabase.rpc('assign_member_unit', {

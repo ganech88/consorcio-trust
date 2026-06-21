@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
-import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems, reportPeriodItemPayment } from '../services/data.service';
+import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium } from '../services/data.service';
 import { useToast } from './Toast';
 
 const STATUS_CONFIG = {
@@ -177,6 +177,7 @@ export default function ExpensesView({ session, userProfile }) {
   const [reportTarget, setReportTarget] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [mpEnabled, setMpEnabled] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
@@ -185,12 +186,14 @@ export default function ExpensesView({ session, userProfile }) {
       fetchMyFines(session?.user?.id),
       fetchMpConfig(userProfile.consortium_id),
       fetchUserPeriodItems(session?.user?.id),
+      fetchConsortium(userProfile.consortium_id),
     ])
-      .then(([exp, myFines, mpCfg, items]) => {
+      .then(([exp, myFines, mpCfg, items, cons]) => {
         setExpenses(exp);
         setFines(myFines);
         setMpEnabled(!!mpCfg?.enabled);
         setPeriodItems(items || []);
+        setPaymentInfo(cons || null);
       })
       .catch(e => toast.error(e.message, 'Error al cargar expensas'))
       .finally(() => setLoading(false));
@@ -257,6 +260,27 @@ export default function ExpensesView({ session, userProfile }) {
           </div>
         </div>
       </div>
+
+      {paymentInfo && (paymentInfo.payment_cbu || paymentInfo.payment_alias || paymentInfo.payment_instructions) && (
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-emerald-200 dark:border-emerald-800 p-5">
+          <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2 mb-2">
+            <CreditCard size={16} className="text-emerald-500" />
+            Como pagar
+          </h4>
+          <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">
+            Transferi a estos datos y despues informa tu pago aca abajo con el comprobante.
+          </p>
+          <div className="space-y-1.5 text-sm">
+            {paymentInfo.payment_cbu && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">CBU/CVU</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_cbu}</span></div>}
+            {paymentInfo.payment_alias && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Alias</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_alias}</span></div>}
+            {paymentInfo.payment_bank && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Banco</span><span className="text-slate-800 dark:text-ink-hi">{paymentInfo.payment_bank}</span></div>}
+            {paymentInfo.payment_holder && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Titular</span><span className="text-slate-800 dark:text-ink-hi">{paymentInfo.payment_holder}</span></div>}
+          </div>
+          {paymentInfo.payment_instructions && (
+            <p className="text-xs text-slate-500 dark:text-ink-mid mt-3 bg-slate-50 dark:bg-surface-inset rounded-lg p-2.5 whitespace-pre-wrap">{paymentInfo.payment_instructions}</p>
+          )}
+        </div>
+      )}
 
       {(() => {
         const today = new Date(); today.setHours(0, 0, 0, 0);

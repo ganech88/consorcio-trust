@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Building2, Check, Copy, RefreshCw, Loader2, Users, Bell, Save,
-  CreditCard as MpIcon, Palette,
+  CreditCard as MpIcon, Palette, Landmark,
 } from 'lucide-react';
 import {
   updateConsortium, fetchConsortiumMembers,
@@ -27,6 +27,8 @@ export default function ConsorcioTab({ userProfile }) {
   const [savingMp, setSavingMp] = useState(false);
   const [brandForm, setBrandForm] = useState({ admin_name: '', admin_phone: '', admin_address: '', admin_logo_url: '', admin_signature_url: '' });
   const [savingBrand, setSavingBrand] = useState(false);
+  const [payForm, setPayForm] = useState({ payment_cbu: '', payment_alias: '', payment_bank: '', payment_holder: '', payment_instructions: '' });
+  const [savingPay, setSavingPay] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) { setLoading(false); return; }
@@ -47,6 +49,11 @@ export default function ConsorcioTab({ userProfile }) {
           admin_name: c.admin_name || '', admin_phone: c.admin_phone || '',
           admin_address: c.admin_address || '', admin_logo_url: c.admin_logo_url || '',
           admin_signature_url: c.admin_signature_url || '',
+        });
+        setPayForm({
+          payment_cbu: c.payment_cbu || '', payment_alias: c.payment_alias || '',
+          payment_bank: c.payment_bank || '', payment_holder: c.payment_holder || '',
+          payment_instructions: c.payment_instructions || '',
         });
       }
       setMembers(m);
@@ -132,6 +139,26 @@ export default function ConsorcioTab({ userProfile }) {
       toast.error(err.message, 'Error al guardar');
     } finally {
       setSavingBrand(false);
+    }
+  }
+
+  async function handleSavePayment(e) {
+    e.preventDefault();
+    setSavingPay(true);
+    try {
+      const updated = await updateConsortium(userProfile.consortium_id, {
+        payment_cbu: payForm.payment_cbu.trim() || null,
+        payment_alias: payForm.payment_alias.trim() || null,
+        payment_bank: payForm.payment_bank.trim() || null,
+        payment_holder: payForm.payment_holder.trim() || null,
+        payment_instructions: payForm.payment_instructions.trim() || null,
+      });
+      setConsortium(prev => ({ ...prev, ...updated }));
+      toast.success('Medios de pago guardados');
+    } catch (err) {
+      toast.error(err.message, 'Error al guardar');
+    } finally {
+      setSavingPay(false);
     }
   }
 
@@ -339,6 +366,43 @@ export default function ConsorcioTab({ userProfile }) {
         >
           {savingReminder ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
           Guardar recordatorios
+        </button>
+      </form>
+
+      {/* Medios de pago */}
+      <form onSubmit={handleSavePayment} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
+        <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2">
+          <Landmark size={16} className="text-emerald-500" />
+          Medios de pago
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-ink-mid">
+          Datos para que los residentes transfieran las expensas. Los ven al momento de informar un pago.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">CBU / CVU</label>
+            <input type="text" value={payForm.payment_cbu} onChange={e => setPayForm(p => ({ ...p, payment_cbu: e.target.value }))} placeholder="0000003100..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Alias</label>
+            <input type="text" value={payForm.payment_alias} onChange={e => setPayForm(p => ({ ...p, payment_alias: e.target.value }))} placeholder="MI.CONSORCIO.MP" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Banco / Billetera</label>
+            <input type="text" value={payForm.payment_bank} onChange={e => setPayForm(p => ({ ...p, payment_bank: e.target.value }))} placeholder="Mercado Pago / Banco Nación" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Titular</label>
+            <input type="text" value={payForm.payment_holder} onChange={e => setPayForm(p => ({ ...p, payment_holder: e.target.value }))} placeholder="Administración López" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Instrucciones (opcional)</label>
+            <textarea value={payForm.payment_instructions} onChange={e => setPayForm(p => ({ ...p, payment_instructions: e.target.value }))} rows={2} placeholder="Ej: enviá el comprobante por la app después de transferir" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none" />
+          </div>
+        </div>
+        <button type="submit" disabled={savingPay} className="flex items-center gap-2 bg-brand-500 hover:bg-brand-400 disabled:opacity-60 text-[#04201d] px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+          {savingPay ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Guardar medios de pago
         </button>
       </form>
 
