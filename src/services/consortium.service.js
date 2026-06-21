@@ -196,6 +196,12 @@ export async function fetchAdminPendingCounts(consortiumId) {
     const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('unit_id', unitIds).eq('status', 'pending');
     pagos = count || 0;
   }
+  const { data: periods } = await supabase.from('expense_periods').select('id').eq('consortium_id', consortiumId);
+  const periodIds = (periods || []).map(p => p.id);
+  if (periodIds.length) {
+    const { count } = await supabase.from('expense_period_items').select('id', { count: 'exact', head: true }).in('period_id', periodIds).eq('status', 'reported');
+    pagos += count || 0;
+  }
   return { reservas: resv.count || 0, pagos, reclamos: clm.count || 0 };
 }
 

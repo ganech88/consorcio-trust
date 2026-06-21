@@ -102,6 +102,31 @@ export async function fetchUserPeriodItems(userId) {
   return data || [];
 }
 
+// Items por periodo (coeficiente) que los residentes informaron y el admin
+// tiene que aprobar (status 'reported'), del consorcio entero.
+export async function fetchReportedPeriodItems(consortiumId) {
+  if (!consortiumId) return [];
+  const { data: periods } = await supabase
+    .from('expense_periods').select('id, period').eq('consortium_id', consortiumId);
+  const periodIds = (periods || []).map(p => p.id);
+  if (!periodIds.length) return [];
+  const periodName = Object.fromEntries((periods || []).map(p => [p.id, p.period]));
+  const { data, error } = await supabase
+    .from('expense_period_items')
+    .select('id, amount, status, receipt_url, reported_at, user_id, unit_id, period_id')
+    .in('period_id', periodIds)
+    .eq('status', 'reported')
+    .order('reported_at', { ascending: false });
+  if (error) throw error;
+  const userIds = [...new Set((data || []).map(i => i.user_id).filter(Boolean))];
+  let nameMap = {};
+  if (userIds.length) {
+    const { data: profs } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+    nameMap = Object.fromEntries((profs || []).map(p => [p.id, p.full_name]));
+  }
+  return (data || []).map(i => ({ ...i, period: periodName[i.period_id] || null, payer_name: nameMap[i.user_id] || 'Residente' }));
+}
+
 export async function createPeriodItems(items) {
   const { data, error } = await supabase
     .from('expense_period_items')
