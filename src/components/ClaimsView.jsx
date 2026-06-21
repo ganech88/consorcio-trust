@@ -260,6 +260,12 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
                       <p className="text-xs text-slate-400 dark:text-ink-low mt-1.5">
                         {formatDate(rec.created_at)}
                       </p>
+                      {rec.admin_note && (
+                        <div className="mt-2 bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-100 dark:border-emerald-800/60 rounded-xl p-3">
+                          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-0.5">Respuesta de la administración</p>
+                          <p className="text-sm text-slate-700 dark:text-ink-mid whitespace-pre-wrap">{rec.admin_note}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span
