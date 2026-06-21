@@ -120,7 +120,12 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
   }, [session?.user?.id]);
 
   const userClaimsCount = reclamos.filter((r) => r.user_id === session.user.id).length;
-  const displayPayments = payments.slice(0, 6);
+  const periodHistory = periodItems
+    .filter(it => it.status === 'paid' || it.status === 'reported')
+    .map(it => ({ id: 'pi-' + it.id, amount: it.amount, status: it.status === 'paid' ? 'approved' : 'pending', created_at: it.paid_at || it.reported_at || it.created_at }));
+  const displayPayments = [...payments, ...periodHistory]
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    .slice(0, 6);
   const totalExpenses = gastos.reduce((sum, g) => sum + g.value, 0);
   const expenseLabel = totalExpenses > 0 ? `$${totalExpenses.toLocaleString('es-AR')}` : '$—';
   const isResident = userProfile?.role === 'resident' || userProfile?.role === 'owner';

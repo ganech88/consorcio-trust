@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { VIEWS } from '../lib/constants';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home, Wallet, BarChart3,
@@ -45,26 +47,24 @@ const TABS = [
 ];
 
 export default function AdminView({ session, userProfile }) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('inicio');
   const [counts, setCounts] = useState({ reservas: 0, pagos: 0, reclamos: 0 });
 
-  useEffect(() => {
-    if (!userProfile?.consortium_id) return;
-    fetchAdminPendingCounts(userProfile.consortium_id).then(setCounts).catch(() => {});
-  }, [userProfile?.consortium_id, activeTab]);
+  const isAdmin = !!userProfile && ['admin', 'super_admin'].includes(userProfile.role);
 
-  if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 space-y-4 animate-fade-in">
-        <div className="bg-red-50 dark:bg-red-400/[0.12] p-5 rounded-2xl">
-          <ShieldCheck size={48} className="text-red-400" />
-        </div>
-        <h3 className="font-bold text-slate-800 dark:text-ink-hi text-lg">Acceso restringido</h3>
-        <p className="text-slate-500 dark:text-ink-mid text-sm text-center max-w-xs">
-          Esta sección es exclusiva para administradores del consorcio. Tu cuenta no tiene permisos de administrador.
-        </p>
-      </div>
-    );
+  useEffect(() => {
+    // Si un residente cae en /admin (ej: URL vieja), lo mandamos al inicio en vez de mostrar un cartel feo.
+    if (userProfile && !isAdmin) navigate(VIEWS.DASHBOARD, { replace: true });
+  }, [userProfile, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin || !userProfile?.consortium_id) return;
+    fetchAdminPendingCounts(userProfile.consortium_id).then(setCounts).catch(() => {});
+  }, [isAdmin, userProfile?.consortium_id, activeTab]);
+
+  if (!isAdmin) {
+    return null;
   }
 
   return (
