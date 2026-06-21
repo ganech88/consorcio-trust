@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { Bell, CheckCircle, Clock, AlertCircle, X, MessageSquare } from 'lucide-react';
 
-function generateNotifications(reclamos, payments) {
+function generateNotifications(reclamos, payments, reservations) {
   const notifs = [];
 
   reclamos.slice(0, 3).forEach((r) => {
@@ -29,14 +29,28 @@ function generateNotifications(reclamos, payments) {
     });
   });
 
+  (reservations || []).slice(0, 3).forEach((r) => {
+    if (r.status !== 'approved' && r.status !== 'rejected') return;
+    const approved = r.status === 'approved';
+    notifs.push({
+      id: `resv-${r.id}`,
+      icon: approved ? CheckCircle : AlertCircle,
+      color: approved ? 'text-emerald-500' : 'text-red-500',
+      bg: approved ? 'bg-emerald-50 dark:bg-emerald-400/[0.14]' : 'bg-red-50 dark:bg-red-400/[0.14]',
+      title: approved ? 'Reserva confirmada' : 'Reserva rechazada',
+      body: r.amenity_name || 'Reserva',
+      time: r.created_at,
+    });
+  });
+
   return notifs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);
 }
 
-export default function NotificationsPanel({ isOpen, onClose, reclamos = [], payments = [] }) {
+export default function NotificationsPanel({ isOpen, onClose, reclamos = [], payments = [], reservations = [] }) {
   const panelRef = useRef(null);
   const notifications = useMemo(
-    () => generateNotifications(reclamos, payments),
-    [reclamos, payments]
+    () => generateNotifications(reclamos, payments, reservations),
+    [reclamos, payments, reservations]
   );
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel } from 'lucide-react';
 import { fetchExpenses, createExpensePayment, fetchMyFines, fetchMpConfig, createMpPreference, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium } from '../services/data.service';
 import { useToast } from './Toast';
+import { useData } from '../context/DataContext';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400', icon: Clock },
@@ -169,6 +170,7 @@ const FINE_STATUS_LABELS = {
 
 export default function ExpensesView({ session, userProfile }) {
   const toast = useToast();
+  const { payments: informedPayments } = useData();
   const [expenses, setExpenses] = useState([]);
   const [periodItems, setPeriodItems] = useState([]);
   const [fines, setFines] = useState([]);
@@ -498,6 +500,30 @@ export default function ExpensesView({ session, userProfile }) {
                   </div>
                   <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0">{formatCurrency(p.amount)}</p>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${pst.color}`}>{pst.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Pagos informados (tabla payments) con su estado */}
+      {informedPayments.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
+            Mis pagos informados ({informedPayments.length})
+          </h4>
+          <div className="space-y-2">
+            {informedPayments.map(p => {
+              const cfg = PAYMENT_STATUS_CONFIG[p.status] || PAYMENT_STATUS_CONFIG.pending;
+              return (
+                <div key={p.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-3">
+                  <CreditCard size={16} className="text-brand-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi">{formatCurrency(p.amount)}</p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low">{new Date(p.created_at).toLocaleDateString('es-AR')}</p>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${cfg.color}`}>{cfg.label}</span>
                 </div>
               );
             })}

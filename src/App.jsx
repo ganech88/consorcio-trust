@@ -88,7 +88,7 @@ function showPushNotification(title, body) {
 
 function AppContent() {
   const { session, setSession, authLoading, authError, logout, recoveryMode, exitRecovery } = useAuth();
-  const { reclamos, setReclamos, gastos, payments, userProfile, setUserProfile, dataLoading, loadData, resetData, unreadChatCount } = useData();
+  const { reclamos, setReclamos, gastos, payments, reservations, userProfile, setUserProfile, dataLoading, loadData, resetData, unreadChatCount } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const view = location.pathname;
@@ -273,6 +273,7 @@ function AppContent() {
                 onClose={() => setShowNotifications(false)}
                 reclamos={reclamos}
                 payments={payments}
+                reservations={reservations}
               />
             </div>
           </div>

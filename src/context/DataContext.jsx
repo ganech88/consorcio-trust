@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { fetchClaims, fetchExpenseBreakdown, fetchUserProfile, fetchPayments, fetchConsortium } from '../services/data.service';
+import { fetchClaims, fetchExpenseBreakdown, fetchUserProfile, fetchPayments, fetchConsortium, fetchReservations } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
 const DataContext = createContext(null);
@@ -8,6 +8,7 @@ export function DataProvider({ children }) {
   const [reclamos, setReclamos] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [consortium, setConsortium] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
@@ -32,17 +33,19 @@ export function DataProvider({ children }) {
       const consortiumId = profile?.consortium_id || null;
 
       // Fase 2: cargar datos acotados al consorcio, en paralelo.
-      const [claimsRes, expensesRes, paymentsRes, consortiumRes] = await Promise.allSettled([
+      const [claimsRes, expensesRes, paymentsRes, consortiumRes, reservationsRes] = await Promise.allSettled([
         fetchClaims(consortiumId),
         fetchExpenseBreakdown(consortiumId),
         userId ? fetchPayments(userId) : Promise.resolve([]),
         consortiumId ? fetchConsortium(consortiumId) : Promise.resolve(null),
+        userId ? fetchReservations(userId) : Promise.resolve([]),
       ]);
 
       if (claimsRes.status === 'fulfilled') setReclamos(claimsRes.value || []);
       if (expensesRes.status === 'fulfilled') setGastos(expensesRes.value || []);
       if (paymentsRes.status === 'fulfilled') setPayments(paymentsRes.value || []);
       if (consortiumRes.status === 'fulfilled' && consortiumRes.value) setConsortium(consortiumRes.value);
+      if (reservationsRes.status === 'fulfilled') setReservations(reservationsRes.value || []);
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast.error('No se pudieron cargar los datos. Intentá nuevamente.');
@@ -55,6 +58,7 @@ export function DataProvider({ children }) {
     setReclamos([]);
     setGastos([]);
     setPayments([]);
+    setReservations([]);
     setUserProfile(null);
     setConsortium(null);
     setUnreadChatCount(0);
@@ -64,13 +68,14 @@ export function DataProvider({ children }) {
     reclamos, setReclamos,
     gastos,
     payments, setPayments,
+    reservations,
     userProfile, setUserProfile,
     consortium, setConsortium,
     dataLoading,
     loadData,
     resetData,
     unreadChatCount, setUnreadChatCount,
-  }), [reclamos, gastos, payments, userProfile, consortium, dataLoading, unreadChatCount, loadData, resetData]);
+  }), [reclamos, gastos, payments, reservations, userProfile, consortium, dataLoading, unreadChatCount, loadData, resetData]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
