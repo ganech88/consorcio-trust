@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import ComprobanteLink from './ComprobanteLink';
 import {
   Truck, Plus, Loader2, Trash2, X, CheckCircle, Clock,
-  ChevronDown, ChevronUp, Building, Phone, Mail, CreditCard, Paperclip,
+  ChevronDown, ChevronUp, Building, Phone, Mail, CreditCard, Paperclip, Pencil,
 } from 'lucide-react';
 import {
-  fetchSuppliers, createSupplier, deleteSupplier,
+  fetchSuppliers, createSupplier, updateSupplier, deleteSupplier,
   fetchPaymentOrders, createPaymentOrder, updatePaymentOrderStatus, deletePaymentOrder,
 } from '../services/data.service';
 import { useToast } from './Toast';
@@ -39,10 +39,11 @@ export default function SuppliersView({ session, userProfile }) {
   const [expandedSupplierId, setExpandedSupplierId] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const emptySupplier = { name: '', cuit: '', category: SUPPLIER_CATEGORIES[0], phone: '', email: '', bank_info: '', notes: '' };
+  const emptySupplier = { name: '', cuit: '', category: SUPPLIER_CATEGORIES[0], phone: '', email: '', bank_info: '', notes: '', default_amount: '', recurring: false };
   const emptyOrder = { supplier_id: '', description: '', amount: '', invoice_number: '', due_date: '', attachment_url: '' };
   const [supplierForm, setSupplierForm] = useState(emptySupplier);
   const [orderForm, setOrderForm] = useState(emptyOrder);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
@@ -60,16 +61,34 @@ export default function SuppliersView({ session, userProfile }) {
     if (!supplierForm.name) { toast.error('El nombre es obligatorio'); return; }
     setSaving(true);
     try {
-      const s = await createSupplier(userProfile.consortium_id, supplierForm);
-      setSuppliers(prev => [...prev, s].sort((a, b) => a.name.localeCompare(b.name)));
+      const payload = { ...supplierForm, default_amount: supplierForm.default_amount === '' || supplierForm.default_amount == null ? null : Number(supplierForm.default_amount) };
+      if (editingId) {
+        const s = await updateSupplier(editingId, payload);
+        setSuppliers(prev => prev.map(x => x.id === editingId ? { ...x, ...s } : x).sort((a, b) => a.name.localeCompare(b.name)));
+        toast.success('Proveedor actualizado');
+      } else {
+        const s = await createSupplier(userProfile.consortium_id, payload);
+        setSuppliers(prev => [...prev, s].sort((a, b) => a.name.localeCompare(b.name)));
+        toast.success('Proveedor creado');
+      }
       setSupplierForm(emptySupplier);
+      setEditingId(null);
       setShowSupplierForm(false);
-      toast.success('Proveedor creado');
     } catch (err) {
       toast.error(err.message);
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleEditSupplier(sup) {
+    setSupplierForm({
+      name: sup.name || '', cuit: sup.cuit || '', category: sup.category || SUPPLIER_CATEGORIES[0],
+      phone: sup.phone || '', email: sup.email || '', bank_info: sup.bank_info || '', notes: sup.notes || '',
+      default_amount: sup.default_amount != null ? String(sup.default_amount) : '', recurring: !!sup.recurring,
+    });
+    setEditingId(sup.id);
+    setShowSupplierForm(true);
   }
 
   async function handleDeleteSupplier(id) {
@@ -206,7 +225,7 @@ export default function SuppliersView({ session, userProfile }) {
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
-              onClick={() => setShowSupplierForm(v => !v)}
+              onClick={() => { setEditingId(null); setSupplierForm(emptySupplier); setShowSupplierForm(v => !v); }}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
             >
               <Plus size={16} />
@@ -217,7 +236,7 @@ export default function SuppliersView({ session, userProfile }) {
           {showSupplierForm && (
             <form onSubmit={handleCreateSupplier} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
               <h4 className="font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
-                <Building size={16} className="text-blue-500" /> Nuevo proveedor
+                <Building size={16} className="text-blue-500" /> {editingId ? 'Editar proveedor' : 'Nuevo proveedor'}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
@@ -249,6 +268,10 @@ export default function SuppliersView({ session, userProfile }) {
                     {SUPPLIER_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Monto habitual ($, opcional)</label>
+                  <input type="number" min="0" step="0.01" value={supplierForm.default_amount} onChange={e => setSupplierForm(prev => ({ ...prev, default_amount: e.target.value }))} placeholder="Ej: 85000" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas</label>
@@ -259,8 +282,12 @@ export default function SuppliersView({ session, userProfile }) {
                   className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 />
               </div>
+              <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-ink-mid cursor-pointer">
+                <input type="checkbox" checked={supplierForm.recurring} onChange={e => setSupplierForm(prev => ({ ...prev, recurring: e.target.checked }))} className="rounded" />
+                Gasto mensual recurrente (lo pago todos los meses)
+              </label>
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setShowSupplierForm(false)} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">Cancelar</button>
+                <button type="button" onClick={() => { setShowSupplierForm(false); setEditingId(null); setSupplierForm(emptySupplier); }} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors">Cancelar</button>
                 <button type="submit" disabled={saving} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                   Guardar
@@ -299,6 +326,13 @@ export default function SuppliersView({ session, userProfile }) {
                             {supplierOrders.length} órdenes
                           </span>
                         )}
+                        <button
+                          onClick={() => handleEditSupplier(s)}
+                          className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors"
+                          title="Editar proveedor"
+                        >
+                          <Pencil size={15} />
+                        </button>
                         <button
                           onClick={() => setExpandedSupplierId(isExpanded ? null : s.id)}
                           className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
@@ -357,7 +391,15 @@ export default function SuppliersView({ session, userProfile }) {
                   <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Proveedor *</label>
                   <select
                     value={orderForm.supplier_id}
-                    onChange={e => setOrderForm(prev => ({ ...prev, supplier_id: e.target.value }))}
+                    onChange={e => {
+                      const sup = suppliers.find(x => x.id === e.target.value);
+                      setOrderForm(prev => ({
+                        ...prev,
+                        supplier_id: e.target.value,
+                        amount: prev.amount || (sup?.default_amount != null ? String(sup.default_amount) : ''),
+                        description: prev.description || (sup ? `${sup.category || 'Servicio'} - ${new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}` : ''),
+                      }));
+                    }}
                     required
                     className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-emerald-500 outline-none"
                   >
