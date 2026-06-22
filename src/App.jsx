@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Bell, Sun, Moon } from 'lucide-react';
 import { VIEWS } from './lib/constants';
@@ -91,6 +91,15 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const view = location.pathname;
+  const adminRedirected = useRef(false);
+  useEffect(() => {
+    // Al loguearse, el admin/super-admin aterriza en su panel (no en el dashboard de residente).
+    if (adminRedirected.current || !userProfile) return;
+    adminRedirected.current = true;
+    if (location.pathname !== VIEWS.DASHBOARD) return;
+    if (userProfile.role === 'admin') navigate(VIEWS.ADMIN, { replace: true });
+    else if (userProfile.role === 'super_admin') navigate(VIEWS.SUPER_ADMIN, { replace: true });
+  }, [userProfile, location.pathname, navigate]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [realtimeBadge, setRealtimeBadge] = useState(0);

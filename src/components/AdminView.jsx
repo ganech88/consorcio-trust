@@ -4,7 +4,7 @@ import { VIEWS } from '../lib/constants';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home, Wallet, BarChart3,
-  LayoutDashboard,
+  ArrowLeft,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -26,25 +26,59 @@ import ConsorcioTab from './admin/ConsorcioTab';
 import AdminHome from './admin/AdminHome';
 import { fetchAdminPendingCounts } from '../services/data.service';
 
-const TABS = [
-  { id: 'inicio',        label: 'Inicio',         icon: LayoutDashboard },
-  { id: 'usuarios',      label: 'Usuarios',       icon: Users },
-  { id: 'unidades',      label: 'Unidades',       icon: Home },
-  { id: 'claims',        label: 'Reclamos',       icon: AlertCircle },
-  { id: 'expenses',      label: 'Expensas',       icon: DollarSign },
-  { id: 'liquidacion',   label: 'Liquidación',    icon: Receipt },
-  { id: 'ctacte',        label: 'Cta. Cte.',      icon: Wallet },
-  { id: 'rendicion',     label: 'Rendición',      icon: BarChart3 },
-  { id: 'multas',        label: 'Multas',         icon: Gavel },
-  { id: 'reservations',  label: 'Reservas',       icon: Calendar },
-  { id: 'announcements', label: 'Comunicados',    icon: Megaphone },
-  { id: 'documents',     label: 'Documentos',     icon: FileText },
-  { id: 'maintenance',   label: 'Mantenimiento',  icon: Wrench },
-  { id: 'seguros',       label: 'Seguros',        icon: ShieldCheck },
-  { id: 'presupuestos',  label: 'Presupuestos',   icon: ClipboardList },
-  { id: 'cobranzas',     label: 'Cobranzas',      icon: HelpCircle },
-  { id: 'consorcio',     label: 'Consorcio',      icon: Building2 },
+const SECTIONS = {
+  usuarios:      { label: 'Usuarios',      icon: Users },
+  unidades:      { label: 'Unidades',      icon: Home },
+  claims:        { label: 'Reclamos',      icon: AlertCircle },
+  expenses:      { label: 'Expensas',      icon: DollarSign },
+  liquidacion:   { label: 'Liquidación',   icon: Receipt },
+  ctacte:        { label: 'Cta. Cte.',     icon: Wallet },
+  rendicion:     { label: 'Rendición',     icon: BarChart3 },
+  multas:        { label: 'Multas',        icon: Gavel },
+  reservations:  { label: 'Reservas',      icon: Calendar },
+  announcements: { label: 'Comunicados',   icon: Megaphone },
+  documents:     { label: 'Documentos',    icon: FileText },
+  maintenance:   { label: 'Mantenimiento', icon: Wrench },
+  seguros:       { label: 'Seguros',       icon: ShieldCheck },
+  presupuestos:  { label: 'Presupuestos',  icon: ClipboardList },
+  cobranzas:     { label: 'Cobranzas',     icon: HelpCircle },
+  consorcio:     { label: 'Consorcio',     icon: Building2 },
+};
+
+const GROUPS = [
+  { title: 'Cobranzas y expensas', ids: ['expenses', 'liquidacion', 'ctacte', 'cobranzas', 'rendicion'] },
+  { title: 'Comunidad',            ids: ['claims', 'reservations', 'announcements', 'documents'] },
+  { title: 'Administración',       ids: ['usuarios', 'unidades', 'multas', 'maintenance', 'seguros', 'presupuestos', 'consorcio'] },
 ];
+
+function badgeFor(id, counts) {
+  if (id === 'reservations') return counts.reservas;
+  if (id === 'expenses') return counts.pagos;
+  if (id === 'claims') return counts.reclamos;
+  return 0;
+}
+
+function renderSection(id, session, userProfile) {
+  switch (id) {
+    case 'usuarios':      return <UsersTab userProfile={userProfile} />;
+    case 'unidades':      return <UnitsTab userProfile={userProfile} />;
+    case 'claims':        return <ClaimsTab session={session} userProfile={userProfile} />;
+    case 'expenses':      return <ExpensesTab session={session} userProfile={userProfile} />;
+    case 'liquidacion':   return <LiquidacionTab session={session} userProfile={userProfile} />;
+    case 'ctacte':        return <LedgerTab userProfile={userProfile} />;
+    case 'rendicion':     return <RendicionTab userProfile={userProfile} />;
+    case 'multas':        return <FinesTab session={session} userProfile={userProfile} />;
+    case 'reservations':  return <ReservationsTab />;
+    case 'announcements': return <AnnouncementsTab session={session} userProfile={userProfile} />;
+    case 'documents':     return <DocumentsTab session={session} userProfile={userProfile} />;
+    case 'maintenance':   return <MaintenanceTab session={session} userProfile={userProfile} />;
+    case 'seguros':       return <InsuranceTab session={session} userProfile={userProfile} />;
+    case 'presupuestos':  return <BudgetsTab session={session} userProfile={userProfile} />;
+    case 'cobranzas':     return <CollectionsTab session={session} userProfile={userProfile} />;
+    case 'consorcio':     return <ConsorcioTab session={session} userProfile={userProfile} />;
+    default:              return null;
+  }
+}
 
 export default function AdminView({ session, userProfile }) {
   const navigate = useNavigate();
@@ -54,7 +88,6 @@ export default function AdminView({ session, userProfile }) {
   const isAdmin = !!userProfile && ['admin', 'super_admin'].includes(userProfile.role);
 
   useEffect(() => {
-    // Si un residente cae en /admin (ej: URL vieja), lo mandamos al inicio en vez de mostrar un cartel feo.
     if (userProfile && !isAdmin) navigate(VIEWS.DASHBOARD, { replace: true });
   }, [userProfile, isAdmin, navigate]);
 
@@ -63,69 +96,72 @@ export default function AdminView({ session, userProfile }) {
     fetchAdminPendingCounts(userProfile.consortium_id).then(setCounts).catch(() => {});
   }, [isAdmin, userProfile?.consortium_id, activeTab]);
 
-  if (!isAdmin) {
-    return null;
+  if (!isAdmin) return null;
+
+  const section = SECTIONS[activeTab];
+
+  // Vista de una sección (con botón Volver)
+  if (activeTab !== 'inicio' && section) {
+    const Icon = section.icon;
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('inicio')}
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-ink-mid hover:text-slate-800 dark:hover:text-ink-hi bg-white dark:bg-surface-panel border border-slate-200 dark:border-white/[0.07] rounded-xl px-3 py-2 transition-colors shrink-0"
+          >
+            <ArrowLeft size={16} /> Panel
+          </button>
+          <h3 className="font-bold text-slate-800 dark:text-ink-hi text-lg flex items-center gap-2 min-w-0">
+            <Icon size={20} className="text-brand-500 shrink-0" />
+            <span className="truncate">{section.label}</span>
+          </h3>
+        </div>
+        {renderSection(activeTab, session, userProfile)}
+      </div>
+    );
   }
 
+  // Home / menú de botones
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-6 rounded-2xl text-white shadow-lg">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <ShieldCheck size={24} />
           Panel de Administrador
         </h3>
-        <p className="text-slate-300 mt-1 text-sm">
-          Gestioná reclamos, expensas, liquidaciones, reservas, comunicados y documentos
-        </p>
+        <p className="text-slate-300 mt-1 text-sm">Todo lo que administrás, en un solo lugar.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-surface-panel p-1 rounded-2xl overflow-x-auto">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          const badge = tab.id === 'reservations' ? counts.reservas
-            : tab.id === 'expenses' ? counts.pagos
-            : tab.id === 'claims' ? counts.reclamos : 0;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                isActive
-                  ? 'bg-white dark:bg-surface-panel2 text-slate-800 dark:text-ink-hi'
-                  : 'text-slate-500 dark:text-ink-mid hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              <Icon size={14} />
-              {tab.label}
-              {badge > 0 && (
-                <span className="ml-1 min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold">{badge}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <AdminHome counts={counts} onGo={setActiveTab} userProfile={userProfile} />
 
-      {/* Contenido */}
-      {activeTab === 'inicio'        && <AdminHome counts={counts} onGo={setActiveTab} userProfile={userProfile} />}
-      {activeTab === 'usuarios'      && <UsersTab userProfile={userProfile} />}
-      {activeTab === 'unidades'      && <UnitsTab userProfile={userProfile} />}
-      {activeTab === 'claims'        && <ClaimsTab session={session} userProfile={userProfile} />}
-      {activeTab === 'expenses'      && <ExpensesTab session={session} userProfile={userProfile} />}
-      {activeTab === 'liquidacion'   && <LiquidacionTab session={session} userProfile={userProfile} />}
-      {activeTab === 'ctacte'        && <LedgerTab userProfile={userProfile} />}
-      {activeTab === 'rendicion'     && <RendicionTab userProfile={userProfile} />}
-      {activeTab === 'multas'        && <FinesTab session={session} userProfile={userProfile} />}
-      {activeTab === 'reservations'  && <ReservationsTab />}
-      {activeTab === 'announcements' && <AnnouncementsTab session={session} userProfile={userProfile} />}
-      {activeTab === 'documents'     && <DocumentsTab session={session} userProfile={userProfile} />}
-      {activeTab === 'maintenance'   && <MaintenanceTab session={session} userProfile={userProfile} />}
-      {activeTab === 'seguros'       && <InsuranceTab session={session} userProfile={userProfile} />}
-      {activeTab === 'presupuestos'  && <BudgetsTab session={session} userProfile={userProfile} />}
-      {activeTab === 'cobranzas'     && <CollectionsTab session={session} userProfile={userProfile} />}
-      {activeTab === 'consorcio'     && <ConsorcioTab session={session} userProfile={userProfile} />}
+      {GROUPS.map(g => (
+        <div key={g.title}>
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">{g.title}</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {g.ids.map(id => {
+              const sec = SECTIONS[id];
+              const Icon = sec.icon;
+              const badge = badgeFor(id, counts);
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className="relative bg-white dark:bg-surface-panel border border-slate-100 dark:border-white/[0.07] rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-brand-300 dark:hover:border-brand-600 hover:shadow-sm transition-all"
+                >
+                  {badge > 0 && (
+                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold">{badge}</span>
+                  )}
+                  <div className="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-400/[0.14] flex items-center justify-center">
+                    <Icon size={20} className="text-brand-600 dark:text-brand-400" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-ink-mid text-center leading-tight">{sec.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
