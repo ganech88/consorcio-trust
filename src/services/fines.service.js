@@ -90,3 +90,23 @@ export async function fetchFinesSummaryByPeriod(consortiumId, period) {
   if (error) { console.warn('fetchFinesSummaryByPeriod:', error.message); return 0; }
   return (data || []).reduce((sum, f) => sum + Number(f.amount), 0);
 }
+
+// Todas las multas activas del consorcio (para mostrar el detalle a todos los
+// miembros; cada uno paga solo la suya). Requiere la policy de la migracion 064.
+export async function fetchConsortiumFines(consortiumId) {
+  if (!consortiumId) return [];
+  const { data, error } = await supabase
+    .from('fines')
+    .select('id, amount, reason, status, fine_date, period, unit_id, user_id, notes')
+    .eq('consortium_id', consortiumId)
+    .eq('status', 'active')
+    .order('fine_date', { ascending: false });
+  if (error) { console.warn('fetchConsortiumFines:', error.message); return []; }
+  const unitIds = [...new Set((data || []).map(f => f.unit_id).filter(Boolean))];
+  let unitName = {};
+  if (unitIds.length) {
+    const { data: units } = await supabase.from('units').select('id, name').in('id', unitIds);
+    unitName = Object.fromEntries((units || []).map(u => [u.id, u.name]));
+  }
+  return (data || []).map(f => ({ ...f, unit_name: f.unit_id ? (unitName[f.unit_id] || null) : null }));
+}

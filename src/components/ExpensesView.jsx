@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel, UploadCloud } from 'lucide-react';
-import { fetchExpenses, fetchMyFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof } from '../services/data.service';
+import { fetchExpenses, fetchConsortiumFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof } from '../services/data.service';
 import { useToast } from './Toast';
 import { useData } from '../context/DataContext';
 
@@ -96,13 +96,6 @@ function PeriodReportModal({ item, onClose, onReported }) {
   );
 }
 
-const FINE_STATUS_LABELS = {
-  active:    'Pendiente',
-  paid:      'Pagada',
-  cancelled: 'Anulada',
-  waived:    'Condonada',
-};
-
 export default function ExpensesView({ session, userProfile }) {
   const toast = useToast();
   const { payments: informedPayments } = useData();
@@ -118,7 +111,7 @@ export default function ExpensesView({ session, userProfile }) {
     if (!userProfile?.consortium_id) return;
     Promise.all([
       fetchExpenses(userProfile.consortium_id),
-      fetchMyFines(session?.user?.id),
+      fetchConsortiumFines(userProfile.consortium_id),
       fetchUserPeriodItems(session?.user?.id),
       fetchConsortium(userProfile.consortium_id),
     ])
@@ -132,8 +125,10 @@ export default function ExpensesView({ session, userProfile }) {
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, session?.user?.id, toast]);
 
+  const myUserId = session?.user?.id;
   const activeFines = fines.filter(f => f.status === 'active');
-  const totalFines = activeFines.reduce((s, f) => s + Number(f.amount), 0);
+  const myActiveFines = activeFines.filter(f => f.user_id === myUserId);
+  const totalFines = myActiveFines.reduce((s, f) => s + Number(f.amount), 0);
   const myPending = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + Number(it.amount || 0), 0);
   const totalPending = myPending + totalFines;
 
@@ -305,36 +300,41 @@ export default function ExpensesView({ session, userProfile }) {
         </div>
       )}
 
-      {/* Multas activas */}
+      {/* Multas del edificio: las propias se pagan, las ajenas son informativas */}
       {activeFines.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-red-400 dark:text-red-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
-            <Gavel size={13} /> Multas aplicadas ({activeFines.length})
+          <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+            <Gavel size={13} /> Multas del periodo ({activeFines.length})
           </h4>
           <div className="space-y-2">
-            {activeFines.map(fine => (
-              <div key={fine.id} className="bg-red-50 dark:bg-red-400/[0.12] rounded-2xl border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                  <Gavel size={16} className="text-red-500 dark:text-red-400" />
+            {activeFines.map(fine => {
+              const mine = fine.user_id === myUserId;
+              return (
+                <div key={fine.id} className={`rounded-2xl border p-4 flex items-start gap-3 ${mine ? 'bg-red-50 dark:bg-red-400/[0.12] border-red-200 dark:border-red-800' : 'bg-white dark:bg-surface-panel border-slate-100 dark:border-white/[0.07]'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${mine ? 'bg-red-100 dark:bg-red-900/40' : 'bg-slate-100 dark:bg-surface-panel2'}`}>
+                    <Gavel size={16} className={mine ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-ink-low'} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm ${mine ? 'text-red-800 dark:text-red-200' : 'text-slate-700 dark:text-ink-hi'}`}>
+                      {fine.unit_name ? `Unidad ${fine.unit_name}` : 'Unidad'} - {fine.reason}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
+                      {new Date(fine.fine_date).toLocaleDateString('es-AR')}{fine.period ? ` - Periodo ${fine.period}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`font-bold ${mine ? 'text-red-700 dark:text-red-400' : 'text-slate-500 dark:text-ink-mid'}`}>{formatCurrency(fine.amount)}</p>
+                    <span className={`text-[10px] font-bold uppercase ${mine ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-ink-low'}`}>{mine ? 'La pagas vos' : 'Otra unidad'}</span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-red-800 dark:text-red-200 text-sm">{fine.reason}</p>
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">
-                    {new Date(fine.fine_date).toLocaleDateString('es-AR')}
-                    {fine.period ? ` · Periodo ${fine.period}` : ''}
-                  </p>
-                  {fine.notes && (<p className="text-xs text-red-400 dark:text-red-500 mt-1">{fine.notes}</p>)}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-red-700 dark:text-red-400">{formatCurrency(fine.amount)}</p>
-                  <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase">{FINE_STATUS_LABELS[fine.status]}</span>
-                </div>
+              );
+            })}
+            {totalFines > 0 && (
+              <div className="flex items-center justify-between bg-red-100 dark:bg-red-400/[0.14] rounded-xl px-4 py-2.5">
+                <span className="text-xs font-bold text-red-700 dark:text-red-400">Tus multas (las pagas vos)</span>
+                <span className="font-bold text-red-700 dark:text-red-400">{formatCurrency(totalFines)}</span>
               </div>
-            ))}
-            <div className="flex items-center justify-between bg-red-100 dark:bg-red-400/[0.14] rounded-xl px-4 py-2.5">
-              <span className="text-xs font-bold text-red-700 dark:text-red-400">Total multas</span>
-              <span className="font-bold text-red-700 dark:text-red-400">{formatCurrency(totalFines)}</span>
-            </div>
+            )}
           </div>
         </div>
       )}
