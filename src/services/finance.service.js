@@ -69,3 +69,19 @@ export async function fetchMonthlyFinanceSummary(consortiumId) {
 
   return Object.entries(byMonth).map(([month, total]) => ({ month, total }));
 }
+
+// Suma de egresos (expenses_log) de un mes 'YYYY-MM' para sugerir el total de la liquidacion.
+export async function fetchEgresosTotalForPeriod(consortiumId, period) {
+  if (!consortiumId || !period) return 0;
+  const start = period + '-01';
+  const [y, m] = period.split('-').map(Number);
+  const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+  const { data, error } = await supabase
+    .from('expenses_log')
+    .select('amount')
+    .eq('consortium_id', consortiumId)
+    .gte('date', start)
+    .lt('date', next);
+  if (error) { console.warn('egresos total:', error.message); return 0; }
+  return (data || []).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+}

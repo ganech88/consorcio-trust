@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw, FileText } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
-  approvePeriodItem, rejectPeriodItem, deletePeriodItems, getSignedComprobanteUrl,
+  approvePeriodItem, rejectPeriodItem, deletePeriodItems, getSignedComprobanteUrl, fetchEgresosTotalForPeriod,
 } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
@@ -18,6 +18,7 @@ export default function LiquidacionTab({ session, userProfile }) {
   const [periodItems, setPeriodItems] = useState({});
   const [loadingItems, setLoadingItems] = useState(null);
   const [decidingItem, setDecidingItem] = useState(null);
+  const [egresosTotal, setEgresosTotal] = useState(0);
   const [form, setForm] = useState({
     period: new Date().toISOString().slice(0, 7),
     totalAmount: '',
@@ -31,6 +32,11 @@ export default function LiquidacionTab({ session, userProfile }) {
       .catch(e => toast.error(e.message, 'Error al cargar períodos'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, toast]);
+
+  useEffect(() => {
+    if (!userProfile?.consortium_id || !form.period) { setEgresosTotal(0); return; }
+    fetchEgresosTotalForPeriod(userProfile.consortium_id, form.period).then(setEgresosTotal).catch(() => setEgresosTotal(0));
+  }, [userProfile?.consortium_id, form.period]);
 
   function setField(k, v) { setForm(prev => ({ ...prev, [k]: v })); }
 
@@ -203,6 +209,17 @@ export default function LiquidacionTab({ session, userProfile }) {
             />
           </div>
         </div>
+
+        {egresosTotal > 0 && (
+          <div className="flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-200 dark:border-emerald-800 rounded-xl px-3 py-2.5">
+            <span className="text-xs text-emerald-700 dark:text-emerald-400">
+              Egresos cargados este mes: <strong>${egresosTotal.toLocaleString('es-AR')}</strong>
+            </span>
+            <button type="button" onClick={() => setField('totalAmount', String(egresosTotal))} className="text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition-colors shrink-0">
+              Usar como total
+            </button>
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-slate-400 dark:text-ink-low">
