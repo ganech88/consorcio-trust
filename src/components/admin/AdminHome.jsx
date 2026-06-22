@@ -2,7 +2,7 @@ import { Calendar, Banknote, AlertCircle, ChevronRight, CheckCircle2 } from 'luc
 
 const CARDS = [
   { key: 'reservas', tab: 'reservations', label: 'Reservas por aprobar', icon: Calendar,    accent: 'text-blue-500' },
-  { key: 'pagos',    tab: 'expenses',     label: 'Pagos por aprobar',    icon: Banknote,    accent: 'text-emerald-500' },
+  { key: 'pagos',    tab: 'liquidacion',  label: 'Pagos por aprobar',    icon: Banknote,    accent: 'text-emerald-500' },
   { key: 'reclamos', tab: 'claims',       label: 'Reclamos abiertos',    icon: AlertCircle, accent: 'text-amber-500' },
 ];
 

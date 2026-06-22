@@ -7,6 +7,7 @@ import {
 import { fetchUnits } from '../../services/units.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState } from './shared';
+import InformedPaymentsCard from './InformedPaymentsCard';
 
 export default function LiquidacionTab({ session, userProfile }) {
   const toast = useToast();
@@ -162,6 +163,7 @@ export default function LiquidacionTab({ session, userProfile }) {
 
   return (
     <div className="space-y-6">
+      <InformedPaymentsCard userProfile={userProfile} />
       {/* Formulario de nueva liquidación */}
       <form onSubmit={handleCreatePeriod} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
         <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm">Nueva liquidación mensual</h4>

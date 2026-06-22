@@ -46,14 +46,14 @@ const SECTIONS = {
 };
 
 const GROUPS = [
-  { title: 'Cobranzas y expensas', ids: ['expenses', 'liquidacion', 'ctacte', 'cobranzas', 'rendicion'] },
+  { title: 'Cobranzas y expensas', ids: ['liquidacion', 'ctacte', 'rendicion'] },
   { title: 'Comunidad',            ids: ['claims', 'reservations', 'announcements', 'documents'] },
   { title: 'Administración',       ids: ['usuarios', 'unidades', 'multas', 'maintenance', 'seguros', 'presupuestos', 'consorcio'] },
 ];
 
 function badgeFor(id, counts) {
   if (id === 'reservations') return counts.reservas;
-  if (id === 'expenses') return counts.pagos;
+  if (id === 'liquidacion') return counts.pagos;
   if (id === 'claims') return counts.reclamos;
   return 0;
 }
