@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Plus, Loader2, DollarSign } from 'lucide-react';
+import { TrendingUp, Plus, Loader2, DollarSign, UploadCloud, FileText } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -7,6 +7,8 @@ import {
   fetchExpensesLog,
   addExpenseLog,
   fetchMonthlyFinanceSummary,
+  uploadAttachment,
+  getSignedComprobanteUrl,
 } from '../services/data.service';
 import { useToast } from './Toast';
 
@@ -65,6 +67,7 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
     provider: '',
   });
   const [saving, setSaving] = useState(false);
+  const [file, setFile] = useState(null);
 
   function setField(k, v) { setForm(prev => ({ ...prev, [k]: v })); }
 
@@ -73,12 +76,15 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
     if (!form.amount || Number(form.amount) <= 0) { toast.error('Ingresá un monto válido'); return; }
     setSaving(true);
     try {
+      let receiptUrl = null;
+      if (file) receiptUrl = await uploadAttachment(file, 'egresos');
       const item = await addExpenseLog({
         description: form.description,
         category: form.category,
         amount: Number(form.amount),
         date: form.date,
         provider: form.provider || null,
+        receiptUrl,
         consortiumId: userProfile?.consortium_id,
         createdBy: session.user.id,
       });
@@ -91,6 +97,7 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
         date: new Date().toISOString().slice(0, 10),
         provider: '',
       });
+      setFile(null);
     } catch (e) {
       toast.error(e.message, 'Error al registrar gasto');
     } finally {
@@ -163,6 +170,15 @@ function AddExpenseForm({ session, userProfile, onAdded }) {
             className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Comprobante (PDF o imagen, opcional)</label>
+        <label className={`flex items-center gap-2 cursor-pointer border-2 border-dashed rounded-xl px-3 py-3 text-sm transition-colors ${file ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-400/[0.10] text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-white/[0.09] text-slate-500 dark:text-ink-mid hover:border-slate-300'}`}>
+          <UploadCloud size={16} />
+          <span className="truncate">{file ? file.name : 'Adjuntar comprobante'}</span>
+          <input type="file" accept="image/*,application/pdf" className="hidden" onChange={e => setFile(e.target.files?.[0] || null)} />
+        </label>
       </div>
 
       <button
@@ -387,6 +403,11 @@ export default function FinanceView({ session, userProfile }) {
                   <p className="font-bold text-slate-800 dark:text-ink-hi shrink-0 text-right">
                     {formatCurrency(e.amount)}
                   </p>
+                  {e.receipt_url && (
+                    <button onClick={async () => { const u = await getSignedComprobanteUrl(e.receipt_url); if (u) window.open(u, '_blank', 'noopener'); }} className="p-1.5 rounded-lg text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-white/[0.06] transition-colors shrink-0" title="Ver comprobante">
+                      <FileText size={16} />
+                    </button>
+                  )}
                 </div>
               );
             })}

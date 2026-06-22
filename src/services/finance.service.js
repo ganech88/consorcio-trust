@@ -13,7 +13,7 @@ export async function fetchExpensesLog(consortiumId) {
   return data || [];
 }
 
-export async function addExpenseLog({ description, category, amount, date, provider, consortiumId, createdBy }) {
+export async function addExpenseLog({ description, category, amount, date, provider, receiptUrl, consortiumId, createdBy }) {
   const { data, error } = await supabase
     .from('expenses_log')
     .insert([{
@@ -22,6 +22,7 @@ export async function addExpenseLog({ description, category, amount, date, provi
       amount: Number(amount),
       date,
       provider: provider || null,
+      receipt_url: receiptUrl || null,
       consortium_id: consortiumId || null,
       created_by: createdBy,
     }])
