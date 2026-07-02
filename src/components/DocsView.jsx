@@ -30,7 +30,10 @@ export default function DocsView() {
   const [activeCategory, setActiveCategory] = useState('all');
 
   useEffect(() => {
-    fetchConsortiumDocuments(userProfile?.consortium_id)
+    // Esperar a que el perfil cargue: si consortium_id aún no existe, el fetch fallaba
+    // o devolvía vacío en un refresh directo sobre esta vista.
+    if (!userProfile?.consortium_id) return;
+    fetchConsortiumDocuments(userProfile.consortium_id)
       .then(rows => setDocs((rows || []).map(d => ({
         ...d,
         name: d.name ?? d.title ?? 'Documento',
@@ -39,7 +42,7 @@ export default function DocsView() {
       }))))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userProfile?.consortium_id]);
 
   const filtered = docs.filter(doc => {
     const matchesSearch = (doc.name || '').toLowerCase().includes(search.toLowerCase());

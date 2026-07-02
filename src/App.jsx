@@ -102,6 +102,10 @@ function AppContent() {
   }, [userProfile, location.pathname, navigate]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  // Ref espejo para leer el valor actual dentro del callback de realtime
+  // (evita closure viejo: antes el badge se incrementaba aunque el panel estuviera abierto)
+  const showNotificationsRef = useRef(showNotifications);
+  showNotificationsRef.current = showNotifications;
   const [realtimeBadge, setRealtimeBadge] = useState(0);
   const { dark, toggle: toggleTheme } = useTheme();
   const toast = useToast();
@@ -125,7 +129,7 @@ function AppContent() {
         (payload) => {
           const updated = payload.new;
           setReclamos(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
-          if (!showNotifications) setRealtimeBadge(n => n + 1);
+          if (!showNotificationsRef.current) setRealtimeBadge(n => n + 1);
           const statusLabel =
             updated.status === 'closed'   ? 'fue resuelto' :
             updated.status === 'pending'  ? 'está en proceso' : 'fue actualizado';

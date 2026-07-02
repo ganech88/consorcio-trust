@@ -13,15 +13,24 @@ export default function Modal({ children, onClose, title }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // Prevenir scroll del body
+  // Prevenir scroll del body (compensando el ancho de la scrollbar para evitar salto de layout)
   useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
   }, []);
 
-  // Focus trap básico
+  // Enfocar el modal al abrir y devolver el foco al elemento anterior al cerrar (accesibilidad)
   useEffect(() => {
+    const previouslyFocused = document.activeElement;
     dialogRef.current?.focus();
+    return () => {
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
+    };
   }, []);
 
   return (

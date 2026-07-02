@@ -89,7 +89,7 @@ export default function ExpensesTab({ session, userProfile }) {
   const [pagination, setPagination] = useState(null);
 
   const loadPage = useCallback((p) => {
-    if (!userProfile?.consortium_id) return;
+    if (!userProfile?.consortium_id) { setLoading(false); return; }
     setLoading(true);
     fetchExpenses(userProfile.consortium_id, { page: p })
       .then(result => {
