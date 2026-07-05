@@ -20,9 +20,15 @@ export default function LoginPage({ onLogin }) {
         const { session } = await signIn(email, password);
         if (session) onLogin(session);
       } else {
-        await signUp(email, password);
-        toast.success('Registro exitoso. Ya puedes iniciar sesión.');
-        setIsLoginView(true);
+        const { session } = await signUp(email, password);
+        if (session) {
+          // Sin confirmación de email: la cuenta ya queda activa.
+          onLogin(session);
+        } else {
+          // Con confirmación de email activada: hay que verificar antes de entrar.
+          toast.success('Te enviamos un correo para confirmar tu cuenta. Revisá tu casilla (y la carpeta de spam).');
+          setIsLoginView(true);
+        }
       }
     } catch (error) {
       toast.error(error.message, 'Error de autenticación');
