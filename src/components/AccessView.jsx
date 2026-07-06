@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
-  Package, UserCheck, Plus, Trash2, Loader2, CheckCircle, Clock,
+  UserCheck, Plus, Trash2, Loader2, CheckCircle,
   DoorOpen, QrCode, CalendarCheck,
 } from 'lucide-react';
 import {
   fetchVisitors, addVisitor, removeVisitor,
-  fetchPackages, fetchAllPackages, registerPackage, deliverPackage,
   fetchAuthorizedVisitors, createAuthorizedVisitor, checkInVisitor,
 } from '../services/data.service';
 import { useToast } from './Toast';
@@ -481,176 +480,6 @@ function VisitorsSection({ session, userProfile }) {
   );
 }
 
-// ─── Packages Section ─────────────────────────────────────────────────────────
-
-function PackagesSection({ session, userProfile, isAdmin }) {
-  const toast = useToast();
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ description: '', unitId: '', userId: '' });
-  const [saving, setSaving] = useState(false);
-  const [delivering, setDelivering] = useState(null);
-
-  useEffect(() => {
-    const fetcher = isAdmin ? fetchAllPackages : fetchPackages;
-    const arg = isAdmin ? undefined : session.user.id;
-    fetcher(arg)
-      .then(setPackages)
-      .catch(e => toast.error(e.message, 'Error al cargar encomiendas'))
-      .finally(() => setLoading(false));
-  }, [isAdmin, session.user.id, toast]);
-
-  async function handleRegister(e) {
-    e.preventDefault();
-    if (!form.description.trim()) { toast.error('Ingresá una descripción'); return; }
-    setSaving(true);
-    try {
-      const pkg = await registerPackage({
-        unitId: isAdmin ? (form.unitId.trim() || 'N/A') : (userProfile?.unit_id ?? ''),
-        userId: isAdmin ? (form.userId || null) : session.user.id,
-        description: form.description.trim(),
-        consortiumId: userProfile?.consortium_id,
-      });
-      setPackages(prev => [pkg, ...prev]);
-      setForm({ description: '', unitId: '', userId: '' });
-      setShowForm(false);
-      toast.success('Encomienda registrada');
-    } catch (e) {
-      toast.error(e.message, 'Error al registrar encomienda');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDeliver(id) {
-    setDelivering(id);
-    try {
-      const updated = await deliverPackage(id);
-      setPackages(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
-      toast.success('Entregado al propietario');
-    } catch (e) {
-      toast.error(e.message, 'Error al registrar entrega');
-    } finally {
-      setDelivering(null);
-    }
-  }
-
-  const pending   = packages.filter(p => !p.delivered_at);
-
-  return (
-    <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
-      <div className="p-5 border-b border-slate-100 dark:border-white/[0.07] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Package size={18} className="text-amber-500" />
-          <h4 className="font-bold text-slate-800 dark:text-ink-hi">
-            Encomiendas
-            {pending.length > 0 && (
-              <span className="ml-2 bg-amber-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
-                {pending.length}
-              </span>
-            )}
-          </h4>
-        </div>
-        {isAdmin && (
-          <button
-            onClick={() => setShowForm(v => !v)}
-            className="flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
-          >
-            <Plus size={13} />
-            {showForm ? 'Cancelar' : 'Registrar'}
-          </button>
-        )}
-      </div>
-
-      {isAdmin && showForm && (
-        <form onSubmit={handleRegister} className="p-4 bg-slate-50 dark:bg-surface-inset border-b border-slate-100 dark:border-white/[0.07] space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Unidad</label>
-              <input
-                type="text"
-                value={form.unitId}
-                onChange={e => setForm(p => ({ ...p, unitId: e.target.value }))}
-                placeholder="Ej: 3B"
-                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Descripción</label>
-              <input
-                type="text"
-                value={form.description}
-                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                placeholder="Ej: Caja mediana, Amazon"
-                className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
-                required
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
-          >
-            {saving ? <Loader2 size={13} className="animate-spin" /> : <Package size={13} />}
-            Registrar encomienda
-          </button>
-        </form>
-      )}
-
-      <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 size={24} className="animate-spin text-brand-500" />
-          </div>
-        ) : packages.length === 0 ? (
-          <div className="p-8 text-center">
-            <Package size={32} className="mx-auto text-slate-300 dark:text-ink-low mb-2" />
-            <p className="text-slate-400 dark:text-ink-low text-sm">No hay encomiendas registradas</p>
-          </div>
-        ) : (
-          packages.map(pkg => (
-            <div key={pkg.id} className="p-4 flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                pkg.delivered_at ? 'bg-emerald-100 dark:bg-emerald-400/[0.14]' : 'bg-amber-100 dark:bg-amber-400/[0.14]'
-              }`}>
-                {pkg.delivered_at
-                  ? <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400" />
-                  : <Clock size={16} className="text-amber-600 dark:text-amber-400" />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{pkg.description}</p>
-                <p className="text-xs text-slate-400 dark:text-ink-low">
-                  {isAdmin && pkg.unit_id ? `Unidad ${pkg.unit_id} · ` : ''}
-                  Recibido: {formatDateTime(pkg.received_at)}
-                </p>
-                {pkg.delivered_at && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    Entregado: {formatDateTime(pkg.delivered_at)}
-                  </p>
-                )}
-              </div>
-              {isAdmin && !pkg.delivered_at && (
-                <button
-                  onClick={() => handleDeliver(pkg.id)}
-                  disabled={delivering === pkg.id}
-                  className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
-                >
-                  {delivering === pkg.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                  Entregar
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function AccessView({ session, userProfile }) {
   const isAdmin = userProfile?.role === 'admin';
 
@@ -659,19 +488,18 @@ export default function AccessView({ session, userProfile }) {
       <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2 mb-1">
           <DoorOpen size={22} />
-          Accesos y Encomiendas
+          Accesos y Visitas
         </h3>
         <p className="text-brand-100 text-sm">
           {isAdmin
-            ? 'Gestioná visitantes y encomiendas de todos los propietarios'
-            : 'Pre-autorizá visitas y seguí tus encomiendas'
+            ? 'Gestioná los visitantes de todos los propietarios'
+            : 'Pre-autorizá visitas y gestioná tus accesos'
           }
         </p>
       </div>
 
       <PreAuthSection session={session} userProfile={userProfile} isAdmin={isAdmin} />
       <VisitorsSection session={session} userProfile={userProfile} isAdmin={isAdmin} />
-      <PackagesSection session={session} userProfile={userProfile} isAdmin={isAdmin} />
     </div>
   );
 }

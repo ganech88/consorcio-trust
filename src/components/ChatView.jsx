@@ -6,6 +6,7 @@ import {
   fetchMessages,
   sendMessage,
   markMessagesRead,
+  fetchUnreadByConversation,
 } from '../services/data.service';
 import { supabase } from '../lib/supabase';
 import { useData } from '../context/DataContext';
@@ -25,6 +26,7 @@ export default function ChatView({ session, userProfile }) {
   const isAdmin = ['admin', 'super_admin'].includes(userProfile?.role);
 
   const [conversations, setConversations] = useState([]); // bandeja del admin
+  const [unreadByConv, setUnreadByConv] = useState({});    // no-leidos por conversacion (admin)
   const [conversation, setConversation] = useState(null);  // conversacion activa
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
@@ -44,8 +46,11 @@ export default function ChatView({ session, userProfile }) {
     async function init() {
       try {
         if (isAdmin) {
-          const convs = await fetchAllConversations();
-          if (!cancel) setConversations(convs);
+          const convs = await fetchAllConversations(userProfile?.consortium_id);
+          if (cancel) return;
+          setConversations(convs);
+          const unread = await fetchUnreadByConversation(convs.map(c => c.id), userId);
+          if (!cancel) setUnreadByConv(unread);
         } else {
           const conv = await fetchOrCreateConversation(userId, userProfile?.consortium_id);
           if (!cancel) setConversation(conv);
@@ -70,13 +75,23 @@ export default function ChatView({ session, userProfile }) {
         if (cancel) return;
         setMessages(msgs);
         await markMessagesRead(conversation.id, userId);
-        if (!isAdmin) setUnreadChatCount(0);
+        if (!isAdmin) {
+          setUnreadChatCount(0);
+        } else {
+          setUnreadByConv(prev => (prev[conversation.id] ? { ...prev, [conversation.id]: 0 } : prev));
+        }
       } catch (e) {
         if (!cancel) toast.error(e.message, 'Error al cargar mensajes');
       }
     })();
     return () => { cancel = true; };
   }, [conversation?.id, userId, isAdmin, setUnreadChatCount, toast]);
+
+  // El badge global del admin se deriva de los no-leidos por conversacion
+  useEffect(() => {
+    if (!isAdmin) return;
+    setUnreadChatCount(Object.values(unreadByConv).reduce((a, b) => a + b, 0));
+  }, [unreadByConv, isAdmin, setUnreadChatCount]);
 
   // Realtime sobre la conversacion activa
   useEffect(() => {
@@ -172,6 +187,11 @@ export default function ChatView({ session, userProfile }) {
                   {c.last_message_at ? `Ultimo mensaje: ${formatDate(c.last_message_at)}` : 'Sin mensajes aun'}
                 </p>
               </div>
+              {(unreadByConv[c.id] || 0) > 0 && (
+                <span className="min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold shrink-0">
+                  {unreadByConv[c.id] > 9 ? '9+' : unreadByConv[c.id]}
+                </span>
+              )}
             </button>
           ))
         )}

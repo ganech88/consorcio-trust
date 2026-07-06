@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Eye, Search, FolderOpen, Loader2 } from 'lucide-react';
-import { fetchConsortiumDocuments } from '../services/data.service';
+import { fetchConsortiumDocuments, getSignedDocumentUrl } from '../services/data.service';
 import { useData } from '../context/DataContext';
 
 const CATEGORIES = [
@@ -43,6 +43,22 @@ export default function DocsView() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id]);
+
+  // Bucket privado: si el doc tiene file_name (path de storage) generamos una
+  // signed URL al abrir; si solo tiene file_url legacy, se usa como fallback.
+  async function resolveUrl(doc) {
+    return getSignedDocumentUrl(doc.file_name || doc.file_url);
+  }
+
+  async function handleView(doc) {
+    const url = await resolveUrl(doc);
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  async function handleDownload(doc) {
+    const url = await resolveUrl(doc);
+    if (url) downloadFile(url, doc.name);
+  }
 
   const filtered = docs.filter(doc => {
     const matchesSearch = (doc.name || '').toLowerCase().includes(search.toLowerCase());
@@ -143,18 +159,16 @@ export default function DocsView() {
               </div>
 
               <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <a
-                  href={doc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => handleView(doc)}
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-white/[0.07] text-slate-400 dark:text-ink-low hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   aria-label={`Ver ${doc.name}`}
                   title="Ver"
                 >
                   <Eye size={18} />
-                </a>
+                </button>
                 <button
-                  onClick={() => downloadFile(doc.file_url, doc.name)}
+                  onClick={() => handleDownload(doc)}
                   className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-white/[0.07] text-slate-400 dark:text-ink-low hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   aria-label={`Descargar ${doc.name}`}
                   title="Descargar"

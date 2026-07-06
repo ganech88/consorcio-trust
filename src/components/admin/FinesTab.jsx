@@ -5,6 +5,7 @@ import {
   fetchFines, createFine, updateFineStatus, deleteFine,
   fetchConsortiumMembers,
 } from '../../services/data.service';
+import { fetchUnits } from '../../services/units.service';
 import FileUploadInline from '../FileUpload';
 import { useToast } from '../Toast';
 import { FINE_STATUS_LABELS, LoadingSpinner, EmptyState } from './shared';
@@ -14,6 +15,7 @@ export default function FinesTab({ session, userProfile }) {
   const toast = useToast();
   const [fines, setFines] = useState([]);
   const [members, setMembers] = useState([]);
+  const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,12 +38,14 @@ export default function FinesTab({ session, userProfile }) {
     Promise.all([
       fetchFines(userProfile?.consortium_id, { page: p }),
       fetchConsortiumMembers(userProfile?.consortium_id),
+      fetchUnits(userProfile?.consortium_id),
     ])
-      .then(([result, m]) => {
+      .then(([result, m, u]) => {
         setFines(result.data);
         setPagination(result);
         setPage(p);
         setMembers(m);
+        setUnits(u);
       })
       .catch(e => toast.error(e.message))
       .finally(() => setLoading(false));
@@ -64,12 +68,22 @@ export default function FinesTab({ session, userProfile }) {
       toast.error('El monto de la multa debe ser mayor a cero');
       return;
     }
+    // Si no se eligio residente, derivamos el destinatario del ocupante de la
+    // unidad (owner o inquilino) para que la multa le quede visible.
+    let userId = form.user_id || null;
+    if (!userId) {
+      const unit = units.find(u => u.id === form.unit_id);
+      userId = unit?.owner_id || unit?.tenant_id || null;
+      if (!userId) {
+        toast.info('La unidad no tiene ocupante asignado: la multa quedara sin destinatario visible para los residentes.');
+      }
+    }
     setSaving(true);
     try {
       const fine = await createFine({
         consortiumId: userProfile.consortium_id,
         unitId: form.unit_id,
-        userId: form.user_id || null,
+        userId,
         amount: form.amount,
         reason: form.reason,
         period: form.period || null,
@@ -114,6 +128,9 @@ export default function FinesTab({ session, userProfile }) {
 
   const formatCurrency = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+  // fines.unit_id es un UUID; mostramos el nombre legible de la unidad.
+  const unitNameById = Object.fromEntries(units.map(u => [u.id, u.name]));
 
   if (loading) return <LoadingSpinner />;
 
@@ -172,7 +189,7 @@ export default function FinesTab({ session, userProfile }) {
                 <option value="">Seleccionar residente...</option>
                 {members.map(m => (
                   <option key={m.id} value={m.id}>
-                    {m.full_name || 'Sin nombre'}{m.unit_id ? ` — Unidad ${m.unit_id}` : ''}
+                    {m.full_name || 'Sin nombre'}{m.unit_id ? ` — Unidad ${unitNameById[m.unit_id] || m.unit_id}` : ''}
                   </option>
                 ))}
               </select>
@@ -183,14 +200,17 @@ export default function FinesTab({ session, userProfile }) {
               <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">
                 Unidad *
               </label>
-              <input
-                type="text"
+              <select
                 value={form.unit_id}
                 onChange={e => setForm(prev => ({ ...prev, unit_id: e.target.value }))}
-                placeholder="Ej: 3B"
                 className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-red-500 outline-none"
                 required
-              />
+              >
+                <option value="">Seleccionar unidad...</option>
+                {units.map(u => (
+                  <option key={u.id} value={u.id}>Unidad {u.name}</option>
+                ))}
+              </select>
             </div>
 
             {/* Monto */}
@@ -307,7 +327,7 @@ export default function FinesTab({ session, userProfile }) {
                       <Gavel size={14} className="text-red-500 dark:text-red-400" />
                     </div>
                     <span className="text-sm font-bold text-slate-700 dark:text-ink-hi">
-                      U. {fine.unit_id}
+                      U. {unitNameById[fine.unit_id] || fine.unit_id}
                     </span>
                   </div>
 

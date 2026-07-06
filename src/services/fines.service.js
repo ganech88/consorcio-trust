@@ -17,30 +17,6 @@ export async function fetchFines(consortiumId, { page, pageSize } = {}) {
   return data || [];
 }
 
-export async function fetchUnitFines(unitId, consortiumId) {
-  const { data, error } = await supabase
-    .from('fines')
-    .select('*')
-    .eq('unit_id', unitId)
-    .eq('consortium_id', consortiumId)
-    .eq('status', 'active')
-    .order('fine_date', { ascending: false });
-
-  if (error) { console.warn('fetchUnitFines:', error.message); return []; }
-  return data || [];
-}
-
-export async function fetchMyFines(userId) {
-  const { data, error } = await supabase
-    .from('fines')
-    .select('*')
-    .eq('user_id', userId)
-    .order('fine_date', { ascending: false });
-
-  if (error) { console.warn('fetchMyFines:', error.message); return []; }
-  return data || [];
-}
-
 export async function createFine({ consortiumId, unitId, userId, amount, reason, period, notes, appliedBy, attachmentUrl }) {
   const { data, error } = await supabase
     .from('fines')

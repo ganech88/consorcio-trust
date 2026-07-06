@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { FileText, ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2 } from 'lucide-react';
-import { fetchDocuments, updateDocumentStatus, deleteDocument } from '../../services/data.service';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { FileText, ChevronDown, ChevronUp, Check, X, Clock, Loader2, Trash2, Upload, Plus } from 'lucide-react';
+import { fetchDocuments, updateDocumentStatus, deleteDocument, uploadConsortiumDocument, getSignedDocumentUrl } from '../../services/data.service';
 import { useToast } from '../Toast';
 import { DOC_TYPES_MAP, DOC_STATUS, LoadingSpinner, EmptyState } from './shared';
 import Pagination from './Pagination';
@@ -15,6 +15,11 @@ export default function DocumentsTab({ session, userProfile }) {
   const [expanded, setExpanded] = useState(null);
   const [, setPage] = useState(0);
   const [pagination, setPagination] = useState(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [upForm, setUpForm] = useState({ title: '', docType: 'general' });
+  const [upFile, setUpFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const loadPage = useCallback((p) => {
     setLoading(true);
@@ -44,6 +49,38 @@ export default function DocumentsTab({ session, userProfile }) {
     }
   }
 
+  async function handleUpload(e) {
+    e.preventDefault();
+    if (!upForm.title.trim()) { toast.error('Ingresá un título'); return; }
+    if (!upFile) { toast.error('Elegí un archivo PDF'); return; }
+    setUploading(true);
+    try {
+      const doc = await uploadConsortiumDocument(
+        upFile,
+        upForm.title.trim(),
+        upForm.docType,
+        userProfile?.consortium_id,
+        session.user.id,
+      );
+      setDocuments(prev => [{ ...doc, profiles: { full_name: 'Administración', unit_id: null } }, ...prev]);
+      setUpForm({ title: '', docType: 'general' });
+      setUpFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setShowUpload(false);
+      toast.success('Documento subido');
+    } catch (e2) {
+      toast.error(e2.message, 'Error al subir documento');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleOpenFile(doc) {
+    const url = await getSignedDocumentUrl(doc.file_name || doc.file_url);
+    if (!url) { toast.error('No se pudo abrir el archivo'); return; }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   async function handleDelete(doc) {
     try {
       await deleteDocument(doc.id);
@@ -60,6 +97,68 @@ export default function DocumentsTab({ session, userProfile }) {
 
   return (
     <div className="space-y-4">
+      {/* Subir documento del consorcio */}
+      <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
+        <div className="p-4 flex items-center justify-between">
+          <p className="text-sm font-semibold text-slate-600 dark:text-ink-mid">Documentos del consorcio</p>
+          <button
+            onClick={() => setShowUpload(v => !v)}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+          >
+            <Plus size={13} />
+            {showUpload ? 'Cancelar' : 'Subir documento'}
+          </button>
+        </div>
+        {showUpload && (
+          <form onSubmit={handleUpload} className="px-4 pb-4 space-y-3 bg-slate-50 dark:bg-surface-inset">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Título *</label>
+                <input
+                  type="text"
+                  value={upForm.title}
+                  onChange={e => setUpForm(p => ({ ...p, title: e.target.value }))}
+                  placeholder="Ej: Reglamento de copropiedad"
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Tipo</label>
+                <select
+                  value={upForm.docType}
+                  onChange={e => setUpForm(p => ({ ...p, docType: e.target.value }))}
+                  className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {Object.entries(DOC_TYPES_MAP).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Archivo (solo PDF, máx. 10 MB) *</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={e => setUpFile(e.target.files?.[0] || null)}
+                className="w-full text-sm text-slate-600 dark:text-ink-mid file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-blue-50 dark:file:bg-brand-400/[0.14] file:text-blue-700 dark:file:text-brand-400 file:text-xs file:font-semibold hover:file:bg-blue-100 file:cursor-pointer"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={uploading}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+            >
+              {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+              {uploading ? 'Subiendo...' : 'Subir documento'}
+            </button>
+          </form>
+        )}
+      </div>
+
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
         {['all', 'pending', 'under_review', 'approved', 'rejected'].map(s => (
@@ -124,15 +223,13 @@ export default function DocumentsTab({ session, userProfile }) {
                       {doc.description}
                     </p>
                   )}
-                  {doc.file_url && (
-                    <a
-                      href={doc.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {(doc.file_name || doc.file_url) && (
+                    <button
+                      onClick={() => handleOpenFile(doc)}
                       className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-brand-400 hover:underline"
                     >
                       <FileText size={13} /> Ver archivo adjunto
-                    </a>
+                    </button>
                   )}
                   <div>
                     <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">

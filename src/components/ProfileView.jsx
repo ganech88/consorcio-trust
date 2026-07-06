@@ -160,7 +160,9 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500 dark:text-ink-mid">Email verificado</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sí</span>
+            <span className={`font-medium ${session.user.email_confirmed_at ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+              {session.user.email_confirmed_at ? 'Sí' : 'No'}
+            </span>
           </div>
         </div>
       </div>

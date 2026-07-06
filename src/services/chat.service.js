@@ -7,7 +7,21 @@ export async function fetchOrCreateConversation(userId, consortiumId) {
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) {
+    // Si el usuario cambió de consorcio, re-vinculamos la conversación al
+    // consorcio actual para que el admin correcto la vea en su bandeja.
+    if (consortiumId && existing.consortium_id !== consortiumId) {
+      const { data: updated, error } = await supabase
+        .from('conversations')
+        .update({ consortium_id: consortiumId })
+        .eq('id', existing.id)
+        .select()
+        .maybeSingle();
+      if (!error && updated) return updated;
+      return { ...existing, consortium_id: consortiumId };
+    }
+    return existing;
+  }
 
   const { data, error } = await supabase
     .from('conversations')
@@ -19,12 +33,16 @@ export async function fetchOrCreateConversation(userId, consortiumId) {
   return data;
 }
 
-export async function fetchAllConversations() {
-  const { data, error } = await supabase
+export async function fetchAllConversations(consortiumId) {
+  // Hint explícito del FK para desambiguar el embed de profiles.
+  let query = supabase
     .from('conversations')
-    .select('*, profiles(full_name, unit_id)')
+    .select('*, profiles!conversations_user_id_profiles_fkey(full_name, unit_id)')
     .order('last_message_at', { ascending: false });
 
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data, error } = await query;
   if (error) { console.warn('conversations:', error.message); return []; }
   return data || [];
 }
@@ -81,6 +99,48 @@ export async function countUnreadMessages(userId) {
     .from('messages')
     .select('id', { count: 'exact', head: true })
     .eq('conversation_id', conv.id)
+    .neq('sender_id', userId)
+    .is('read_at', null);
+
+  if (error) return 0;
+  return count || 0;
+}
+
+// No-leídos por conversación (para la bandeja del admin).
+export async function fetchUnreadByConversation(conversationIds, userId) {
+  if (!conversationIds?.length) return {};
+  const { data, error } = await supabase
+    .from('messages')
+    .select('conversation_id')
+    .in('conversation_id', conversationIds)
+    .neq('sender_id', userId)
+    .is('read_at', null);
+
+  if (error) { console.warn('fetchUnreadByConversation:', error.message); return {}; }
+  const map = {};
+  (data || []).forEach(m => { map[m.conversation_id] = (map[m.conversation_id] || 0) + 1; });
+  return map;
+}
+
+// Total de no-leídos para el badge global: residente = su conversación;
+// admin = suma de todas las conversaciones del consorcio.
+export async function fetchUnreadChatCount({ userId, isAdmin, consortiumId }) {
+  if (!userId) return 0;
+  if (!isAdmin) return countUnreadMessages(userId);
+  if (!consortiumId) return 0;
+
+  const { data: convs } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('consortium_id', consortiumId);
+
+  const ids = (convs || []).map(c => c.id);
+  if (!ids.length) return 0;
+
+  const { count, error } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .in('conversation_id', ids)
     .neq('sender_id', userId)
     .is('read_at', null);
 

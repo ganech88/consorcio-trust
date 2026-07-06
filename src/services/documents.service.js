@@ -16,7 +16,9 @@ export async function fetchConsortiumDocuments(consortiumId) {
   return data || [];
 }
 
-export async function uploadConsortiumDocument(file, name, category, consortiumId, uploadedBy) {
+// Schema real (migración 019): title, file_name (path en storage), file_url
+// (legacy), user_id (uploader, NOT NULL), doc_type, status, consortium_id.
+export async function uploadConsortiumDocument(file, title, docType, consortiumId, uploadedBy) {
   if (file.type !== 'application/pdf') {
     throw new Error('Solo se permiten archivos PDF.');
   }
@@ -24,32 +26,45 @@ export async function uploadConsortiumDocument(file, name, category, consortiumI
     throw new Error('El archivo supera el límite de 10 MB.');
   }
 
-  const fileName = `${crypto.randomUUID()}.pdf`;
+  const path = `${consortiumId || 'general'}/${crypto.randomUUID()}.pdf`;
 
   const { error: uploadError } = await supabase.storage
     .from('documents')
-    .upload(fileName, file, { contentType: 'application/pdf' });
+    .upload(path, file, { contentType: 'application/pdf' });
 
   if (uploadError) throw uploadError;
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('documents')
-    .getPublicUrl(fileName);
 
   const { data, error } = await supabase
     .from('documents')
     .insert([{
-      name,
-      category: category || 'general',
-      file_path: fileName,
-      file_url: publicUrl,
-      consortium_id: consortiumId || null,
-      uploaded_by: uploadedBy,
+      title,
+      file_name: path,
+      file_url: null, // bucket privado: se resuelve con signed URL al abrir
+      doc_type: docType || 'general',
+      status: 'approved', // subido por la administración, no requiere revisión
+      consortium_id: consortiumId,
+      user_id: uploadedBy,
     }])
-    .select();
+    .select()
+    .single();
 
-  if (error) throw error;
-  return data?.[0];
+  if (error) {
+    // No dejar el archivo huérfano en storage si falló el insert
+    await supabase.storage.from('documents').remove([path]);
+    throw error;
+  }
+  return data;
+}
+
+// Bucket `documents` privado (migración 067): siempre abrir con signed URL.
+export async function getSignedDocumentUrl(pathOrUrl, expiresIn = 3600) {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl; // compat con URLs viejas
+  const { data, error } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(pathOrUrl, expiresIn);
+  if (error) { console.warn('signed url:', error.message); return null; }
+  return data?.signedUrl ?? null;
 }
 
 export async function deleteConsortiumDocument(id, filePath) {

@@ -43,11 +43,31 @@ export async function cancelReservation(reservationId) {
   if (error) throw error;
 }
 
-export async function fetchAllReservations() {
-  const { data: reservations, error } = await supabase
+// Reservas de todo el consorcio, sin datos personales (solo lo necesario para
+// calcular disponibilidad). La policy reservations_select_consortium permite
+// a los residentes verlas; solo pending/approved bloquean turno.
+export async function fetchConsortiumReservations(consortiumId) {
+  if (!consortiumId) return [];
+  const { data, error } = await supabase
+    .from('reservations')
+    .select('id, amenity_id, date, time_slot, status, user_id')
+    .eq('consortium_id', consortiumId)
+    .in('status', ['pending', 'approved']);
+
+  if (error) { console.warn('fetchConsortiumReservations:', error.message); return []; }
+  return data || [];
+}
+
+export async function fetchAllReservations(consortiumId) {
+  let query = supabase
     .from('reservations')
     .select('*')
     .order('created_at', { ascending: false });
+
+  // Admins multi-consorcio: acotar al consorcio activo.
+  if (consortiumId) query = query.eq('consortium_id', consortiumId);
+
+  const { data: reservations, error } = await query;
 
   if (error) throw error;
   if (!reservations?.length) return [];

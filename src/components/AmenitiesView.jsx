@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Users, Clock, ChevronRight, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { AMENITIES_LIST } from '../lib/constants';
 import { useToast } from './Toast';
-import { fetchReservations, createReservation, cancelReservation, fetchAllReservations } from '../services/data.service';
+import { fetchReservations, createReservation, cancelReservation, fetchConsortiumReservations } from '../services/data.service';
 import { formatDate } from '../lib/utils';
 import Modal from './Modal';
 
@@ -28,8 +28,9 @@ function getTodayString() {
 
 function getAvailabilityInfo(amenityId, allReservations) {
   const todayStr = getTodayString();
+  // pending y approved bloquean el turno (UNIQUE parcial en la DB)
   const todayRes = allReservations.filter(
-    r => r.amenity_id === amenityId && r.date === todayStr && r.status === 'approved'
+    r => r.amenity_id === amenityId && r.date === todayStr && ['pending', 'approved'].includes(r.status)
   );
   const takenSlots = todayRes.map(r => r.time_slot);
   const freeSlots = TIME_SLOTS.filter(s => !takenSlots.includes(s));
@@ -60,7 +61,7 @@ export default function AmenitiesView({ session, userProfile }) {
     try {
       const [mine, all] = await Promise.all([
         fetchReservations(session.user.id),
-        fetchAllReservations().catch(() => []),
+        fetchConsortiumReservations(userProfile?.consortium_id).catch(() => []),
       ]);
       setReservations(mine);
       setAllReservations(all);
@@ -69,7 +70,7 @@ export default function AmenitiesView({ session, userProfile }) {
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id, toast]);
+  }, [session?.user?.id, userProfile?.consortium_id, toast]);
 
   useEffect(() => {
     loadReservations();
@@ -107,11 +108,15 @@ export default function AmenitiesView({ session, userProfile }) {
     }
   }
 
-  async function handleCancel(reservationId) {
-    setCancelling(reservationId);
+  async function handleCancel(res) {
+    if (res.status === 'approved' && !window.confirm('Vas a liberar el turno. ¿Querés cancelar la reserva?')) {
+      return;
+    }
+    setCancelling(res.id);
     try {
-      await cancelReservation(reservationId);
-      setReservations((prev) => prev.filter((r) => r.id !== reservationId));
+      await cancelReservation(res.id);
+      setReservations((prev) => prev.filter((r) => r.id !== res.id));
+      setAllReservations((prev) => prev.filter((r) => r.id !== res.id));
       toast.success('Reserva cancelada');
     } catch (err) {
       toast.error('No se pudo cancelar la reserva', 'Error');
@@ -122,7 +127,7 @@ export default function AmenitiesView({ session, userProfile }) {
 
   const takenForSelected = selectedAmenity && date
     ? allReservations
-        .filter((r) => r.amenity_id === selectedAmenity.id && r.date === date && r.status !== 'rejected')
+        .filter((r) => r.amenity_id === selectedAmenity.id && r.date === date && ['pending', 'approved'].includes(r.status))
         .map((r) => r.time_slot)
     : [];
 
@@ -227,9 +232,9 @@ export default function AmenitiesView({ session, userProfile }) {
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${sc.bg} ${sc.color}`}>
                     {sc.label}
                   </span>
-                  {res.status === 'pending' && (
+                  {['pending', 'approved'].includes(res.status) && (
                     <button
-                      onClick={() => handleCancel(res.id)}
+                      onClick={() => handleCancel(res)}
                       disabled={cancelling === res.id}
                       className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                       aria-label="Cancelar reserva"

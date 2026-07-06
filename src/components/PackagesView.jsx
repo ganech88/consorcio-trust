@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PackageSearch, Plus, CheckCircle, Clock, Loader2, Package } from 'lucide-react';
 import {
-  fetchUserPackages, createPackage, collectPackage,
+  fetchUserPackages, fetchAllPackages, registerPackage, deliverPackage, fetchConsortiumMembers,
 } from '../services/data.service';
 import { useToast } from './Toast';
 import { supabase } from '../lib/supabase';
@@ -16,23 +16,35 @@ function formatDateTime(ts) {
 
 function AdminForm({ session, userProfile, onCreated }) {
   const toast = useToast();
-  const [form, setForm] = useState({ carrier: '', description: '' });
+  const [form, setForm] = useState({ carrier: '', description: '', unitUserId: '' });
+  const [members, setMembers] = useState([]);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
+  // Residentes del consorcio para elegir destinatario
+  useEffect(() => {
+    if (!userProfile?.consortium_id) return;
+    fetchConsortiumMembers(userProfile.consortium_id)
+      .then(list => setMembers(list.filter(m => m.id !== session.user.id)))
+      .catch(() => {});
+  }, [userProfile?.consortium_id, session.user.id]);
+
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!form.unitUserId) { toast.error('Elegí el destinatario del paquete'); return; }
     if (!form.description.trim()) { toast.error('Ingresá una descripción'); return; }
     setSaving(true);
     try {
-      const pkg = await createPackage({
+      const pkg = await registerPackage({
         consortiumId: userProfile?.consortium_id,
+        unitUserId: form.unitUserId,
         carrier: form.carrier.trim() || null,
         description: form.description.trim(),
         loggedBy: session.user.id,
       });
-      onCreated(pkg);
-      setForm({ carrier: '', description: '' });
+      const recipient = members.find(m => m.id === form.unitUserId) || null;
+      onCreated({ ...pkg, recipient });
+      setForm({ carrier: '', description: '', unitUserId: '' });
       setShowForm(false);
       toast.success('Paquete registrado');
     } catch (e) {
@@ -57,6 +69,22 @@ function AdminForm({ session, userProfile, onCreated }) {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="px-4 pb-4 space-y-3 bg-slate-50 dark:bg-surface-inset">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Destinatario *</label>
+            <select
+              value={form.unitUserId}
+              onChange={e => setForm(p => ({ ...p, unitUserId: e.target.value }))}
+              className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none"
+              required
+            >
+              <option value="">Elegí unidad / residente...</option>
+              {members.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.unit_id ? `Unidad ${m.unit_id} · ` : ''}{m.full_name || 'Sin nombre'}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1 block">Transportista</label>
@@ -104,14 +132,16 @@ export default function PackagesView({ session, userProfile }) {
   const loadPackages = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchUserPackages(session.user.id, isAdmin);
+      const data = isAdmin
+        ? await fetchAllPackages(userProfile?.consortium_id)
+        : await fetchUserPackages(session.user.id);
       setPackages(data);
     } catch (e) {
       toast.error(e.message, 'Error al cargar paquetes');
     } finally {
       setLoading(false);
     }
-  }, [session.user.id, isAdmin, toast]);
+  }, [session.user.id, isAdmin, userProfile?.consortium_id, toast]);
 
   useEffect(() => {
     loadPackages();
@@ -131,7 +161,7 @@ export default function PackagesView({ session, userProfile }) {
   async function handleCollect(id) {
     setCollecting(id);
     try {
-      const updated = await collectPackage(id);
+      const updated = await deliverPackage(id);
       setPackages(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
       toast.success('Paquete marcado como retirado');
     } catch (e) {
@@ -198,6 +228,11 @@ export default function PackagesView({ session, userProfile }) {
                   {pkg.carrier && (
                     <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">via {pkg.carrier}</p>
                   )}
+                  {isAdmin && pkg.recipient && (
+                    <p className="text-xs text-brand-600 dark:text-brand-400 mt-0.5">
+                      Para: {pkg.recipient.unit_id ? `Unidad ${pkg.recipient.unit_id} · ` : ''}{pkg.recipient.full_name || 'Residente'}
+                    </p>
+                  )}
                   <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
                     Registrado: {formatDateTime(pkg.logged_at || pkg.created_at)}
                   </p>
@@ -211,7 +246,7 @@ export default function PackagesView({ session, userProfile }) {
                     ? <Loader2 size={12} className="animate-spin" />
                     : <CheckCircle size={12} />
                   }
-                  Retiré mi paquete
+                  {isAdmin ? 'Marcar retirado' : 'Retiré mi paquete'}
                 </button>
               </div>
             ))}
@@ -235,6 +270,11 @@ export default function PackagesView({ session, userProfile }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{pkg.description}</p>
                   {pkg.carrier && <p className="text-xs text-slate-400 dark:text-ink-low">via {pkg.carrier}</p>}
+                  {isAdmin && pkg.recipient && (
+                    <p className="text-xs text-slate-400 dark:text-ink-low">
+                      Para: {pkg.recipient.unit_id ? `Unidad ${pkg.recipient.unit_id} · ` : ''}{pkg.recipient.full_name || 'Residente'}
+                    </p>
+                  )}
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
                     Retirado: {formatDateTime(pkg.collected_at)}
                   </p>

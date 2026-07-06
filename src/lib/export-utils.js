@@ -4,6 +4,18 @@
  */
 
 /**
+ * Anti formula-injection: Excel/Sheets interpretan como fórmula las celdas
+ * que empiezan con =, +, - o @. Prefijamos con apóstrofe para neutralizarlas
+ * (el apóstrofe fuerza texto plano en planillas y no altera el valor visible).
+ * @param {*} value - Valor de la celda
+ * @returns {*} Valor saneado
+ */
+function sanitizeCellValue(value) {
+  if (typeof value === 'string' && /^[=+\-@]/.test(value)) return `'${value}`;
+  return value;
+}
+
+/**
  * Exporta un array de objetos a un archivo .xlsx y lo descarga.
  * @param {object[]} data - Array de filas
  * @param {{ header: string, key: string }[]} columns - Definición de columnas
@@ -15,7 +27,7 @@ export async function exportToExcel(data, columns, fileName, sheetName = 'Datos'
 
   const rows = data.map(row =>
     columns.reduce((acc, col) => {
-      acc[col.header] = row[col.key] ?? '';
+      acc[col.header] = sanitizeCellValue(row[col.key] ?? '');
       return acc;
     }, {})
   );

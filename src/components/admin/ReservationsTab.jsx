@@ -4,7 +4,7 @@ import { fetchAllReservations, updateReservationStatus } from '../../services/da
 import { useToast } from '../Toast';
 import { STATUS_LABELS, LoadingSpinner, EmptyState } from './shared';
 
-export default function ReservationsTab() {
+export default function ReservationsTab({ userProfile }) {
   const toast = useToast();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,11 +13,12 @@ export default function ReservationsTab() {
   const [noteInputs, setNoteInputs] = useState({});
 
   useEffect(() => {
-    fetchAllReservations()
+    // Acotado al consorcio activo (admins multi-consorcio)
+    fetchAllReservations(userProfile?.consortium_id)
       .then(setReservations)
       .catch(e => toast.error(e.message, 'Error al cargar reservas'))
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [userProfile?.consortium_id, toast]);
 
   async function handleAction(res, status) {
     setSaving(res.id);

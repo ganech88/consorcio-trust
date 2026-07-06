@@ -151,6 +151,7 @@ export async function deletePeriodItems(periodId) {
 }
 
 // El residente informa el pago de su expensa del periodo (queda 'reported').
+// Guard de estado: solo se puede informar un item que sigue 'pending'.
 export async function reportPeriodItemPayment(itemId, { notes, receiptUrl, method } = {}) {
   const { data, error } = await supabase
     .from('expense_period_items')
@@ -162,34 +163,39 @@ export async function reportPeriodItemPayment(itemId, { notes, receiptUrl, metho
       payment_method: method || null,
     })
     .eq('id', itemId)
-    .select()
-    .single();
+    .eq('status', 'pending')
+    .select();
   if (error) throw error;
-  return data;
+  if (!data || data.length === 0) throw new Error('Esta expensa ya fue informada o procesada.');
+  return data[0];
 }
 
 // El admin aprueba el pago informado de un item de periodo.
+// Guard de estado: solo se aprueba un item 'reported' (evita doble aprobacion).
 export async function approvePeriodItem(itemId, userId) {
   const { data, error } = await supabase
     .from('expense_period_items')
     .update({ status: 'paid', paid_at: new Date().toISOString(), approved_by: userId, approved_at: new Date().toISOString() })
     .eq('id', itemId)
-    .select()
-    .single();
+    .eq('status', 'reported')
+    .select();
   if (error) throw error;
-  return data;
+  if (!data || data.length === 0) throw new Error('El item ya fue procesado.');
+  return data[0];
 }
 
 // El admin rechaza el pago informado (vuelve a 'pending').
+// Guard de estado: solo se rechaza un item 'reported'.
 export async function rejectPeriodItem(itemId) {
   const { data, error } = await supabase
     .from('expense_period_items')
     .update({ status: 'pending', reported_at: null })
     .eq('id', itemId)
-    .select()
-    .single();
+    .eq('status', 'reported')
+    .select();
   if (error) throw error;
-  return data;
+  if (!data || data.length === 0) throw new Error('El item ya fue procesado.');
+  return data[0];
 }
 
 export async function updatePeriodItemStatus(itemId, status) {

@@ -46,7 +46,7 @@ const SECTIONS = {
 };
 
 const GROUPS = [
-  { title: 'Cobranzas y expensas', ids: ['liquidacion', 'ctacte', 'rendicion'] },
+  { title: 'Cobranzas y expensas', ids: ['liquidacion', 'ctacte', 'rendicion', 'expenses', 'cobranzas'] },
   { title: 'Comunidad',            ids: ['claims', 'reservations', 'announcements', 'documents'] },
   { title: 'Administración',       ids: ['usuarios', 'unidades', 'multas', 'maintenance', 'seguros', 'presupuestos', 'consorcio'] },
 ];
@@ -68,7 +68,7 @@ function renderSection(id, session, userProfile) {
     case 'ctacte':        return <LedgerTab userProfile={userProfile} />;
     case 'rendicion':     return <RendicionTab userProfile={userProfile} />;
     case 'multas':        return <FinesTab session={session} userProfile={userProfile} />;
-    case 'reservations':  return <ReservationsTab />;
+    case 'reservations':  return <ReservationsTab userProfile={userProfile} />;
     case 'announcements': return <AnnouncementsTab session={session} userProfile={userProfile} />;
     case 'documents':     return <DocumentsTab session={session} userProfile={userProfile} />;
     case 'maintenance':   return <MaintenanceTab session={session} userProfile={userProfile} />;

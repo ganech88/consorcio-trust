@@ -20,10 +20,22 @@ export async function fetchUserProfile(userId) {
   return data;
 }
 
+// Allow-list de columnas que el usuario puede editar de su propio perfil.
+// Campos sensibles (role, consortium_id, unit_id, email) se cambian solo por
+// flujos de admin / RPCs dedicados, nunca desde este update libre.
+const EDITABLE_PROFILE_FIELDS = ['full_name', 'first_name', 'last_name', 'phone', 'avatar_url'];
+
 export async function updateProfile(userId, updates) {
+  const safeUpdates = Object.fromEntries(
+    Object.entries(updates || {}).filter(([key]) => EDITABLE_PROFILE_FIELDS.includes(key))
+  );
+  if (Object.keys(safeUpdates).length === 0) {
+    throw new Error('No hay campos editables para actualizar.');
+  }
+
   const { data, error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', userId)
     .select()
     .single();

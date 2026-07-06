@@ -117,9 +117,12 @@ export async function fetchInformedPayments(consortiumId) {
   }));
 }
 
+// Guard de estado: solo se decide sobre un pago que sigue 'pending'
+// (evita dobles aprobaciones/rechazos en simultaneo).
 export async function setInformedPaymentStatus(paymentId, status) {
   const { data, error } = await supabase
-    .from('payments').update({ status }).eq('id', paymentId).select();
+    .from('payments').update({ status }).eq('id', paymentId).eq('status', 'pending').select();
   if (error) throw error;
-  return data?.[0];
+  if (!data || data.length === 0) throw new Error('El pago ya fue procesado.');
+  return data[0];
 }

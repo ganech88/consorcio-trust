@@ -72,6 +72,18 @@ export default function UsersTab({ userProfile }) {
     try {
       const updated = await updateProfileRole(profileId, newRole);
       setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, role: updated.role } : p));
+      // Al pasar de propietario a inquilino (o viceversa), re-vinculamos la
+      // unidad: el RPC libera el vinculo anterior (owner_id/tenant_id) y setea
+      // el campo que corresponde al nuevo rol.
+      const prof = profiles.find(p => p.id === profileId);
+      if (prof?.unit_id && (newRole === 'owner' || newRole === 'resident')) {
+        try {
+          await assignMemberUnit({ userId: profileId, unitId: prof.unit_id });
+        } catch (unitErr) {
+          toast.error(unitErr.message, 'Rol actualizado, pero no se pudo re-vincular la unidad');
+          return;
+        }
+      }
       toast.success('Rol actualizado');
     } catch (e) {
       toast.error(e.message, 'Error al cambiar rol');

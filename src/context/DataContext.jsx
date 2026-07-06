@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { fetchClaims, fetchExpenseBreakdown, fetchUserProfile, fetchPayments, fetchConsortium, fetchReservations } from '../services/data.service';
+import { fetchClaims, fetchExpenseBreakdown, fetchUserProfile, fetchPayments, fetchConsortium, fetchReservations, fetchUnreadChatCount } from '../services/data.service';
 import { useToast } from '../components/Toast';
 
 const DataContext = createContext(null);
@@ -33,12 +33,19 @@ export function DataProvider({ children }) {
       const consortiumId = profile?.consortium_id || null;
 
       // Fase 2: cargar datos acotados al consorcio, en paralelo.
-      const [claimsRes, expensesRes, paymentsRes, consortiumRes, reservationsRes] = await Promise.allSettled([
+      const [claimsRes, expensesRes, paymentsRes, consortiumRes, reservationsRes, unreadRes] = await Promise.allSettled([
         fetchClaims(consortiumId),
         fetchExpenseBreakdown(consortiumId),
         userId ? fetchPayments(userId) : Promise.resolve([]),
         consortiumId ? fetchConsortium(consortiumId) : Promise.resolve(null),
         userId ? fetchReservations(userId) : Promise.resolve([]),
+        profile
+          ? fetchUnreadChatCount({
+              userId,
+              isAdmin: ['admin', 'super_admin'].includes(profile.role),
+              consortiumId,
+            })
+          : Promise.resolve(0),
       ]);
 
       if (claimsRes.status === 'fulfilled') setReclamos(claimsRes.value || []);
@@ -46,6 +53,7 @@ export function DataProvider({ children }) {
       if (paymentsRes.status === 'fulfilled') setPayments(paymentsRes.value || []);
       if (consortiumRes.status === 'fulfilled' && consortiumRes.value) setConsortium(consortiumRes.value);
       if (reservationsRes.status === 'fulfilled') setReservations(reservationsRes.value || []);
+      if (unreadRes.status === 'fulfilled') setUnreadChatCount(unreadRes.value || 0);
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast.error('No se pudieron cargar los datos. Intentá nuevamente.');

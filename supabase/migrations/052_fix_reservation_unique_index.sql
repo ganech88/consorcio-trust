@@ -1,0 +1,1 @@
+-- Reemplazado por 052_drop_redundant_reservation_index.sql (no-op).

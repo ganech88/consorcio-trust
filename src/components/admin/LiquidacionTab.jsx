@@ -100,7 +100,8 @@ export default function LiquidacionTab({ session, userProfile }) {
       const rows = withCoef.map(u => ({
         period_id: period.id,
         unit_id: u.name,
-        user_id: u.owner_id || null,
+        unit_uuid: u.id,
+        user_id: u.owner_id || u.tenant_id || null,
         amount: Math.round(total * Number(u.coefficient) / 100 * 100) / 100,
       }));
 
@@ -117,9 +118,28 @@ export default function LiquidacionTab({ session, userProfile }) {
       setPeriodItems(prev => ({ ...prev, [period.id]: fresh }));
 
       const sumCoef = withCoef.reduce((s, u) => s + Number(u.coefficient), 0);
-      toast.success(Math.abs(sumCoef - 100) < 0.5
-        ? `Expensas distribuidas a ${rows.length} unidades segun su coeficiente`
-        : `Distribuido a ${rows.length} unidades. Atencion: los coeficientes suman ${sumCoef.toFixed(2)}% (no 100%)`);
+      const excluded = units.filter(u => u.coefficient == null || Number(u.coefficient) <= 0);
+      const coefOk = Math.abs(sumCoef - 100) < 0.5;
+      if (excluded.length === 0 && coefOk) {
+        toast.success(`Expensas distribuidas a ${rows.length} unidades segun su coeficiente`);
+      } else {
+        const distribuido = rows.reduce((s, r) => s + r.amount, 0);
+        const sinDistribuir = Math.max(0, Math.round((total - distribuido) * 100) / 100);
+        const avisos = [];
+        if (excluded.length > 0) {
+          avisos.push(`Quedaron SIN facturar ${excluded.length} unidad(es) sin coeficiente: ${excluded.map(u => u.name).join(', ')}.`);
+        }
+        if (!coefOk) {
+          avisos.push(`Los coeficientes suman ${sumCoef.toFixed(2)}% (no 100%).`);
+        }
+        if (sinDistribuir > 0) {
+          avisos.push(`Monto sin distribuir: $${sinDistribuir.toLocaleString('es-AR')}.`);
+        }
+        toast.error(
+          `Se distribuyo a ${rows.length} unidades, pero: ${avisos.join(' ')} Corregi los coeficientes en la pestana Unidades y usa Re-distribuir.`,
+          'Distribucion incompleta',
+        );
+      }
     } catch (e) {
       toast.error(e.message, 'Error al distribuir');
     } finally {
