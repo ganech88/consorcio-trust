@@ -86,3 +86,22 @@ export async function fetchEgresosTotalForPeriod(consortiumId, period) {
   if (error) { console.warn('egresos total:', error.message); return 0; }
   return (data || []).reduce((sum, e) => sum + Number(e.amount || 0), 0);
 }
+
+// Egresos detallados de un período (YYYY-MM) para la liquidación con formato
+// Ley 941: cada gasto con proveedor, concepto, fecha, importe y si tiene
+// comprobante respaldatorio.
+export async function fetchEgresosForPeriod(consortiumId, period) {
+  if (!consortiumId || !period) return [];
+  const start = period + '-01';
+  const [y, m] = period.split('-').map(Number);
+  const next = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+  const { data, error } = await supabase
+    .from('expenses_log')
+    .select('id, description, category, amount, date, provider, receipt_url')
+    .eq('consortium_id', consortiumId)
+    .gte('date', start)
+    .lt('date', next)
+    .order('date', { ascending: true });
+  if (error) { console.warn('egresos periodo:', error.message); return []; }
+  return data || [];
+}

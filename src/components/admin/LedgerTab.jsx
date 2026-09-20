@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Receipt, Gavel, FileText } from 'lucide-react';
+import { Wallet, Receipt, Gavel, FileText, Percent, Banknote } from 'lucide-react';
+import { amountWithInterest } from '../../lib/mora';
 import { fetchUnits } from '../../services/units.service';
 import { fetchUnitLedger } from '../../services/reports.service';
 import { fetchConsortium, fetchConsortiumMembers } from '../../services/data.service';
@@ -9,6 +10,7 @@ import { LoadingSpinner, EmptyState, fmtCurrency } from './shared';
 
 const STATUS_BADGE = {
   paid:     { label: 'Pagado',    cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
+  credit:   { label: 'Acreditado', cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
   reported: { label: 'Informado', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400' },
   pending:  { label: 'Pendiente', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
 };
@@ -51,18 +53,33 @@ export default function LedgerTab({ userProfile }) {
   }
 
   const movements = ledger ? [
-    ...ledger.items.map(it => ({
-      id: 'i' + it.id, kind: 'expensa', label: `Expensa ${it.expense_periods?.period ?? ''}`.trim(),
-      date: it.expense_periods?.due_date || it.created_at, amount: Number(it.amount || 0), status: it.status,
-    })),
+    ...ledger.items.flatMap(it => {
+      const due = it.expense_periods?.due_date || null;
+      const base = {
+        id: 'i' + it.id, kind: 'expensa', label: `Expensa ${it.expense_periods?.period ?? ''}`.trim(),
+        date: due || it.created_at, amount: Number(it.amount || 0), status: it.status,
+      };
+      if (it.status === 'paid') return [base];
+      const { interest, days } = amountWithInterest(it.amount, due, consortium);
+      if (interest <= 0) return [base];
+      return [base, {
+        id: 'int' + it.id, kind: 'interes', label: `Interés por mora (${days} días) - ${it.expense_periods?.period ?? ''}`.trim(),
+        date: new Date().toISOString(), amount: interest, status: 'pending',
+      }];
+    }),
     ...ledger.fines.map(f => ({
       id: 'f' + f.id, kind: 'multa', label: f.reason || 'Multa',
       date: f.fine_date, amount: Number(f.amount || 0), status: f.status === 'paid' ? 'paid' : 'pending',
     })),
+    ...(ledger.payments || []).map(p => ({
+      id: 'p' + p.id, kind: 'pago', label: `Pago acreditado${p.payment_method === 'mercadopago' ? ' (MercadoPago)' : ''}`,
+      date: p.paid_at || p.created_at, amount: Number(p.amount || 0), status: 'credit',
+    })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
 
-  const totalFacturado = movements.reduce((s, m) => s + m.amount, 0);
-  const totalPagado = movements.filter(m => m.status === 'paid').reduce((s, m) => s + m.amount, 0);
+  const charges = movements.filter(m => m.status !== 'credit');
+  const totalFacturado = charges.reduce((s, m) => s + m.amount, 0);
+  const totalPagado = charges.filter(m => m.status === 'paid').reduce((s, m) => s + m.amount, 0);
   const saldo = totalFacturado - totalPagado;
 
   async function handlePdf(kind) {
@@ -72,7 +89,7 @@ export default function LedgerTab({ userProfile }) {
       await generateDebtPdf({
         kind, unit,
         ownerName: unit.owner_id ? owners[unit.owner_id] : null,
-        movements,
+        movements: charges,
         consortium: consortium || {},
       });
     } catch (e) {
@@ -145,14 +162,17 @@ export default function LedgerTab({ userProfile }) {
                 const badge = STATUS_BADGE[m.status] ?? STATUS_BADGE.pending;
                 return (
                   <div key={m.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.kind === 'multa' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-brand-100 dark:bg-brand-400/[0.14]'}`}>
-                      {m.kind === 'multa' ? <Gavel size={16} className="text-red-500 dark:text-red-400" /> : <Receipt size={16} className="text-brand-600 dark:text-brand-400" />}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.kind === 'multa' ? 'bg-red-100 dark:bg-red-900/30' : m.kind === 'interes' ? 'bg-amber-100 dark:bg-amber-900/30' : m.kind === 'pago' ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-brand-100 dark:bg-brand-400/[0.14]'}`}>
+                      {m.kind === 'multa' ? <Gavel size={16} className="text-red-500 dark:text-red-400" />
+                        : m.kind === 'interes' ? <Percent size={16} className="text-amber-600 dark:text-amber-400" />
+                        : m.kind === 'pago' ? <Banknote size={16} className="text-emerald-600 dark:text-emerald-400" />
+                        : <Receipt size={16} className="text-brand-600 dark:text-brand-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{m.label}</p>
                       <p className="text-xs text-slate-400 dark:text-ink-low">{m.date ? new Date(m.date).toLocaleDateString('es-AR') : '—'}</p>
                     </div>
-                    <p className="font-bold text-slate-800 dark:text-ink-hi font-mono shrink-0">{fmtCurrency(m.amount)}</p>
+                    <p className={`font-bold font-mono shrink-0 ${m.kind === 'pago' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-ink-hi'}`}>{m.kind === 'pago' ? '-' : ''}{fmtCurrency(m.amount)}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>
                   </div>
                 );

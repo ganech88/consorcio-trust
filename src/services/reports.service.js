@@ -14,7 +14,7 @@ export async function fetchUnitLedger(unit) {
     itemFilters.push(`user_id.in.(${occupantIds.join(',')})`);
     fineFilters.push(`user_id.in.(${occupantIds.join(',')})`);
   }
-  const [itemsRes, finesRes] = await Promise.all([
+  const [itemsRes, finesRes, paysRes] = await Promise.all([
     supabase
       .from('expense_period_items')
       .select('id, amount, status, paid_at, created_at, expense_periods(period, due_date)')
@@ -25,12 +25,18 @@ export async function fetchUnitLedger(unit) {
       .select('id, amount, reason, fine_date, status')
       .or(fineFilters.join(','))
       .order('fine_date', { ascending: false }),
+    supabase
+      .from('payments')
+      .select('id, amount, status, paid_at, created_at, payment_method, period_item_id, fine_id, notes')
+      .eq('unit_id', unit.id)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false }),
   ]);
   const dedupeById = (rows) => {
     const seen = new Set();
     return (rows || []).filter(r => !seen.has(r.id) && seen.add(r.id));
   };
-  return { items: dedupeById(itemsRes.data), fines: dedupeById(finesRes.data) };
+  return { items: dedupeById(itemsRes.data), fines: dedupeById(finesRes.data), payments: dedupeById(paysRes.data) };
 }
 
 // Rendicion: egresos del consorcio (expenses_log) de los ultimos N meses,

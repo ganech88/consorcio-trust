@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConsorcioTrust — Expensas claras, vecinos tranquilos</title>
+  <meta name="description" content="Gestión de consorcios con transparencia total: liquidación por coeficiente, cobranza con MercadoPago, cuenta corriente por unidad, reclamos, reservas y comunicados. Gratis para consorcios chicos." />
+  <meta property="og:title" content="ConsorcioTrust — Expensas claras, vecinos tranquilos" />
+  <meta property="og:description" content="La app de gestión para consorcios autoadministrados y administraciones que quieren mostrar adónde va cada peso." />
+  <link rel="icon" href="/icon-192.svg" />
+  <style>
+    :root { --brand: #0d9488; --brand-dark: #0f766e; --brand-50: #f0fdfa; --brand-100: #ccfbf1; --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --accent: #f59e0b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); line-height: 1.55; background: #fff; }
+    a { color: var(--brand-dark); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    header { position: sticky; top: 0; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); z-index: 10; }
+    nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+    .logo span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--brand); color: #fff; font-size: 1rem; }
+    nav ul { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; }
+    nav ul a { color: var(--muted); text-decoration: none; font-size: .95rem; font-weight: 500; }
+    .btn { display: inline-block; padding: 12px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: .98rem; border: 2px solid transparent; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .btn-ghost { border-color: var(--line); color: var(--ink); background: #fff; }
+    .hero { padding: 72px 0 56px; background: radial-gradient(1200px 500px at 20% -10%, var(--brand-100), transparent 60%); }
+    .hero .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+    .eyebrow { display: inline-block; background: var(--brand-50); color: var(--brand-dark); font-weight: 700; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; margin-bottom: 18px; }
+    h1 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 18px; letter-spacing: -.02em; }
+    h1 em { font-style: normal; color: var(--brand); }
+    .lead { font-size: 1.15rem; color: var(--muted); margin: 0 0 28px; max-width: 540px; }
+    .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .fine { font-size: .85rem; color: var(--muted); margin-top: 12px; }
+    .mock { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 20px 60px rgba(15,23,42,.10); padding: 20px; }
+    .mock h4 { margin: 0 0 12px; font-size: .9rem; color: var(--muted); font-weight: 600; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: .95rem; }
+    .row:first-of-type { border-top: 0; }
+    .tag { font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+    .ok { background: #d1fae5; color: #047857; } .warn { background: #fef3c7; color: #b45309; } .info { background: #dbeafe; color: #1d4ed8; }
+    .big { font-size: 1.6rem; font-weight: 800; }
+    section { padding: 64px 0; }
+    section h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 10px; letter-spacing: -.01em; }
+    .sub { color: var(--muted); margin: 0 0 32px; max-width: 640px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card { border: 1px solid var(--line); border-radius: 16px; padding: 22px; background: #fff; }
+    .card .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--brand-50); display: grid; place-items: center; font-size: 1.2rem; margin-bottom: 12px; }
+    .card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .card p { margin: 0; color: var(--muted); font-size: .95rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; background: var(--ink); color: #fff; border-radius: 20px; padding: 28px; }
+    .stats div b { display: block; font-size: 2rem; color: #5eead4; }
+    .stats div span { color: #cbd5e1; font-size: .9rem; }
+    .stats small { grid-column: 1 / -1; color: #94a3b8; font-size: .75rem; }
+    .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+    .plan { border: 1px solid var(--line); border-radius: 18px; padding: 26px; display: flex; flex-direction: column; }
+    .plan.hot { border-color: var(--brand); box-shadow: 0 12px 40px rgba(13,148,136,.15); position: relative; }
+    .plan.hot::before { content: "Más elegido"; position: absolute; top: -12px; left: 22px; background: var(--brand); color: #fff; font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+    .plan h3 { margin: 0; font-size: 1.1rem; }
+    .price { font-size: 2rem; font-weight: 800; margin: 10px 0 2px; }
+    .price small { font-size: .9rem; font-weight: 500; color: var(--muted); }
+    .plan p.who { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+    .plan ul { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; }
+    .plan li { padding: 6px 0 6px 26px; position: relative; font-size: .93rem; }
+    .plan li::before { content: "✓"; position: absolute; left: 4px; color: var(--brand); font-weight: 800; }
+    .steps { counter-reset: s; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .step { padding: 22px; border-radius: 16px; background: var(--brand-50); }
+    .step::before { counter-increment: s; content: counter(s); display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; margin-bottom: 10px; }
+    .step h3 { margin: 0 0 6px; font-size: 1rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .93rem; }
+    .faq details { border-top: 1px solid var(--line); padding: 14px 0; }
+    .faq summary { cursor: pointer; font-weight: 600; }
+    .faq p { color: var(--muted); margin: 8px 0 0; }
+    footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: .88rem; }
+    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    @media (max-width: 820px) {
+      .hero .grid, .cards, .stats, .pricing, .steps { grid-template-columns: 1fr; }
+      nav ul { display: none; }
+      .hero { padding: 44px 0 36px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <nav>
+        <a class="logo" href="/landing.html"><span>CT</span> ConsorcioTrust</a>
+        <ul>
+          <li><a href="#funciones">Funciones</a></li>
+          <li><a href="#como">Cómo funciona</a></li>
+          <li><a href="#precios">Precios</a></li>
+          <li><a href="#faq">Preguntas</a></li>
+        </ul>
+        <a class="btn btn-primary" href="/">Ingresar</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap grid">
+      <div>
+        <span class="eyebrow">Para consorcios autoadministrados y administraciones</span>
+        <h1>Expensas claras, <em>vecinos tranquilos</em>.</h1>
+        <p class="lead">ConsorcioTrust muestra adónde va cada peso: liquidación por coeficiente con formato Ley 941, cobranza online con MercadoPago, cuenta corriente por unidad y toda la vida del edificio en una sola app.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="/">Crear mi consorcio gratis</a>
+          <a class="btn btn-ghost" href="#como">Ver cómo funciona</a>
+        </div>
+        <p class="fine">Gratis hasta 20 unidades. Sin tarjeta. Cargá tus unidades y liquidá tu primera expensa en 15 minutos.</p>
+      </div>
+      <div class="mock" aria-hidden="true">
+        <h4>Liquidación · Agosto 2026</h4>
+        <div class="row"><span>Total liquidado</span><span class="big">$3.360.000</span></div>
+        <div class="row"><span>Unidad 3°B · coef. 4,25%</span><span>$142.800 <span class="tag ok">Pagada</span></span></div>
+        <div class="row"><span>Unidad 5°A · coef. 5,10%</span><span>$171.360 <span class="tag info">Informada</span></span></div>
+        <div class="row"><span>Unidad PB 2 · coef. 3,60%</span><span>$120.960 <span class="tag warn">Vencida + mora</span></span></div>
+        <div class="row"><span>Cobrado al día</span><span class="big" style="color:#047857">83%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="funciones">
+    <div class="wrap">
+      <h2>Todo lo que un consorcio necesita, sin planilla de Excel</h2>
+      <p class="sub">Pensado primero para el vecino que abre la app a las 11 de la noche a ver cuánto tiene que pagar, y después para quien administra.</p>
+      <div class="cards">
+        <div class="card"><div class="ic">📄</div><h3>Liquidación por coeficiente</h3><p>Cargás el total, la app reparte según el coeficiente de cada unidad, con redondeo que cierra exacto y PDF con el contenido que exige la Ley 941 (matrícula RPA, comprobantes, QR).</p></div>
+        <div class="card"><div class="ic">💳</div><h3>Cobranza que se cobra sola</h3><p>Pago online con MercadoPago que se acredita solo, informe de pago con comprobante, interés por mora automático y recordatorios por WhatsApp antes y después del vencimiento.</p></div>
+        <div class="card"><div class="ic">📒</div><h3>Cuenta corriente por unidad</h3><p>Cargos, pagos, mora y saldo de cada unidad. Certificado de deuda e intimación en PDF con el logo y la firma de la administración.</p></div>
+        <div class="card"><div class="ic">🔍</div><h3>Transparencia total</h3><p>Cada egreso con su comprobante adjunto, destino de fondos por rubro, rendición anual exportable y acuse de lectura de comunicados.</p></div>
+        <div class="card"><div class="ic">🛠️</div><h3>Reclamos y mantenimiento</h3><p>El vecino carga el reclamo con foto, la administración responde y resuelve, y todos ven el historial. Órdenes de pago a proveedores que generan el egreso solas.</p></div>
+        <div class="card"><div class="ic">🏢</div><h3>Vida del edificio</h3><p>Reservas de SUM y parrilla, votaciones, tablón, paquetería, visitas autorizadas, seguros con vencimientos, presupuestos y chat con la administración.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="stats">
+        <div><b>17%</b><span>de morosidad promedio en expensas en Argentina (2026)</span></div>
+        <div><b>$337.000</b><span>expensa promedio en CABA en mayo de 2026</span></div>
+        <div><b>1 de 6</b><span>propietarios paga tarde. Recordatorios y mora automática cambian ese número.</span></div>
+        <small>Fuentes: relevamientos de Octavo Piso y ConsorcioAbierto publicados por Infobae y Ámbito (julio 2026).</small>
+      </div>
+    </div>
+  </section>
+
+  <section id="como">
+    <div class="wrap">
+      <h2>Cómo funciona</h2>
+      <p class="sub">Sin implementación, sin capacitación de dos semanas. Si sabés usar WhatsApp, sabés usar ConsorcioTrust.</p>
+      <div class="steps">
+        <div class="step"><h3>Creá tu consorcio</h3><p>Nombre, dirección y las unidades con su coeficiente. Podés importar desde Excel o cargarlas a mano.</p></div>
+        <div class="step"><h3>Invitá a los vecinos</h3><p>Un código de invitación por unidad. Cada propietario o inquilino entra desde el celular y ve solo lo suyo.</p></div>
+        <div class="step"><h3>Liquidá y cobrá</h3><p>Cargás los egresos del mes con sus comprobantes, publicás la liquidación y la app se ocupa de cobrar, recordar y conciliar.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="precios">
+    <div class="wrap">
+      <h2>Precio por consorcio, no por unidad</h2>
+      <p class="sub">Los sistemas grandes cobran por unidad funcional y apuntan al administrador con 20 edificios. Nosotros cobramos un fijo por consorcio para que un edificio de 12 unidades también pueda tener una gestión profesional.</p>
+      <div class="pricing">
+        <div class="plan">
+          <h3>Vecinos</h3>
+          <div class="price">Gratis <small>para siempre</small></div>
+          <p class="who">Consorcios autoadministrados de hasta 20 unidades.</p>
+          <ul>
+            <li>Liquidación por coeficiente y PDF Ley 941</li>
+            <li>Informe de pago con comprobante</li>
+            <li>Cuenta corriente y certificado de deuda</li>
+            <li>Reclamos, reservas, comunicados, votaciones</li>
+            <li>1 consorcio</li>
+          </ul>
+          <a class="btn btn-ghost" href="/">Empezar gratis</a>
+        </div>
+        <div class="plan hot">
+          <h3>Consorcio</h3>
+          <div class="price">$24.900 <small>/ mes por consorcio</small></div>
+          <p class="who">Edificios de cualquier tamaño que quieren cobrar mejor.</p>
+          <ul>
+            <li>Todo lo del plan Vecinos, sin límite de unidades</li>
+            <li>Cobro online con MercadoPago con conciliación automática</li>
+            <li>Interés por mora y recordatorios por WhatsApp</li>
+            <li>Rendición anual y exportaciones a Excel</li>
+            <li>Marca propia en PDFs (logo, firma, matrícula)</li>
+          </ul>
+          <a class="btn btn-primary" href="/">Probar 30 días gratis</a>
+        </div>
+        <div class="plan">
+          <h3>Administración</h3>
+          <div class="price">$14.900 <small>/ mes por consorcio</small></div>
+          <p class="who">Administradores con cartera, a partir de 5 consorcios.</p>
+          <ul>
+            <li>Todo lo del plan Consorcio</li>
+            <li>Panel multi-consorcio con un solo login</li>
+            <li>Soporte prioritario por WhatsApp</li>
+            <li>Migración de datos desde tu sistema actual</li>
+            <li>Facturación centralizada</li>
+          </ul>
+          <a class="btn btn-ghost" href="mailto:hola@consorciotrust.app?subject=Plan%20Administraci%C3%B3n">Hablar con nosotros</a>
+        </div>
+      </div>
+      <p class="fine">Precios en pesos argentinos, IVA incluido, referencia septiembre 2026. El plan gratuito no tiene vencimiento ni tarjeta.</p>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap faq">
+      <h2>Preguntas frecuentes</h2>
+      <details><summary>¿Sirve para un consorcio autoadministrado, sin administrador profesional?</summary><p>Es justamente el caso para el que nació. El consejo de administración carga los gastos, la app liquida por coeficiente y cada vecino ve e informa su parte. Nadie necesita saber de contabilidad.</p></details>
+      <details><summary>¿Cumple con la Ley 941 de CABA?</summary><p>La liquidación en PDF incluye los datos que exige la ley y su reglamentación: matrícula RPA, CUIT, detalle de egresos con proveedor y comprobante, prorrateo por coeficiente, cuenta bancaria y un QR a la documentación digital. En Provincia de Buenos Aires se usa el mismo formato con el registro provincial.</p></details>
+      <details><summary>¿Cómo cobro las expensas?</summary><p>Con MercadoPago (tarjeta, dinero en cuenta, QR) el pago se acredita y concilia solo. Sin MercadoPago, el vecino transfiere al CBU del consorcio e informa el pago con el comprobante desde la app, y la administración lo aprueba con un toque.</p></details>
+      <details><summary>¿Y los datos, de quién son?</summary><p>Del consorcio. Podés exportar todo a Excel en cualquier momento, y los comprobantes se guardan en almacenamiento privado con acceso solo para tu consorcio.</p></details>
+      <details><summary>¿Liquida sueldos del encargado?</summary><p>Todavía no. Hoy cargás el sueldo y las cargas sociales como egresos del mes. La liquidación de sueldos bajo convenio está en el roadmap para el plan Administración.</p></details>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 ConsorcioTrust · Desarrollo Sin Fronteras · Hurlingham, Buenos Aires</span>
+      <span><a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a> · <a href="/">Ingresar</a></span>
+    </div>
+  </footer>
+</body>
+</html>

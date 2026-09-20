@@ -181,6 +181,10 @@ export async function approvePeriodItem(itemId, userId) {
     .select();
   if (error) throw error;
   if (!data || data.length === 0) throw new Error('El item ya fue procesado.');
+  // Conciliación: si el residente informó el pago via `payments`, aprobarlo también.
+  await supabase.from('payments')
+    .update({ status: 'approved', approved_by: userId, approved_at: new Date().toISOString(), paid_at: new Date().toISOString() })
+    .eq('period_item_id', itemId).eq('status', 'pending');
   return data[0];
 }
 
@@ -195,6 +199,7 @@ export async function rejectPeriodItem(itemId) {
     .select();
   if (error) throw error;
   if (!data || data.length === 0) throw new Error('El item ya fue procesado.');
+  await supabase.from('payments').update({ status: 'rejected' }).eq('period_item_id', itemId).eq('status', 'pending');
   return data[0];
 }
 

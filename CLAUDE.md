@@ -1,72 +1,41 @@
-# CLAUDE.md
+# CLAUDE.md — ConsorcioTrust
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía para trabajar en este repo con Claude Code. Leé también `README.md` (qué es el producto) y `docs/LANZAMIENTO.md` (estado y pendientes).
 
-## Project Overview
+## Qué es
 
-This is a **Claude Code plugin** - a collection of production-ready agents, skills, hooks, commands, rules, and MCP configurations. The project provides battle-tested workflows for software development using Claude Code.
+SaaS de gestión de consorcios para Argentina. React 19 + Vite + Tailwind (PWA), Supabase (Postgres/RLS/Storage/Edge Functions en Deno), Vercel, Sentry. Un solo desarrollador; priorizar cambios chicos, verificables y que no rompan producción.
 
-## Running Tests
+## Comandos
 
 ```bash
-# Run all tests
-node tests/run-all.js
-
-# Run individual test files
-node tests/lib/utils.test.js
-node tests/lib/package-manager.test.js
-node tests/hooks/hooks.test.js
+npm run dev            # Vite
+npm run lint           # eslint (0 errores; warnings de react-refresh son conocidos)
+npm run typecheck      # tsc --noEmit (allowJs; migración gradual a TS)
+npm run test:run       # vitest (jsdom)
+npm run build          # vite build
 ```
 
-## Architecture
+CI (`.github/workflows/ci.yml`) corre lint + typecheck + test + build en cada push a `main`. Vercel despliega `main` automáticamente.
 
-The project is organized into several core components:
+## Reglas del repo
 
-- **agents/** - Specialized subagents for delegation (planner, code-reviewer, tdd-guide, etc.)
-- **skills/** - Workflow definitions and domain knowledge (coding standards, patterns, testing)
-- **commands/** - Slash commands invoked by users (/tdd, /plan, /e2e, etc.)
-- **hooks/** - Trigger-based automations (session persistence, pre/post-tool hooks)
-- **rules/** - Always-follow guidelines (security, coding style, testing requirements)
-- **mcp-configs/** - MCP server configurations for external integrations
-- **scripts/** - Cross-platform Node.js utilities for hooks and setup
-- **tests/** - Test suite for scripts and utilities
+1. **Migraciones**: `supabase/migrations/NNN_nombre.sql`, numeradas y consecutivas. **Nunca editar una migración ya aplicada**; crear una nueva. Toda migración se versiona en el repo y se aplica a la DB (`kldgbgxycmvywvvftuvi`) desde el archivo. Datos demo (037–043) no se aplican en un reset de producción.
+2. **RLS siempre**: toda tabla nueva con `ENABLE ROW LEVEL SECURITY` y policies scopeadas por `consortium_id` (o por unidad → consorcio). Usar `is_consortium_admin(cid)` / `is_super_admin()`. Nada de `USING (true)`.
+3. **Plata**: los montos se derivan en el servidor (edge function / trigger), nunca del cliente. Estados de pago con guard (`.eq('status', ...)`) para evitar dobles aprobaciones.
+4. **Lógica pura en `src/lib/`** (TS) con tests en `src/lib/__tests__/`. Los componentes y servicios solo orquestan. Archivos nuevos en `.ts/.tsx`.
+5. **Servicios**: un archivo por dominio en `src/services/`, re-exportados por `data.service.js`. Errores → `throw`; la UI muestra `toast.error`.
+6. **Storage privado**: guardar `path`, nunca `publicUrl`; firmar con `getSignedComprobanteUrl` al mostrar.
+7. **Edge functions**: fail-closed si falta un secret; validar rol server-side (`verifyAdmin` en `mp-config` es el patrón); no devolver errores crudos de terceros al cliente.
+8. **Commits**: conventional commits en español (`feat(expensas): ...`, `fix(rls): ...`).
 
-## Key Commands
+## Mapa rápido
 
-- `/tdd` - Test-driven development workflow
-- `/plan` - Implementation planning
-- `/e2e` - Generate and run E2E tests
-- `/code-review` - Quality review
-- `/build-fix` - Fix build errors
-- `/learn` - Extract patterns from sessions
-- `/skill-create` - Generate skills from git history
+- Residente: `ExpensesView` (mi expensa, mora, pagar online / informar pago, multas), `Dashboard`, `ClaimsView`, `AmenitiesView`, ...
+- Admin: `AdminView` → `admin/LiquidacionTab` (publicar, distribuir, aprobar, PDF Ley 941), `admin/LedgerTab` (cuenta corriente, certificado/intimación), `admin/ConsorcioTab` (datos, marca, RPA/CUIT, medios de pago, mora, MercadoPago, recordatorios), `admin/InformedPaymentsCard` (bandeja de pagos).
+- Lógica: `lib/liquidacion.ts` (prorrateo por coeficiente), `lib/mora.ts` (interés), `services/pdf.service.js` (PDFs).
+- DB: `expense_periods` / `expense_period_items` / `payments` / `fines` / `expenses_log` / `consortia` / `units` / `profiles`. Triggers clave: `protect_period_items` (069), `reconcile_payment` + `protect_payments_insert` (077).
 
-## Development Notes
+## Antes de dar por terminado un cambio
 
-- Package manager detection: npm, pnpm, yarn, bun (configurable via `CLAUDE_PACKAGE_MANAGER` env var or project config)
-- Cross-platform: Windows, macOS, Linux support via Node.js scripts
-- Agent format: Markdown with YAML frontmatter (name, description, tools, model)
-- Skill format: Markdown with clear sections for when to use, how it works, examples
-- Skill placement: Curated in skills/; generated/imported under ~/.claude/skills/. See docs/SKILL-PLACEMENT-POLICY.md
-- Hook format: JSON with matcher conditions and command/notification hooks
-
-## Contributing
-
-Follow the formats in CONTRIBUTING.md:
-- Agents: Markdown with frontmatter (name, description, tools, model)
-- Skills: Clear sections (When to Use, How It Works, Examples)
-- Commands: Markdown with description frontmatter
-- Hooks: JSON with matcher and hooks array
-
-File naming: lowercase with hyphens (e.g., `python-reviewer.md`, `tdd-workflow.md`)
-
-## Skills
-
-Use the following skills when working on related files:
-
-| File(s) | Skill |
-|---------|-------|
-| `README.md` | `/readme` |
-| `.github/workflows/*.yml` | `/ci-workflow` |
-
-When spawning subagents, always pass conventions from the respective skill into the agent's prompt.
+`npm run lint && npm run typecheck && npm run test:run && npm run build` en verde, y si tocaste DB: migración nueva en el repo + aplicada + `docs/LANZAMIENTO.md` actualizado si cambia el estado.

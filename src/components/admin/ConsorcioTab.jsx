@@ -25,9 +25,9 @@ export default function ConsorcioTab({ userProfile }) {
   const [savingReminder, setSavingReminder] = useState(false);
   const [mpForm, setMpForm] = useState({ access_token: '', public_key: '', enabled: false, hasToken: false });
   const [savingMp, setSavingMp] = useState(false);
-  const [brandForm, setBrandForm] = useState({ admin_name: '', admin_phone: '', admin_address: '', admin_logo_url: '', admin_signature_url: '' });
+  const [brandForm, setBrandForm] = useState({ admin_name: '', admin_phone: '', admin_address: '', admin_logo_url: '', admin_signature_url: '', admin_rpa_license: '', admin_cuit: '', admin_email: '', cuit: '' });
   const [savingBrand, setSavingBrand] = useState(false);
-  const [payForm, setPayForm] = useState({ payment_cbu: '', payment_alias: '', payment_bank: '', payment_holder: '', payment_instructions: '' });
+  const [payForm, setPayForm] = useState({ payment_cbu: '', payment_alias: '', payment_bank: '', payment_holder: '', payment_instructions: '', late_interest_monthly_pct: '0', late_interest_grace_days: '0' });
   const [savingPay, setSavingPay] = useState(false);
 
   useEffect(() => {
@@ -49,11 +49,15 @@ export default function ConsorcioTab({ userProfile }) {
           admin_name: c.admin_name || '', admin_phone: c.admin_phone || '',
           admin_address: c.admin_address || '', admin_logo_url: c.admin_logo_url || '',
           admin_signature_url: c.admin_signature_url || '',
+          admin_rpa_license: c.admin_rpa_license || '', admin_cuit: c.admin_cuit || '',
+          admin_email: c.admin_email || '', cuit: c.cuit || '',
         });
         setPayForm({
           payment_cbu: c.payment_cbu || '', payment_alias: c.payment_alias || '',
           payment_bank: c.payment_bank || '', payment_holder: c.payment_holder || '',
           payment_instructions: c.payment_instructions || '',
+          late_interest_monthly_pct: String(c.late_interest_monthly_pct ?? 0),
+          late_interest_grace_days: String(c.late_interest_grace_days ?? 0),
         });
       }
       setMembers(m);
@@ -132,6 +136,10 @@ export default function ConsorcioTab({ userProfile }) {
         admin_address: brandForm.admin_address.trim() || null,
         admin_logo_url: brandForm.admin_logo_url.trim() || null,
         admin_signature_url: brandForm.admin_signature_url.trim() || null,
+        admin_rpa_license: brandForm.admin_rpa_license.trim() || null,
+        admin_cuit: brandForm.admin_cuit.trim() || null,
+        admin_email: brandForm.admin_email.trim() || null,
+        cuit: brandForm.cuit.trim() || null,
       });
       setConsortium(prev => ({ ...prev, ...updated }));
       toast.success('Datos de la administracion guardados');
@@ -152,6 +160,8 @@ export default function ConsorcioTab({ userProfile }) {
         payment_bank: payForm.payment_bank.trim() || null,
         payment_holder: payForm.payment_holder.trim() || null,
         payment_instructions: payForm.payment_instructions.trim() || null,
+        late_interest_monthly_pct: Math.min(30, Math.max(0, Number(payForm.late_interest_monthly_pct) || 0)),
+        late_interest_grace_days: Math.min(90, Math.max(0, Math.round(Number(payForm.late_interest_grace_days) || 0))),
       });
       setConsortium(prev => ({ ...prev, ...updated }));
       toast.success('Medios de pago guardados');
@@ -259,6 +269,23 @@ export default function ConsorcioTab({ userProfile }) {
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Logo (URL)</label>
             <input type="url" value={brandForm.admin_logo_url} onChange={e => setBrandForm(p => ({ ...p, admin_logo_url: e.target.value }))} placeholder="https://..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Matrícula RPA (Ley 941 CABA)</label>
+            <input type="text" value={brandForm.admin_rpa_license} onChange={e => setBrandForm(p => ({ ...p, admin_rpa_license: e.target.value }))} placeholder="Ej: 12345" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+            <p className="text-[11px] text-slate-400 dark:text-ink-low mt-1">Obligatoria en cada liquidación en CABA. En Provincia, el número del registro provincial.</p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">CUIT de la administración</label>
+            <input type="text" value={brandForm.admin_cuit} onChange={e => setBrandForm(p => ({ ...p, admin_cuit: e.target.value }))} placeholder="20-12345678-9" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">CUIT del consorcio</label>
+            <input type="text" value={brandForm.cuit} onChange={e => setBrandForm(p => ({ ...p, cuit: e.target.value }))} placeholder="30-12345678-9" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Email de la administración</label>
+            <input type="email" value={brandForm.admin_email} onChange={e => setBrandForm(p => ({ ...p, admin_email: e.target.value }))} placeholder="admin@..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Firma (URL de imagen)</label>
@@ -394,6 +421,15 @@ export default function ConsorcioTab({ userProfile }) {
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Titular</label>
             <input type="text" value={payForm.payment_holder} onChange={e => setPayForm(p => ({ ...p, payment_holder: e.target.value }))} placeholder="Administración López" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Interés por mora (% mensual)</label>
+            <input type="number" min="0" max="30" step="0.1" value={payForm.late_interest_monthly_pct} onChange={e => setPayForm(p => ({ ...p, late_interest_monthly_pct: e.target.value }))} placeholder="Ej: 3" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
+            <p className="text-[11px] text-slate-400 dark:text-ink-low mt-1">Interés simple, prorrateado por día de atraso. 0 = sin interés.</p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Días de gracia</label>
+            <input type="number" min="0" max="90" step="1" value={payForm.late_interest_grace_days} onChange={e => setPayForm(p => ({ ...p, late_interest_grace_days: e.target.value }))} placeholder="Ej: 5" className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none" />
           </div>
           <div className="sm:col-span-2">
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Instrucciones (opcional)</label>

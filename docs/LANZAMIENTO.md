@@ -1,8 +1,20 @@
 # Checklist de lanzamiento — ConsorcioTrust
 
-Estado al 17/06/2026. Marca lo pendiente antes de abrir a consorcios reales.
+Estado al 20/09/2026. Marca lo pendiente antes de abrir a consorcios reales.
 
 ## ✅ Hecho en esta etapa
+
+### Septiembre 2026 — cierre de pendientes de seguridad + cobranza + Ley 941
+- **Webhooks fail-closed**: `mp-webhook` y `whatsapp-webhook` responden 503 si falta el secret (antes aceptaban sin firma). `mp-webhook` valida ventana de tiempo, compara `transaction_amount` con lo registrado y es idempotente (`payments.mp_payment_id` UNIQUE).
+- **MercadoPago conectado**: botón "Pagar online" en Mis Expensas cuando `mp_config.enabled`. `mercadopago-create-preference` recibe solo `periodItemId`; el monto (item + mora) se deriva en el servidor y se valida pertenencia a la unidad.
+- **`debt-reminders` con control de rol**: service role (cron) o admin logueado (solo su consorcio). No duplica recordatorios el mismo día. Incluye la mora en el monto.
+- **Conciliación de pagos** (migración 077): `payments` vinculado a `expense_period_items` / `fines`. Aprobar un pago salda el cargo (trigger); rechazar lo reabre. El residente no puede insertar pagos ajenos ni con campos MP (trigger). Cuenta corriente muestra pagos acreditados.
+- **Interés por mora**: `consortia.late_interest_monthly_pct` + `late_interest_grace_days` (Consorcio → Medios de pago). Fórmula única en `lib/mora.ts`, edge functions y `public.late_interest()`. Se ve en Mis Expensas, cuenta corriente, certificados y recordatorios.
+- **Ley 941**: matrícula RPA, CUIT admin/consorcio, email (Consorcio → Marca). PDF "Liquidación (Ley 941)" por período en Liquidación: egresos con proveedor y comprobante, totales por rubro, prorrateo por coeficiente, medios de pago, leyenda legal, firma y QR a la documentación digital.
+- **Multas**: el residente informa el pago de su multa desde Mis Expensas (queda vinculado a la multa).
+- **Tests**: `lib/liquidacion.ts` (prorrateo extraído de LiquidacionTab) y `lib/mora.ts` con vitest.
+- **Docs y landing**: README y CLAUDE.md del producto (el anterior era del plugin ECC), `public/landing.html` con posicionamiento y precios (link desde el login).
+
 
 - **Seguridad RLS**: cerradas todas las policies `USING(true)`, fuga de `expense_items` entre consorcios, escalada de rol; policies de admin acotadas por consorcio (un admin solo opera en el suyo). 0 policies de admin global.
 - **Bucket de comprobantes privado** + signed URLs (ya no es público ni listable).
@@ -19,7 +31,8 @@ Estado al 17/06/2026. Marca lo pendiente antes de abrir a consorcios reales.
 2. **SMTP en Supabase Auth** (Authentication → Email): para que los emails de confirmación y reset de contraseña lleguen de verdad. Sin SMTP propio, el envío es muy limitado.
 3. **MercadoPago**:
    - Cada consorcio carga su `access_token`/`public_key` (admin → MercadoPago).
-   - Setear el secreto `MP_WEBHOOK_SECRET` en Supabase (Edge Functions → Secrets) con el de Webhooks de MP.
+   - Setear el secreto `MP_WEBHOOK_SECRET` en Supabase (Edge Functions → Secrets) con el de Webhooks de MP. **Sin este secret el webhook responde 503 (fail-closed) y ningún pago se acredita.**
+   - Setear `APP_URL` (ej. `https://consorcio-trust.vercel.app`) para las back_urls del checkout.
    - En MP, configurar la URL de notificaciones: `https://<PROJECT>.supabase.co/functions/v1/mp-webhook`.
    - Probar con credenciales/usuarios de prueba antes de producción.
 4. **Sentry**: crear proyecto y setear `VITE_SENTRY_DSN` en Vercel (env var). Sin DSN, queda inactivo (no rompe).
@@ -37,7 +50,7 @@ Estado al 17/06/2026. Marca lo pendiente antes de abrir a consorcios reales.
 - **Cargos / pagos a residentes**: `expenses` + `expense_payments` (lo usa la vista Expensas e Informar Pago). **Fuente de verdad.**
 - **Egresos del consorcio por categoría**: `expenses_log` (lo usa Finanzas y ahora el Dashboard "Destino de tus Fondos").
 - El Dashboard ya **no** usa el huérfano `expense_items`/`expenses_summary` (quedaron fuera del path activo).
-- **Pendiente**: retirar definitivamente `expense_periods`/`expense_period_items` (LiquidacionTab, modelo paralelo) y evaluar expensas **por unidad** (hoy `expenses` es a nivel consorcio). Es un cambio de esquema con migración de datos — hacer deliberadamente.
+- **Decidido (09/2026)**: el modelo canónico es `expense_periods` → `expense_period_items` (cargo por unidad) + `payments` (pago conciliable). `expenses` + `expense_payments` quedan legacy (solo lectura en "Gastos del consorcio (informativo)"); retirarlas en una migración futura.
 
 ### TypeScript (fundación lista, migración gradual)
 - `tsconfig` (allowJs), `database.types.ts` generado, cliente Supabase tipado, `lib/utils`, `lib/pagination` y `claims.service` en `.ts`. `npm run typecheck` (tsc) en CI.
@@ -70,3 +83,12 @@ Cierre de gaps vs. competidores (Consorcio Abierto, Octopus, etc.). Migraciones 
 - Para que corra sola: agendar un cron (Supabase Scheduled Functions o un cron externo) que haga POST a `https://<PROJECT>.supabase.co/functions/v1/debt-reminders` con header `Authorization: Bearer <SERVICE_ROLE_KEY>`, 1 vez por dia.
 - WhatsApp: setear secrets `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID` (o `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID`). Sin eso, el recordatorio queda `in_app` en `debt_reminders_log` y se ve en el banner de la app.
 - Email automatico de expensas/recordatorios: requiere SMTP en Supabase Auth (pendiente).
+
+
+## 🧭 Próximos pasos (roadmap corto)
+
+1. Deploy de las 4 edge functions modificadas + migración 077 + secrets (`MP_WEBHOOK_SECRET`, `APP_URL`) + cron de `debt-reminders`.
+2. Probar el circuito MP completo con credenciales de prueba (pagar $1 ≠ aprobado; monto exacto → item `paid`).
+3. Onboarding self-service desde la landing (crear consorcio + importar unidades desde Excel) y plan gratis hasta 20 UF con límite en DB.
+4. QR interoperable / CBU-alias por unidad para conciliar transferencias por referencia.
+5. Asambleas: quórum y voto por coeficiente + libro de actas. Auditoría IA de facturas (Haiku). Sueldos FATERYH (plan Administración).

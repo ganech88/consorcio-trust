@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw, FileText } from 'lucide-react';
+import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw, FileText, FileDown } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
   approvePeriodItem, rejectPeriodItem, deletePeriodItems, getSignedComprobanteUrl, fetchEgresosTotalForPeriod,
+  fetchEgresosForPeriod, fetchConsortium,
 } from '../../services/data.service';
 import { fetchUnits } from '../../services/units.service';
+import { generateLiquidacionPdf } from '../../services/pdf.service';
+import { distributeByCoefficient } from '../../lib/liquidacion';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState } from './shared';
 import InformedPaymentsCard from './InformedPaymentsCard';
@@ -19,6 +22,7 @@ export default function LiquidacionTab({ session, userProfile }) {
   const [loadingItems, setLoadingItems] = useState(null);
   const [decidingItem, setDecidingItem] = useState(null);
   const [egresosTotal, setEgresosTotal] = useState(0);
+  const [pdfBusy, setPdfBusy] = useState(null);
   const [form, setForm] = useState({
     period: new Date().toISOString().slice(0, 7),
     totalAmount: '',
@@ -93,38 +97,18 @@ export default function LiquidacionTab({ session, userProfile }) {
       }
       const units = await fetchUnits(userProfile?.consortium_id);
       if (!units.length) { toast.error('No hay unidades cargadas. Cargalas en la pestana Unidades.'); return; }
-      const withCoef = units.filter(u => u.coefficient != null && Number(u.coefficient) > 0);
-      if (!withCoef.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la pestana Unidades.'); return; }
-
-      const total = Number(period.total_amount);
-      const rows = withCoef.map(u => ({
-        period_id: period.id,
-        unit_id: u.name,
-        unit_uuid: u.id,
-        user_id: u.owner_id || u.tenant_id || null,
-        amount: Math.round(total * Number(u.coefficient) / 100 * 100) / 100,
-      }));
-
-      // Ajuste de centavos: si por redondeo la suma no da el total exacto,
-      // corregimos la ultima unidad (solo si el desvio es chico, < $1).
-      const sumAmt = rows.reduce((s, r) => s + r.amount, 0);
-      const drift = Math.round((total - sumAmt) * 100) / 100;
-      if (rows.length > 0 && drift !== 0 && Math.abs(drift) < 1) {
-        rows[rows.length - 1].amount = Math.round((rows[rows.length - 1].amount + drift) * 100) / 100;
-      }
+      const dist = distributeByCoefficient(period.total_amount, units);
+      if (!dist.rows.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la pestana Unidades.'); return; }
+      const rows = dist.rows.map(r => ({ period_id: period.id, ...r }));
 
       await createPeriodItems(rows);
       const fresh = await fetchPeriodItems(period.id);
       setPeriodItems(prev => ({ ...prev, [period.id]: fresh }));
 
-      const sumCoef = withCoef.reduce((s, u) => s + Number(u.coefficient), 0);
-      const excluded = units.filter(u => u.coefficient == null || Number(u.coefficient) <= 0);
-      const coefOk = Math.abs(sumCoef - 100) < 0.5;
+      const { excluded, sumCoefficient: sumCoef, coefficientOk: coefOk, undistributed: sinDistribuir } = dist;
       if (excluded.length === 0 && coefOk) {
         toast.success(`Expensas distribuidas a ${rows.length} unidades segun su coeficiente`);
       } else {
-        const distribuido = rows.reduce((s, r) => s + r.amount, 0);
-        const sinDistribuir = Math.max(0, Math.round((total - distribuido) * 100) / 100);
         const avisos = [];
         if (excluded.length > 0) {
           avisos.push(`Quedaron SIN facturar ${excluded.length} unidad(es) sin coeficiente: ${excluded.map(u => u.name).join(', ')}.`);
@@ -162,6 +146,28 @@ export default function LiquidacionTab({ session, userProfile }) {
       toast.error(e.message, 'Error al actualizar el pago');
     } finally {
       setDecidingItem(null);
+    }
+  }
+
+  // PDF de la liquidación con formato Ley 941 (egresos + prorrateo + QR)
+  async function handleLiquidacionPdf(period) {
+    setPdfBusy(period.id);
+    try {
+      const cid = userProfile?.consortium_id;
+      const [items, egresos, consortium, units] = await Promise.all([
+        periodItems[period.id] ? Promise.resolve(periodItems[period.id]) : fetchPeriodItems(period.id),
+        fetchEgresosForPeriod(cid, period.period),
+        fetchConsortium(cid),
+        fetchUnits(cid),
+      ]);
+      const coefByUnit = Object.fromEntries((units || []).map(u => [u.id, u.coefficient]));
+      const rows = (items || []).map(it => ({ ...it, coefficient: it.unit_uuid ? coefByUnit[it.unit_uuid] : null }));
+      if (!periodItems[period.id]) setPeriodItems(prev => ({ ...prev, [period.id]: items }));
+      await generateLiquidacionPdf({ period, items: rows, egresos, consortium: consortium || {} });
+    } catch (e) {
+      toast.error(e.message, 'No se pudo generar el PDF');
+    } finally {
+      setPdfBusy(null);
     }
   }
 
@@ -287,6 +293,17 @@ export default function LiquidacionTab({ session, userProfile }) {
 
                 {isOpen && (
                   <div className="border-t border-slate-100 dark:border-white/[0.07] p-4 space-y-3">
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleLiquidacionPdf(period)}
+                        disabled={pdfBusy === period.id}
+                        title="Liquidación con el contenido que exige la Ley 941: egresos con comprobantes, prorrateo por coeficiente, matrícula RPA y QR"
+                        className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 disabled:opacity-60 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+                      >
+                        {pdfBusy === period.id ? <Loader2 size={12} className="animate-spin" /> : <FileDown size={12} />}
+                        Liquidación PDF (Ley 941)
+                      </button>
+                    </div>
                     {/* Distribuir por coeficiente */}
                     {items.length > 0 ? (
                       <div className="flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-200 dark:border-emerald-800 rounded-xl p-3">

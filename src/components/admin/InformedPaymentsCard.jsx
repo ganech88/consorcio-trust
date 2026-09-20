@@ -22,12 +22,18 @@ export default function InformedPaymentsCard({ userProfile }) {
     if (!cid) { setLoading(false); return; }
     Promise.all([fetchInformedPayments(cid), fetchReportedPeriodItems(cid)])
       .then(([pays, periodItems]) => {
+        const linked = new Set((pays || []).map(p => p.period_item_id).filter(Boolean));
         const a = (pays || []).map(p => ({
           key: 'pay-' + p.id, id: p.id, kind: 'payment', amount: p.amount,
-          who: p.payer_name, sub: p.unit_name ? `Unidad ${p.unit_name}` : 'Sin unidad',
-          date: p.created_at, proof: p.proof_url,
+          who: p.payer_name,
+          sub: [p.unit_name ? `Unidad ${p.unit_name}` : 'Sin unidad',
+                p.period ? `Expensa ${periodLabel(p.period)}` : p.fine_reason ? `Multa: ${p.fine_reason}` : 'Sin cargo asociado',
+                p.payment_method === 'mercadopago' ? 'MercadoPago' : null].filter(Boolean).join(' · '),
+          date: p.created_at, proof: p.proof_url, notes: p.notes,
+          warn: p.charge_amount != null && Number(p.amount) + 0.01 < Number(p.charge_amount) ? `Importe menor al cargo (${fmtCurrency(p.charge_amount)})` : null,
         }));
-        const b = (periodItems || []).map(it => ({
+        // Un item informado que ya tiene su pago vinculado se decide desde el pago (evita duplicados)
+        const b = (periodItems || []).filter(it => !linked.has(it.id)).map(it => ({
           key: 'per-' + it.id, id: it.id, kind: 'period', amount: it.amount,
           who: it.payer_name, sub: periodLabel(it.period) || 'Expensa por coeficiente',
           date: it.reported_at, proof: it.receipt_url,
@@ -42,7 +48,7 @@ export default function InformedPaymentsCard({ userProfile }) {
     setActing(row.key);
     try {
       if (row.kind === 'payment') {
-        await setInformedPaymentStatus(row.id, approve ? 'approved' : 'rejected');
+        await setInformedPaymentStatus(row.id, approve ? 'approved' : 'rejected', userProfile?.id);
       } else if (approve) {
         await approvePeriodItem(row.id, userProfile?.id);
       } else {
@@ -85,6 +91,8 @@ export default function InformedPaymentsCard({ userProfile }) {
               <p className="text-xs text-slate-400 dark:text-ink-low truncate">
                 {row.who} · {row.sub} · {row.date ? new Date(row.date).toLocaleDateString('es-AR') : ''}
               </p>
+              {row.notes && <p className="text-[11px] text-slate-500 dark:text-ink-mid truncate">{row.notes}</p>}
+              {row.warn && <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">{row.warn}</p>}
             </div>
             {row.proof && (
               <button onClick={() => openProof(row.proof)} className="flex items-center gap-1 text-xs text-brand-600 dark:text-brand-400 hover:underline shrink-0">

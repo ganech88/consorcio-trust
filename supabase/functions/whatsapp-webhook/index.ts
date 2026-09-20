@@ -38,14 +38,16 @@ Deno.serve(async (req) => {
     if (req.method === "POST") {
       const rawBody = await req.text();
 
-      // Verify Meta signature if app secret is configured
-      if (WHATSAPP_APP_SECRET) {
-        const signature = req.headers.get("X-Hub-Signature-256");
-        const valid = await verifyWebhookSignature(rawBody, signature);
-        if (!valid) {
-          console.error("Firma de webhook inválida");
-          return new Response("Forbidden", { status: 403 });
-        }
+      // FAIL-CLOSED: sin WHATSAPP_APP_SECRET el webhook no procesa nada.
+      if (!WHATSAPP_APP_SECRET) {
+        console.error("WHATSAPP_APP_SECRET no configurado: webhook deshabilitado");
+        return new Response("Webhook not configured", { status: 503 });
+      }
+      const signature = req.headers.get("X-Hub-Signature-256");
+      const valid = await verifyWebhookSignature(rawBody, signature);
+      if (!valid) {
+        console.error("Firma de webhook inválida");
+        return new Response("Forbidden", { status: 403 });
       }
 
       const body = JSON.parse(rawBody);

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel, UploadCloud } from 'lucide-react';
-import { fetchExpenses, fetchConsortiumFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof } from '../services/data.service';
+import { useSearchParams } from 'react-router-dom';
+import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel, UploadCloud, Wallet, Percent } from 'lucide-react';
+import { fetchExpenses, fetchConsortiumFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof, fetchMpConfig, createMpPreference, savePaymentRecord } from '../services/data.service';
 import { useToast } from './Toast';
 import { useData } from '../context/DataContext';
+import { amountWithInterest } from '../lib/mora';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400', icon: Clock },
@@ -29,12 +31,14 @@ function formatPeriod(period) {
   return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 }
 
-function PeriodReportModal({ item, onClose, onReported }) {
+// item: { id, amount, expense_periods } (expensa) o fine: { id, amount, reason } (multa)
+function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClose, onReported }) {
   const toast = useToast();
   const [notes, setNotes] = useState('');
   const [method, setMethod] = useState('Transferencia');
   const [payFile, setPayFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const amount = total ?? Number(item?.amount ?? fine?.amount ?? 0);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -45,9 +49,19 @@ function PeriodReportModal({ item, onClose, onReported }) {
         const { path } = await uploadPaymentProof(payFile);
         receiptUrl = path;
       }
-      await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method, receiptUrl });
-      toast.success('Pago informado. El administrador lo revisara.');
-      onReported(item.id);
+      if (fine) {
+        await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId: fine.unit_id || unitId, fineId: fine.id, method, notes: notes.trim() || null });
+        toast.success('Pago de la multa informado. El administrador lo revisara.');
+        onReported(fine.id);
+      } else {
+        await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method, receiptUrl });
+        // Registro conciliable: el admin aprueba el pago y la expensa queda saldada.
+        try {
+          await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId: item.unit_uuid || unitId, periodItemId: item.id, method, notes: interest > 0 ? `Incluye interés por mora ${interest}. ${notes.trim()}`.trim() : (notes.trim() || null) });
+        } catch (err) { console.warn('payments insert:', err.message); }
+        toast.success('Pago informado. El administrador lo revisara.');
+        onReported(item.id);
+      }
       onClose();
     } catch (err) {
       toast.error(err.message, 'Error al informar el pago');
@@ -65,8 +79,9 @@ function PeriodReportModal({ item, onClose, onReported }) {
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
-            <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{formatPeriod(item.expense_periods?.period)}</p>
-            <p className="text-sm font-bold text-brand-700 dark:text-brand-400 mt-0.5">Tu parte: {formatCurrency(item.amount)}</p>
+            <p className="text-xs font-semibold text-brand-700 dark:text-brand-400">{fine ? `Multa: ${fine.reason}` : formatPeriod(item.expense_periods?.period)}</p>
+            <p className="text-sm font-bold text-brand-700 dark:text-brand-400 mt-0.5">{fine ? 'Importe' : 'Tu parte'}: {formatCurrency(amount)}</p>
+            {interest > 0 && <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">Incluye {formatCurrency(interest)} de interés por mora</p>}
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Medio de pago</label>
@@ -98,14 +113,18 @@ function PeriodReportModal({ item, onClose, onReported }) {
 
 export default function ExpensesView({ session, userProfile }) {
   const toast = useToast();
-  const { payments: informedPayments } = useData();
+  const { payments: informedPayments, setPayments } = useData();
   const [consortiumExpenses, setConsortiumExpenses] = useState([]);
   const [periodItems, setPeriodItems] = useState([]);
   const [fines, setFines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reportTarget, setReportTarget] = useState(null);
+  const [fineTarget, setFineTarget] = useState(null);
   const [paymentInfo, setPaymentInfo] = useState(null);
+  const [mpConfig, setMpConfig] = useState(null);
+  const [payingMp, setPayingMp] = useState(null);
   const [showTotals, setShowTotals] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (!userProfile?.consortium_id) return;
@@ -114,23 +133,52 @@ export default function ExpensesView({ session, userProfile }) {
       fetchConsortiumFines(userProfile.consortium_id),
       fetchUserPeriodItems(session?.user?.id),
       fetchConsortium(userProfile.consortium_id),
+      fetchMpConfig(userProfile.consortium_id),
     ])
-      .then(([exp, myFines, items, cons]) => {
+      .then(([exp, myFines, items, cons, mp]) => {
         setConsortiumExpenses(exp || []);
         setFines(myFines || []);
         setPeriodItems(items || []);
         setPaymentInfo(cons || null);
+        setMpConfig(mp || null);
       })
       .catch(e => toast.error(e.message, 'Error al cargar expensas'))
       .finally(() => setLoading(false));
   }, [userProfile?.consortium_id, session?.user?.id, toast]);
 
+  // Vuelta del checkout de MercadoPago (?mp=success|failure|pending)
+  useEffect(() => {
+    const mp = searchParams.get('mp');
+    if (!mp) return;
+    if (mp === 'success') toast.success('Pago recibido. Se acredita automaticamente en unos minutos.');
+    else if (mp === 'pending') toast.success('Pago pendiente de acreditacion en MercadoPago.');
+    else toast.error('El pago no se completo. Podes intentar de nuevo.');
+    const next = new URLSearchParams(searchParams); next.delete('mp'); setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, toast]);
+
   const myUserId = session?.user?.id;
+  const mpEnabled = !!mpConfig?.enabled;
+  const withInterest = (it) => amountWithInterest(it.amount, it.expense_periods?.due_date, paymentInfo);
   const activeFines = fines.filter(f => f.status === 'active');
   const myActiveFines = activeFines.filter(f => f.user_id === myUserId);
   const totalFines = myActiveFines.reduce((s, f) => s + Number(f.amount), 0);
-  const myPending = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + Number(it.amount || 0), 0);
+  const myPending = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + withInterest(it).total, 0);
+  const totalInterest = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + withInterest(it).interest, 0);
   const totalPending = myPending + totalFines;
+  const informedFineIds = new Set(informedPayments.filter(p => p.fine_id && p.status === 'pending').map(p => p.fine_id));
+
+  async function handlePayMp(it) {
+    setPayingMp(it.id);
+    try {
+      const pref = await createMpPreference(it.id);
+      const url = pref?.init_point || pref?.sandbox_init_point;
+      if (!url) throw new Error('MercadoPago no devolvio un link de pago');
+      window.location.assign(url);
+    } catch (e) {
+      toast.error(e.message, 'No se pudo iniciar el pago');
+      setPayingMp(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -152,6 +200,7 @@ export default function ExpensesView({ session, userProfile }) {
           <div className="bg-white/15 rounded-xl p-3">
             <p className="text-white/70 text-xs font-medium mb-1">Lo que te toca pagar</p>
             <p className="text-2xl font-bold">{formatCurrency(totalPending)}</p>
+            {totalInterest > 0 && <p className="text-white/70 text-[11px] mt-0.5 flex items-center gap-1"><Percent size={10} /> incluye {formatCurrency(totalInterest)} de mora</p>}
           </div>
           <div className="bg-white/15 rounded-xl p-3">
             <p className="text-white/70 text-xs font-medium mb-1">Unidad</p>
@@ -229,15 +278,27 @@ export default function ExpensesView({ session, userProfile }) {
                     {it.expense_periods?.due_date ? `Vence ${new Date(it.expense_periods.due_date).toLocaleDateString('es-AR')}` : ''}
                   </p>
                 </div>
-                <p className="font-bold text-slate-800 dark:text-ink-hi font-mono shrink-0">{formatCurrency(it.amount)}</p>
+                {(() => { const w = it.status === 'paid' ? null : withInterest(it); return (
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-slate-800 dark:text-ink-hi font-mono">{formatCurrency(w ? w.total : it.amount)}</p>
+                  {w && w.interest > 0 && <p className="text-[10px] text-amber-600 dark:text-amber-400">+{formatCurrency(w.interest)} mora ({w.days} d)</p>}
+                </div>
+                ); })()}
                 {it.status === 'paid' ? (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Pagada</span>
                 ) : it.status === 'reported' ? (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">En revision</span>
                 ) : (
-                  <button onClick={() => setReportTarget(it)} className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0">
-                    <CreditCard size={11} /> Informar pago
-                  </button>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    {mpEnabled && (
+                      <button onClick={() => handlePayMp(it)} disabled={payingMp === it.id} className="flex items-center justify-center gap-1 bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        {payingMp === it.id ? <Loader2 size={11} className="animate-spin" /> : <Wallet size={11} />} Pagar online
+                      </button>
+                    )}
+                    <button onClick={() => setReportTarget(it)} className="flex items-center justify-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                      <CreditCard size={11} /> Informar pago
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
@@ -325,6 +386,13 @@ export default function ExpensesView({ session, userProfile }) {
                   <div className="text-right shrink-0">
                     <p className={`font-bold ${mine ? 'text-red-700 dark:text-red-400' : 'text-slate-500 dark:text-ink-mid'}`}>{formatCurrency(fine.amount)}</p>
                     <span className={`text-[10px] font-bold uppercase ${mine ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-ink-low'}`}>{mine ? 'La pagas vos' : 'Otra unidad'}</span>
+                    {mine && (informedFineIds.has(fine.id) ? (
+                      <p className="text-[10px] font-bold text-blue-600 dark:text-brand-400 mt-1">En revision</p>
+                    ) : (
+                      <button onClick={() => setFineTarget(fine)} className="mt-1 flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ml-auto">
+                        <CreditCard size={10} /> Informar pago
+                      </button>
+                    ))}
                   </div>
                 </div>
               );
@@ -342,8 +410,22 @@ export default function ExpensesView({ session, userProfile }) {
       {reportTarget && (
         <PeriodReportModal
           item={reportTarget}
+          total={withInterest(reportTarget).total}
+          interest={withInterest(reportTarget).interest}
+          userId={myUserId}
+          unitId={userProfile?.unit_id}
           onClose={() => setReportTarget(null)}
           onReported={(itemId) => setPeriodItems(prev => prev.map(it => it.id === itemId ? { ...it, status: 'reported' } : it))}
+        />
+      )}
+      {fineTarget && (
+        <PeriodReportModal
+          fine={fineTarget}
+          interest={0}
+          userId={myUserId}
+          unitId={userProfile?.unit_id}
+          onClose={() => setFineTarget(null)}
+          onReported={(fineId) => setPayments(prev => [{ id: 'tmp-' + fineId, fine_id: fineId, status: 'pending', amount: fineTarget.amount, created_at: new Date().toISOString() }, ...prev])}
         />
       )}
     </div>
