@@ -9,7 +9,8 @@ export async function fetchUnitLedger(unit) {
   // no tiene owner o si el cargo quedo a nombre del inquilino.
   const occupantIds = [unit.owner_id, unit.tenant_id].filter(Boolean);
   const itemFilters = [`unit_uuid.eq.${unit.id}`];
-  const fineFilters = [`unit_id.eq.${unit.id}`];
+  // fines.unit_id guarda el nombre de la unidad (texto); contemplamos ambos por compatibilidad
+  const fineFilters = [`unit_id.eq.${unit.id}`, `unit_id.eq.${unit.name}`];
   if (occupantIds.length) {
     itemFilters.push(`user_id.in.(${occupantIds.join(',')})`);
     fineFilters.push(`user_id.in.(${occupantIds.join(',')})`);

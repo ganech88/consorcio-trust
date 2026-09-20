@@ -1,5 +1,5 @@
 -- ============================================================
--- 077 · Conciliación de pagos + interés por mora + datos Ley 941
+-- 077 · Conciliación de pagos + interés por mora + datos Ley 941 (aplicada a kldgbgxycmvywvvftuvi via MCP el 2026-09-20)
 --
 -- (a) payments se vincula al cargo que salda (expense_period_items o fines).
 --     Aprobar un pago vinculado marca el cargo como pagado (trigger) => la
@@ -89,8 +89,10 @@ BEGIN
     SELECT 1 FROM expense_period_items i LEFT JOIN units u ON u.id = i.unit_uuid
      WHERE i.id = NEW.period_item_id AND (i.user_id = auth.uid() OR u.owner_id = auth.uid() OR u.tenant_id = auth.uid())
   ) THEN RAISE EXCEPTION 'La expensa no pertenece a tu unidad'; END IF;
+  -- fines.unit_id guarda el NOMBRE de la unidad (texto), no el uuid
   IF NEW.fine_id IS NOT NULL AND NOT EXISTS (
-    SELECT 1 FROM fines f LEFT JOIN units u ON u.id = f.unit_id
+    SELECT 1 FROM fines f
+      LEFT JOIN units u ON u.consortium_id = f.consortium_id AND u.name = f.unit_id
      WHERE f.id = NEW.fine_id AND (f.user_id = auth.uid() OR u.owner_id = auth.uid() OR u.tenant_id = auth.uid())
   ) THEN RAISE EXCEPTION 'La multa no pertenece a tu unidad'; END IF;
   RETURN NEW;

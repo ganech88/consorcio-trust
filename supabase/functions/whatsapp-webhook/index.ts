@@ -175,18 +175,19 @@ async function handleImageMessage(message: any, phone: string, user: any): Promi
 
     if (uploadError) throw new Error(`Error subiendo archivo: ${uploadError.message}`);
 
-    // 4. Obtener URL pública
-    const { data: { publicUrl } } = supabase.storage
-      .from("comprobantes")
-      .getPublicUrl(fullPath);
+    // 4. Bucket privado: guardamos el PATH (se firma al mostrar), no una URL pública.
+    // 5. Vincular al cargo pendiente más viejo de la unidad para que el pago concilie
+    const item = await findOldestPendingItem(user);
 
-    // 5. Registrar pago en la base de datos
     const { error: dbError } = await supabase.from("payments").insert([{
-      amount: 0, // Se completa cuando el admin lo revisa
+      amount: item ? Number(item.amount) : 0, // 0 = el admin completa el importe al revisar
       status: "pending",
-      proof_url: publicUrl,
+      proof_url: fullPath,
       user_id: user.id,
       unit_id: user.unit_id,
+      period_item_id: item?.id ?? null,
+      payment_method: "whatsapp",
+      notes: item ? `Comprobante recibido por WhatsApp para ${item.period}` : "Comprobante recibido por WhatsApp (sin cargo asociado)",
     }]);
 
     if (dbError) throw new Error(`Error guardando pago: ${dbError.message}`);
@@ -256,24 +257,16 @@ async function handleTextMessage(text: string, phone: string, user: any): Promis
 // =====================================================
 async function handleDebtQuery(phone: string, user: any): Promise<void> {
   try {
-    const { data: expenses } = await supabase
-      .from("expenses_summary")
-      .select("*")
-      .eq("unit_id", user.unit_id)
-      .order("period", { ascending: false })
-      .limit(1);
-
-    if (!expenses || expenses.length === 0) {
+    const items = await findPendingItems(user);
+    if (!items.length) {
       await sendWhatsAppMessage(phone, "No encontramos expensas pendientes para tu unidad. ✅");
       return;
     }
-
-    const exp = expenses[0];
+    const total = items.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+    const lines = items.map((i: any) => `• ${i.period}: $${Number(i.amount).toLocaleString("es-AR")} (${i.status === "reported" ? "informado, en revisión" : "pendiente"})`).join("\n");
     await sendWhatsAppMessage(phone,
-      `💰 *Estado de Expensas*\n\n` +
-      `Período: ${exp.period || "Actual"}\n` +
-      `Monto: $${Number(exp.total_amount || 0).toLocaleString("es-AR")}\n` +
-      `Estado: ${exp.status === "paid" ? "✅ Pagado" : "⏳ Pendiente"}\n\n` +
+      `💰 *Estado de Expensas*\n\n${lines}\n\n` +
+      `Total pendiente: $${total.toLocaleString("es-AR")}\n\n` +
       `Para informar un pago, enviá una foto del comprobante 📸`
     );
   } catch (error) {
@@ -353,6 +346,27 @@ async function downloadWhatsAppMedia(url: string): Promise<ArrayBuffer> {
 // =====================================================
 // UTILIDADES: Base de datos
 // =====================================================
+// Cargos no pagados de la unidad/usuario (modelo canónico: expense_period_items)
+async function findPendingItems(user: any): Promise<any[]> {
+  const filters = [`user_id.eq.${user.id}`];
+  if (user.unit_id) filters.push(`unit_uuid.eq.${user.unit_id}`);
+  const { data } = await supabase
+    .from("expense_period_items")
+    .select("id, amount, status, expense_periods(period, due_date)")
+    .or(filters.join(","))
+    .neq("status", "paid");
+  const seen = new Set<string>();
+  return (data ?? [])
+    .filter((i: any) => !seen.has(i.id) && seen.add(i.id))
+    .map((i: any) => ({ id: i.id, amount: i.amount, status: i.status, period: i.expense_periods?.period ?? "", due: i.expense_periods?.due_date ?? "" }))
+    .sort((a: any, b: any) => String(a.period).localeCompare(String(b.period)));
+}
+
+async function findOldestPendingItem(user: any): Promise<any | null> {
+  const items = (await findPendingItems(user)).filter((i: any) => i.status === "pending");
+  return items[0] ?? null;
+}
+
 async function findUserByPhone(phone: string): Promise<any | null> {
   // Buscar con y sin código de país
   const phoneVariants = [phone, `+${phone}`];

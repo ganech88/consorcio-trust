@@ -50,7 +50,7 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
         receiptUrl = path;
       }
       if (fine) {
-        await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId: fine.unit_id || unitId, fineId: fine.id, method, notes: notes.trim() || null });
+        await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId, fineId: fine.id, method, notes: notes.trim() || null });
         toast.success('Pago de la multa informado. El administrador lo revisara.');
         onReported(fine.id);
       } else {
