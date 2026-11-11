@@ -60,27 +60,16 @@ export default defineConfig({
         globIgnores: ['**/xlsx-*.js', '**/jspdf*.js', '**/CategoricalChart-*.js', '**/html2canvas*.js', '**/purify*.js'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/kldgbgxycmvywvvftuvi\.supabase\.co\/rest\/v1\/.*/i,
+            // Lecturas de la API para uso offline. La caché se borra al cerrar sesión
+            // (src/lib/sw-cache.ts) porque se indexa por URL, no por usuario.
+            // Storage NO se cachea: son comprobantes/documentos privados con signed URLs.
+            urlPattern: /^https:\/\/[a-z0-9]+\.supabase\.co\/rest\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-api-cache',
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300, // 5 minutos
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/kldgbgxycmvywvvftuvi\.supabase\.co\/storage\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'supabase-storage-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 86400, // 24 horas
               },
               cacheableResponse: {
                 statuses: [0, 200],

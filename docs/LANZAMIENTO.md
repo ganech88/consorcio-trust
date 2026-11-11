@@ -4,6 +4,24 @@ Estado al 20/09/2026. Marca lo pendiente antes de abrir a consorcios reales.
 
 ## ✅ Hecho en esta etapa
 
+### Noviembre 2026 — revisión general (frontend + config, sin cambios de DB)
+- **Bandeja de pagos del admin**: ya no lista (ni cuenta en el Inicio) los checkouts de MercadoPago abandonados. Antes cada clic en "Pagar online" dejaba un `payments` `pending` que el admin podía aprobar a mano y saldar un cargo sin cobro. Filtro compartido `NOT_UNPAID_MP_CHECKOUT` en `payments.service.js`; también se aplica a "Mis pagos informados" del residente.
+- **Headers de seguridad en Vercel** (`vercel.json`): `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, HSTS, y caché `immutable` para `/assets/*`. Falta CSP (ver pendientes).
+- **PWA / privacidad**: el service worker ya no cachea Storage (comprobantes y documentos privados) y la caché de la API se borra al cerrar sesión (`lib/sw-cache.ts`), para dispositivos compartidos.
+- **Rendición anual**: `xlsx` se carga recién al exportar (antes se importaba estático en el panel admin) y las celdas de texto pasan por `sanitizeCellValue` (anti formula-injection).
+- Ícono de las notificaciones push (`/favicon.ico` no existía → `/icon-192.svg`), `AuthContext` con `value` memoizado, tests nuevos (`sw-cache`, `export-utils`).
+- **MercadoPago — checkouts abandonados y devoluciones** (migración 079 + `mp-webhook` + `mercadopago-create-preference`; migración aplicada y ambas funciones desplegadas (v3) el 10/11/2026; `pg_cron` no está habilitado, así que por ahora el vencimiento corre solo al iniciar un pago online):
+  - `expire_stale_mp_checkouts()` pasa a `rejected` (`mp_status = 'expired'`) los checkouts MP sin pagar de más de 48 h. Corre por `pg_cron` si la extensión está habilitada y, además, cada vez que alguien inicia un pago online. Un pago que MP acredite tarde igual se aprueba (el webhook lo encuentra por `external_reference`).
+  - Iniciar un nuevo checkout reemplaza los intentos previos sin pagar del mismo usuario e item (`mp_status = 'superseded'`).
+  - `mp-webhook`: reembolso o contracargo posterior a la aprobación anula el pago y **reabre el cargo**; un reintento ya no des-aprueba un pago aprobado; devolución parcial y posible pago duplicado dejan una nota para el admin. La decisión vive en `mp-webhook/decide.ts` (pura, con tests en `src/lib/__tests__/mp-webhook-decide.test.js`).
+  - Rechazar/vencer un checkout MP ya no reabre un item que tenía un pago informado; rechazar un pago informado no reabre el item si queda otro pendiente. Aprobar un item desde Liquidación ya no aprueba checkouts MP sin pagar (evitaba un crédito doble en la cuenta corriente).
+
+**Pendientes detectados en la revisión:**
+- `npm audit`: 12 vulnerabilidades en prod (vite ≤6.4.3, react-router, ws, etc.) con fix sin breaking; correr `npm audit fix` y commitear el lock. `xlsx` no tiene fix en npm (solo se usa para escribir, riesgo bajo): migrar a `exceljs` o al tarball oficial de SheetJS.
+- Content-Security-Policy (requiere sacar el script inline de `index.html` o usar hash).
+- CORS `*` en las edge functions: restringir a `APP_URL`.
+- Campanita de notificaciones: el punto rojo queda prendido siempre que haya reclamos o pagos (no hay estado "leído").
+
 ### Septiembre 2026 — cierre de pendientes de seguridad + cobranza + Ley 941
 - **Webhooks fail-closed**: `mp-webhook` y `whatsapp-webhook` responden 503 si falta el secret (antes aceptaban sin firma). `mp-webhook` valida ventana de tiempo, compara `transaction_amount` con lo registrado y es idempotente (`payments.mp_payment_id` UNIQUE).
 - **MercadoPago conectado**: botón "Pagar online" en Mis Expensas cuando `mp_config.enabled`. `mercadopago-create-preference` recibe solo `periodItemId`; el monto (item + mora) se deriva en el servidor y se valida pertenencia a la unidad.

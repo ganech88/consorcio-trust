@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { BarChart3, FileSpreadsheet } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { fetchAnnualReport } from '../../services/reports.service';
+import { sanitizeCellValue } from '../../lib/export-utils';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState, fmtCurrency } from './shared';
 
@@ -39,17 +39,19 @@ export default function RendicionTab({ userProfile }) {
     };
   }, [rows]);
 
-  function exportExcel() {
+  async function exportExcel() {
     try {
+      // xlsx (~430 kB) se carga recién al exportar, no al abrir el panel admin.
+      const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
         byMonth.map(([m, v]) => ({ Mes: monthLabel(m), Egresos: v }))
       ), 'Por mes');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
-        byCategory.map(([c, v]) => ({ Categoria: c, Egresos: v }))
+        byCategory.map(([c, v]) => ({ Categoria: sanitizeCellValue(c), Egresos: v }))
       ), 'Por categoria');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
-        rows.map(r => ({ Fecha: r.date, Categoria: r.category, Detalle: r.description, Monto: Number(r.amount || 0) }))
+        rows.map(r => ({ Fecha: r.date, Categoria: sanitizeCellValue(r.category), Detalle: sanitizeCellValue(r.description), Monto: Number(r.amount || 0) }))
       ), 'Detalle');
       XLSX.writeFile(wb, 'rendicion-anual.xlsx');
     } catch (e) {

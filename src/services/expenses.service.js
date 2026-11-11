@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { NOT_UNPAID_MP_CHECKOUT } from './payments.service';
 
 export async function fetchExpenseItems() {
   // expense_items se scopea por su summary via RLS (no tiene consortium_id propio).
@@ -184,7 +185,7 @@ export async function approvePeriodItem(itemId, userId) {
   // Conciliación: si el residente informó el pago via `payments`, aprobarlo también.
   await supabase.from('payments')
     .update({ status: 'approved', approved_by: userId, approved_at: new Date().toISOString(), paid_at: new Date().toISOString() })
-    .eq('period_item_id', itemId).eq('status', 'pending');
+    .eq('period_item_id', itemId).eq('status', 'pending').or(NOT_UNPAID_MP_CHECKOUT);
   return data[0];
 }
 

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { NOT_UNPAID_MP_CHECKOUT } from './payments.service';
 
 export async function fetchConsortium(consortiumId) {
   if (!consortiumId) return null;
@@ -193,7 +194,7 @@ export async function fetchAdminPendingCounts(consortiumId) {
   let pagos = 0;
   const unitIds = (units.data || []).map(u => u.id);
   if (unitIds.length) {
-    const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('unit_id', unitIds).eq('status', 'pending');
+    const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('unit_id', unitIds).eq('status', 'pending').or(NOT_UNPAID_MP_CHECKOUT);
     pagos = count || 0;
   }
   const { data: periods } = await supabase.from('expense_periods').select('id').eq('consortium_id', consortiumId);

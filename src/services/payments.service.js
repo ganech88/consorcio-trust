@@ -61,6 +61,13 @@ export async function getSignedComprobanteUrl(pathOrUrl, expiresIn = 3600) {
 // Registro de pago informado por el residente. Vinculado al cargo que salda
 // (item de período o multa): el trigger de la DB deja el item en 'reported' y,
 // cuando el admin aprueba el pago, lo marca 'paid' (conciliación).
+// Un checkout de MercadoPago crea un `payments` 'pending' ANTES de que el residente
+// pague. Si abandona el checkout, esa fila queda pendiente para siempre: no es un
+// pago informado y no debe aparecer en bandejas ni contadores (el admin podría
+// aprobarla a mano y saldar un cargo que nadie pagó). Sí se muestran los pagos MP
+// que el webhook ya asoció (mp_payment_id) y dejó en revisión manual.
+export const NOT_UNPAID_MP_CHECKOUT = 'payment_method.is.null,payment_method.neq.mercadopago,mp_payment_id.not.is.null';
+
 export async function savePaymentRecord({ amount, proofUrl, userId, unitId, periodItemId = null, fineId = null, method = 'manual', notes = null }) {
   const { data, error } = await supabase
     .from('payments')
@@ -86,6 +93,7 @@ export async function fetchPayments(userId) {
     .from('payments')
     .select('id, amount, status, proof_url, created_at, unit_id, period_item_id, fine_id, payment_method, notes')
     .eq('user_id', userId)
+    .or(NOT_UNPAID_MP_CHECKOUT)
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -107,6 +115,7 @@ export async function fetchInformedPayments(consortiumId) {
     .select('id, amount, status, proof_url, created_at, unit_id, user_id, period_item_id, fine_id, payment_method, notes, expense_period_items(amount, expense_periods(period)), fines(reason, amount)')
     .in('unit_id', unitIds)
     .eq('status', 'pending')
+    .or(NOT_UNPAID_MP_CHECKOUT)
     .order('created_at', { ascending: false });
   if (error) throw error;
   const unitName = Object.fromEntries((units || []).map(u => [u.id, u.name]));

@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getSession, onAuthStateChange, signOut } from '../services/auth.service';
 import { useToast } from '../components/Toast';
+import { clearUserDataCaches } from '../lib/sw-cache';
 
 const AUTH_TIMEOUT_MS = 8000;
 
@@ -47,14 +48,21 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       await signOut();
+      await clearUserDataCaches();
       setSession(null);
     } catch (error) {
       toast.error(error.message, 'Error al cerrar sesión');
     }
   }, [toast]);
 
+  const exitRecovery = useCallback(() => setRecoveryMode(false), []);
+  const value = useMemo(
+    () => ({ session, setSession, authLoading, authError, logout, recoveryMode, exitRecovery }),
+    [session, authLoading, authError, logout, recoveryMode, exitRecovery]
+  );
+
   return (
-    <AuthContext.Provider value={{ session, setSession, authLoading, authError, logout, recoveryMode, exitRecovery: () => setRecoveryMode(false) }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

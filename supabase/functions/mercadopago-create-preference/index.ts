@@ -71,6 +71,16 @@ Deno.serve(async (req: Request) => {
       .select('access_token, enabled').eq('consortium_id', consortiumId).eq('enabled', true).maybeSingle();
     if (!mp?.access_token) return json({ error: 'El consorcio no tiene MercadoPago habilitado.' }, 400);
 
+    // Higiene (best-effort, nunca bloquea el pago): vencer checkouts abandonados
+    // viejos y reemplazar los intentos previos sin pagar de este usuario para este
+    // item. Si MP igual acredita uno viejo, el webhook lo aprueba por external_reference.
+    try {
+      await supabase.rpc('expire_stale_mp_checkouts');
+      await supabase.from('payments').update({ status: 'rejected', mp_status: 'superseded' })
+        .eq('period_item_id', item.id).eq('user_id', user.id).eq('payment_method', 'mercadopago')
+        .eq('status', 'pending').is('mp_payment_id', null);
+    } catch (e) { console.warn('limpieza de checkouts previos', e); }
+
     // Registro local ANTES de ir a MP (así el webhook siempre encuentra la referencia)
     const externalRef = `consorcio_${consortiumId}_${item.id}_${user.id}_${Date.now()}`;
     const { data: pay, error: payErr } = await supabase.from('payments').insert({

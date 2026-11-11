@@ -10,7 +10,7 @@
  * @param {*} value - Valor de la celda
  * @returns {*} Valor saneado
  */
-function sanitizeCellValue(value) {
+export function sanitizeCellValue(value) {
   if (typeof value === 'string' && /^[=+\-@]/.test(value)) return `'${value}`;
   return value;
 }

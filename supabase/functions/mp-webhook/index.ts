@@ -7,8 +7,11 @@
 //  - FAIL-CLOSED: si falta MP_WEBHOOK_SECRET responde 503 (nunca acepta sin firma).
 //  - El estado se toma SIEMPRE de la API de MP, nunca del body del webhook.
 //  - Idempotente: payments.mp_payment_id es UNIQUE; un reintento no duplica.
+//  - Reembolsos y contracargos posteriores a la aprobación anulan el pago y
+//    reabren el cargo (ver decide.ts + trigger reconcile_payment).
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { decidePaymentUpdate } from './decide.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -110,23 +113,19 @@ serve(async (req: Request) => {
     if (consortiumFromRef(payment.mp_external_reference) !== cid) return json({ error: 'referencia no coincide' }, 400);
 
     const mpStatus: string = mpData.status ?? 'pending';
-    const paidAmount = Number(mpData.transaction_amount ?? 0);
-    const expected = Number(payment.amount ?? 0);
 
-    const updateData: Record<string, unknown> = { mp_payment_id: mpPaymentId, mp_status: mpStatus };
-    if (mpStatus === 'approved') {
-      if (paidAmount + 0.01 < expected) {
-        // Pago menor a lo esperado: NO se aprueba. Queda para revisión manual del admin.
-        updateData.status = 'pending';
-        updateData.notes = `MP aprobó ${paidAmount} pero se esperaban ${expected}. Revisar.`;
-      } else if (payment.status !== 'approved') {
-        updateData.status = 'approved';
-        updateData.paid_at = mpData.date_approved ?? new Date().toISOString();
-        updateData.approved_at = new Date().toISOString();
-      }
-    } else if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(mpStatus) && payment.status !== 'approved') {
-      updateData.status = 'rejected';
+    // ¿El cargo ya está saldado por OTRO pago aprobado? (para avisar de un doble pago)
+    let chargeAlreadySettled = false;
+    if (payment.period_item_id && payment.status !== 'approved') {
+      const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true })
+        .eq('period_item_id', payment.period_item_id).eq('status', 'approved').neq('id', payment.id);
+      chargeAlreadySettled = (count ?? 0) > 0;
     }
+
+    const updateData: Record<string, unknown> = {
+      mp_payment_id: mpPaymentId,
+      ...decidePaymentUpdate(payment, mpData, { now: new Date().toISOString(), chargeAlreadySettled }),
+    };
 
     const { error: updateErr } = await supabase.from('payments').update(updateData).eq('id', payment.id);
     if (updateErr) {

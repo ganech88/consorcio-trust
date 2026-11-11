@@ -70,7 +70,7 @@ export default function LiquidacionTab({ session, userProfile }) {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('ConsorcioTrust', {
           body: `Nueva expensa publicada para el período ${form.period}`,
-          icon: '/favicon.ico',
+          icon: '/icon-192.svg',
         });
       }
     } catch (e) {

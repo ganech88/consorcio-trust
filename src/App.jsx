@@ -81,7 +81,7 @@ function requestNotificationPermission() {
 
 function showPushNotification(title, body) {
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/favicon.ico' });
+    new Notification(title, { body, icon: '/icon-192.svg' });
   }
 }
 
