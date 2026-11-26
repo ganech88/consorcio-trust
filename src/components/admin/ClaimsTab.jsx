@@ -6,7 +6,7 @@ import { STATUS_LABELS, LoadingSpinner, EmptyState } from './shared';
 import Pagination from './Pagination';
 import { PAGE_SIZE } from '../../lib/pagination';
 
-export default function ClaimsTab({ session }) {
+export default function ClaimsTab({ session, userProfile }) {
   const toast = useToast();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function ClaimsTab({ session }) {
 
   const loadPage = useCallback((p) => {
     setLoading(true);
-    fetchAllClaims({ page: p })
+    fetchAllClaims({ consortiumId: userProfile?.consortium_id, page: p })
       .then(result => {
         setClaims(result.data);
         setPagination(result);
@@ -28,7 +28,7 @@ export default function ClaimsTab({ session }) {
       })
       .catch((e) => toast.error(e.message, 'Error al cargar reclamos'))
       .finally(() => setLoading(false));
-  }, [toast]);
+  }, [toast, userProfile?.consortium_id]);
 
   useEffect(() => { loadPage(0); }, [loadPage]);
 
@@ -82,7 +82,7 @@ export default function ClaimsTab({ session }) {
           const isOpen = expanded === claim.id;
           const st = STATUS_LABELS[claim.status] || STATUS_LABELS.open;
           const userName = claim.profiles?.full_name || 'Usuario';
-          const unitId = claim.profiles?.unit_id || '—';
+          const unitLabel = claim.profiles?.unit_label;
 
           return (
             <div key={claim.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] overflow-hidden">
@@ -102,7 +102,7 @@ export default function ClaimsTab({ session }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-800 dark:text-ink-hi truncate">{claim.title}</p>
                   <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
-                    {userName} · Unidad {unitId} · {new Date(claim.created_at).toLocaleDateString('es-AR')}
+                    {userName}{unitLabel ? ` · Unidad ${unitLabel}` : ''} · {new Date(claim.created_at).toLocaleDateString('es-AR')}
                   </p>
                   {claim.category && (
                     <span className="text-[10px] bg-slate-100 dark:bg-surface-panel2 text-slate-500 dark:text-ink-mid px-1.5 py-0.5 rounded mt-1 inline-block">

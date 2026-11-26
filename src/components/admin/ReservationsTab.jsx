@@ -64,9 +64,9 @@ export default function ReservationsTab({ userProfile }) {
         <EmptyState icon={Calendar} text="No hay reservas en esta categoría" />
       ) : (
         filtered.map(res => {
-          const st = STATUS_LABELS[res.status] || STATUS_LABELS.pending;
+          const st = res.status === 'pending' ? { ...STATUS_LABELS.pending, label: 'Pendiente' } : (STATUS_LABELS[res.status] || STATUS_LABELS.pending);
           const userName = res.profiles?.full_name || 'Usuario';
-          const unitId = res.profiles?.unit_id || '—';
+          const unitLabel = res.profiles?.unit_label;
           const isPending = res.status === 'pending';
 
           return (
@@ -78,7 +78,7 @@ export default function ReservationsTab({ userProfile }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-800 dark:text-ink-hi">{res.amenity_name}</p>
                   <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
-                    {userName} · Unidad {unitId}
+                    {userName}{unitLabel ? ` · Unidad ${unitLabel}` : ''}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-ink-mid mt-1">
                     {new Date(res.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })} · {res.time_slot}
@@ -94,7 +94,7 @@ export default function ReservationsTab({ userProfile }) {
                     type="text"
                     value={noteInputs[res.id] || ''}
                     onChange={e => setNoteInputs(prev => ({ ...prev, [res.id]: e.target.value }))}
-                    placeholder="Nota opcional para el propietario..."
+                    placeholder="Nota opcional para el vecino..."
                     className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                   <div className="flex gap-2 justify-end">

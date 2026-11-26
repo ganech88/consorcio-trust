@@ -513,7 +513,7 @@ export default function ConsorcioTab({ userProfile }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-800 dark:text-ink-hi truncate">{m.full_name || 'Sin nombre'}</p>
-                  {m.unit_id && <p className="text-xs text-slate-400 dark:text-ink-low">Unidad {m.unit_id}</p>}
+                  {m.unit_label && <p className="text-xs text-slate-400 dark:text-ink-low">Unidad {m.unit_label}</p>}
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   m.role === 'admin'

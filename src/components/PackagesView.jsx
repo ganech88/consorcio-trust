@@ -80,7 +80,7 @@ function AdminForm({ session, userProfile, onCreated }) {
               <option value="">Elegí unidad / residente...</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.unit_id ? `Unidad ${m.unit_id} · ` : ''}{m.full_name || 'Sin nombre'}
+                  {m.unit_label ? `Unidad ${m.unit_label} · ` : ''}{m.full_name || 'Sin nombre'}
                 </option>
               ))}
             </select>
@@ -230,7 +230,7 @@ export default function PackagesView({ session, userProfile }) {
                   )}
                   {isAdmin && pkg.recipient && (
                     <p className="text-xs text-brand-600 dark:text-brand-400 mt-0.5">
-                      Para: {pkg.recipient.unit_id ? `Unidad ${pkg.recipient.unit_id} · ` : ''}{pkg.recipient.full_name || 'Residente'}
+                      Para: {pkg.recipient.unit_label ? `Unidad ${pkg.recipient.unit_label} · ` : ''}{pkg.recipient.full_name || 'Residente'}
                     </p>
                   )}
                   <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
@@ -272,7 +272,7 @@ export default function PackagesView({ session, userProfile }) {
                   {pkg.carrier && <p className="text-xs text-slate-400 dark:text-ink-low">via {pkg.carrier}</p>}
                   {isAdmin && pkg.recipient && (
                     <p className="text-xs text-slate-400 dark:text-ink-low">
-                      Para: {pkg.recipient.unit_id ? `Unidad ${pkg.recipient.unit_id} · ` : ''}{pkg.recipient.full_name || 'Residente'}
+                      Para: {pkg.recipient.unit_label ? `Unidad ${pkg.recipient.unit_label} · ` : ''}{pkg.recipient.full_name || 'Residente'}
                     </p>
                   )}
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">

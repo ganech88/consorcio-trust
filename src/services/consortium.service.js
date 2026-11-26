@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { fetchUnitNames } from './units.service';
 import { NOT_UNPAID_MP_CHECKOUT } from './payments.service';
 
 export async function fetchConsortium(consortiumId) {
@@ -31,7 +32,9 @@ export async function fetchConsortiumMembers(consortiumId) {
     .eq('consortium_id', consortiumId)
     .order('unit_id');
   if (error) { console.warn('fetchConsortiumMembers:', error.message); return []; }
-  return data || [];
+  // unit_label = nombre legible de la unidad ("1A"); unit_id es el identificador interno.
+  const names = await fetchUnitNames((data || []).map(m => m.unit_id));
+  return (data || []).map(m => ({ ...m, unit_label: names[m.unit_id] ?? null }));
 }
 
 export async function joinConsortiumByCode(inviteCode, _userId) {

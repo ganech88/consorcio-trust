@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { fetchUnitNames } from './units.service';
 
 // Schema real de `packages` (migración 013): consortium_id, unit_user_id
 // (destinatario), logged_by, carrier, description, photo_url,
@@ -35,7 +36,8 @@ export async function fetchAllPackages(consortiumId) {
       .from('profiles')
       .select('id, full_name, unit_id')
       .in('id', userIds);
-    profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+    const unitNames = await fetchUnitNames((profiles || []).map(p => p.unit_id));
+    profileMap = Object.fromEntries((profiles || []).map(p => [p.id, { ...p, unit_label: unitNames[p.unit_id] ?? null }]));
   }
 
   return packages.map(p => ({

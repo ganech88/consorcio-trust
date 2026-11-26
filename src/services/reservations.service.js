@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { fetchUnitNames } from './units.service';
 
 export async function fetchReservations(userId) {
   const { data, error } = await supabase
@@ -78,7 +79,8 @@ export async function fetchAllReservations(consortiumId) {
     .select('id, full_name, unit_id')
     .in('id', userIds);
 
-  const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+  const unitNames = await fetchUnitNames((profiles || []).map(p => p.unit_id));
+  const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, { ...p, unit_label: unitNames[p.unit_id] ?? null }]));
 
   return reservations.map(r => ({
     ...r,

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { paginateQuery } from '../lib/pagination';
+import { fetchUnitNames } from './units.service';
 import type { Database } from '../lib/database.types';
 
 type ClaimUpdate = Database['public']['Tables']['claims']['Update'];
@@ -44,19 +45,35 @@ export async function createClaim(params: {
   return data[0];
 }
 
-export async function fetchAllClaims({ page, pageSize }: { page?: number; pageSize?: number } = {}) {
+// Reclamos del consorcio ACTIVO para el panel del administrador. Se filtra por
+// consorcio además de RLS: un super admin (o un admin con varios edificios) veía
+// mezclados los reclamos de todos. Agrega `profiles.unit_label` ("1A").
+export async function fetchAllClaims(
+  { consortiumId, page, pageSize }: { consortiumId?: string | null; page?: number; pageSize?: number } = {},
+) {
+  if (!consortiumId) return page != null ? { data: [], total: 0, page: 0, pageSize: pageSize ?? 20, totalPages: 0 } : [];
   const query = supabase
     .from('claims')
     .select('*, profiles(full_name, unit_id)', { count: 'exact' })
+    .eq('consortium_id', consortiumId)
     .order('created_at', { ascending: false });
 
   if (page != null) {
-    return paginateQuery(query, page, pageSize);
+    const result: any = await paginateQuery(query, page, pageSize);
+    result.data = await withUnitLabels(result.data || []);
+    return result;
   }
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return withUnitLabels(data || []);
+}
+
+async function withUnitLabels(rows: any[]): Promise<any[]> {
+  const names: Record<string, string> = await fetchUnitNames(rows.map(r => r.profiles?.unit_id));
+  return rows.map(r => (r.profiles
+    ? { ...r, profiles: { ...r.profiles, unit_label: names[r.profiles.unit_id] ?? null } }
+    : r));
 }
 
 export async function updateClaimStatus(

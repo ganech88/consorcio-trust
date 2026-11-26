@@ -52,3 +52,13 @@ export async function createUnitsBulk(consortiumId, units) {
   if (error) throw error;
   return data || [];
 }
+
+// Mapa id -> nombre legible ("1A") para mostrar la unidad de una persona.
+// Las pantallas nunca deben mostrar el identificador interno de la unidad.
+export async function fetchUnitNames(unitIds) {
+  const ids = [...new Set((unitIds || []).filter(Boolean))];
+  if (!ids.length) return {};
+  const { data, error } = await supabase.from('units').select('id, name').in('id', ids);
+  if (error) { console.warn('fetchUnitNames:', error.message); return {}; }
+  return Object.fromEntries((data || []).map(u => [u.id, u.name]));
+}
