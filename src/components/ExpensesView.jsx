@@ -182,8 +182,10 @@ export default function ExpensesView({ session, userProfile }) {
   const activeFines = fines.filter(f => f.status === 'active');
   const myActiveFines = activeFines.filter(f => f.user_id === myUserId);
   const totalFines = myActiveFines.reduce((s, f) => s + Number(f.amount), 0);
-  const myPending = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + withInterest(it).total, 0);
-  const totalInterest = periodItems.filter(it => it.status !== 'paid').reduce((s, it) => s + withInterest(it).interest, 0);
+  // "Lo que te toca pagar" = solo lo pendiente; lo ya informado se muestra aparte como "en revisión".
+  const myPending = periodItems.filter(it => it.status === 'pending').reduce((s, it) => s + withInterest(it).total, 0);
+  const inReview = periodItems.filter(it => it.status === 'reported').reduce((s, it) => s + Number(it.amount || 0), 0);
+  const totalInterest = periodItems.filter(it => it.status === 'pending').reduce((s, it) => s + withInterest(it).interest, 0);
   const totalPending = myPending + totalFines;
   const informedFineIds = new Set(informedPayments.filter(p => p.fine_id && p.status === 'pending').map(p => p.fine_id));
 
@@ -220,6 +222,8 @@ export default function ExpensesView({ session, userProfile }) {
           <div className="bg-white/15 rounded-xl p-3">
             <p className="text-white/70 text-xs font-medium mb-1">Lo que te toca pagar</p>
             <p className="text-2xl font-bold">{formatCurrency(totalPending)}</p>
+            {inReview > 0 && <p className="text-[11px] text-white/80 mt-0.5">+ {formatCurrency(inReview)} en revisión</p>}
+            {totalPending === 0 && inReview === 0 && periodItems.length > 0 && <p className="text-[11px] text-white/80 mt-0.5">Estás al día</p>}
             {totalInterest > 0 && <p className="text-white/70 text-[11px] mt-0.5 flex items-center gap-1"><Percent size={10} /> incluye {formatCurrency(totalInterest)} de mora</p>}
           </div>
           <div className="bg-white/15 rounded-xl p-3">

@@ -131,11 +131,14 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
   const totalExpenses = gastos.reduce((sum, g) => sum + g.value, 0);
   const expenseLabel = totalExpenses > 0 ? `$${totalExpenses.toLocaleString('es-AR')}` : '$—';
   const isResident = userProfile?.role === 'resident' || userProfile?.role === 'owner';
-  const myShare = periodItems.filter(it => it.status !== 'paid').reduce((sum, it) => sum + Number(it.amount || 0), 0);
+  const myShare = periodItems.filter(it => it.status === 'pending').reduce((sum, it) => sum + Number(it.amount || 0), 0);
+  const myInReview = periodItems.some(it => it.status === 'reported');
   const expenseCardLabel = isResident ? 'Lo que te toca pagar' : 'Gastos del consorcio';
   const expenseCardValue = isResident ? (myShare > 0 ? `$${myShare.toLocaleString('es-AR')}` : '$0') : expenseLabel;
   const expenseCardSubtitle = isResident
-    ? (myShare > 0 ? 'Tu parte según coeficiente' : 'Pendiente de liquidación')
+    ? (myShare > 0 ? 'Tu parte según coeficiente'
+        : myInReview ? 'Tu pago está en revisión'
+        : periodItems.length > 0 ? 'Estás al día' : 'Todavía no hay expensas liquidadas')
     : (totalExpenses > 0 ? 'Calculado de gastos registrados' : 'Sin datos de expensas');
 
   // Claims urgency color
