@@ -4,7 +4,7 @@ Gestión de consorcios (propiedad horizontal) para Argentina, pensada primero pa
 
 - App: https://consorcio-trust.vercel.app · Landing: `/landing.html`
 - Stack: React 19 + Vite + Tailwind (PWA) · Supabase (Postgres + RLS + Storage + Edge Functions) · Vercel · Sentry
-- Segmento: consorcios chicos y autoadministrados (gratis hasta 20 UF) y administradores con cartera (fijo por consorcio, no por UF).
+- Segmento: consorcios chicos y autoadministrados y administradores con cartera (fijo por consorcio, no por UF).
 
 ## Qué hace
 

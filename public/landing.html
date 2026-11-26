@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ConsorcioTrust — Expensas claras, vecinos tranquilos</title>
-  <meta name="description" content="Gestión de consorcios con transparencia total: liquidación por coeficiente, cobranza con MercadoPago, cuenta corriente por unidad, reclamos, reservas y comunicados. Gratis para consorcios chicos." />
+  <meta name="description" content="Gestión de consorcios con transparencia total: liquidación por coeficiente, cobranza con MercadoPago, cuenta corriente por unidad, reclamos, reservas y comunicados." />
   <meta property="og:title" content="ConsorcioTrust — Expensas claras, vecinos tranquilos" />
   <meta property="og:description" content="La app de gestión para consorcios autoadministrados y administraciones que quieren mostrar adónde va cada peso." />
   <link rel="icon" href="/icon-192.svg" />
@@ -52,7 +52,7 @@
     .stats div b { display: block; font-size: 2rem; color: #5eead4; }
     .stats div span { color: #cbd5e1; font-size: .9rem; }
     .stats small { grid-column: 1 / -1; color: #94a3b8; font-size: .75rem; }
-    .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+    .pricing { display: grid; grid-template-columns: repeat(2, 1fr); max-width: 760px; margin-inline: auto; gap: 18px; align-items: stretch; }
     .plan { border: 1px solid var(--line); border-radius: 18px; padding: 26px; display: flex; flex-direction: column; }
     .plan.hot { border-color: var(--brand); box-shadow: 0 12px 40px rgba(13,148,136,.15); position: relative; }
     .plan.hot::before { content: "Más elegido"; position: absolute; top: -12px; left: 22px; background: var(--brand); color: #fff; font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
@@ -103,10 +103,10 @@
         <h1>Expensas claras, <em>vecinos tranquilos</em>.</h1>
         <p class="lead">ConsorcioTrust muestra adónde va cada peso: liquidación por coeficiente con formato Ley 941, cobranza online con MercadoPago, cuenta corriente por unidad y toda la vida del edificio en una sola app.</p>
         <div class="cta">
-          <a class="btn btn-primary" href="/?registro=1">Crear mi consorcio gratis</a>
+          <a class="btn btn-primary" href="/?registro=1">Crear mi consorcio</a>
           <a class="btn btn-ghost" href="#como">Ver cómo funciona</a>
         </div>
-        <p class="fine">Gratis hasta 20 unidades. Sin tarjeta. Cargá tus unidades y liquidá tu primera expensa en 15 minutos.</p>
+        <p class="fine">Cargá tus unidades y liquidá tu primera expensa en 15 minutos. Escribinos y te ayudamos a arrancar.</p>
       </div>
       <div class="mock" aria-hidden="true">
         <h4>Liquidación · Agosto 2026</h4>
@@ -162,31 +162,20 @@
       <h2>Precio por consorcio, no por unidad</h2>
       <p class="sub">Los sistemas grandes cobran por unidad funcional y apuntan al administrador con 20 edificios. Nosotros cobramos un fijo por consorcio para que un edificio de 12 unidades también pueda tener una gestión profesional.</p>
       <div class="pricing">
-        <div class="plan">
-          <h3>Vecinos</h3>
-          <div class="price">Gratis <small>para siempre</small></div>
-          <p class="who">Consorcios autoadministrados de hasta 20 unidades.</p>
-          <ul>
-            <li>Liquidación por coeficiente y PDF Ley 941</li>
-            <li>Informe de pago con comprobante</li>
-            <li>Cuenta corriente y certificado de deuda</li>
-            <li>Reclamos, reservas, comunicados, votaciones</li>
-            <li>1 consorcio</li>
-          </ul>
-          <a class="btn btn-ghost" href="/?registro=1">Empezar gratis</a>
-        </div>
         <div class="plan hot">
           <h3>Consorcio</h3>
           <div class="price">$24.900 <small>/ mes por consorcio</small></div>
           <p class="who">Edificios de cualquier tamaño que quieren cobrar mejor.</p>
           <ul>
-            <li>Todo lo del plan Vecinos, sin límite de unidades</li>
+            <li>Liquidación por coeficiente y PDF Ley 941, sin límite de unidades</li>
+            <li>Informe de pago con comprobante, cuenta corriente y certificado de deuda</li>
+            <li>Reclamos, reservas, comunicados y votaciones</li>
             <li>Cobro online con MercadoPago con conciliación automática</li>
             <li>Interés por mora y recordatorios por WhatsApp</li>
             <li>Rendición anual y exportaciones a Excel</li>
             <li>Marca propia en PDFs (logo, firma, matrícula)</li>
           </ul>
-          <a class="btn btn-primary" href="/?registro=1">Probar 30 días gratis</a>
+          <a class="btn btn-primary" href="mailto:hola@desarrollosinfronteras.com?subject=Plan%20Consorcio">Contratar</a>
         </div>
         <div class="plan">
           <h3>Administración</h3>
@@ -199,10 +188,10 @@
             <li>Migración de datos desde tu sistema actual</li>
             <li>Facturación centralizada</li>
           </ul>
-          <a class="btn btn-ghost" href="mailto:hola@consorciotrust.app?subject=Plan%20Administraci%C3%B3n">Hablar con nosotros</a>
+          <a class="btn btn-ghost" href="mailto:hola@desarrollosinfronteras.com?subject=Plan%20Administraci%C3%B3n">Hablar con nosotros</a>
         </div>
       </div>
-      <p class="fine">Precios en pesos argentinos, IVA incluido, referencia septiembre 2026. El plan gratuito no tiene vencimiento ni tarjeta.</p>
+      <p class="fine">Precios en pesos argentinos, IVA incluido, referencia septiembre 2026. Escribinos a <a href="mailto:hola@desarrollosinfronteras.com">hola@desarrollosinfronteras.com</a> y armamos el plan para tu edificio.</p>
     </div>
   </section>
 

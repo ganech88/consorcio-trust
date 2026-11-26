@@ -112,7 +112,7 @@ export default function LoginPage({ onLogin }) {
               <p className="text-slate-500 dark:text-ink-mid mt-1.5 text-sm">
                 {isLoginView
                   ? 'Ingresá con tu email y contraseña'
-                  : 'Gratis y sin tarjeta. Después vas a poder crear tu consorcio o sumarte al tuyo con un código.'}
+                  : 'Después vas a poder crear tu consorcio o sumarte al tuyo con el código que te pasó la administración.'}
               </p>
             </div>
 
@@ -227,7 +227,7 @@ export default function LoginPage({ onLogin }) {
                 onClick={() => setIsLoginView(!isLoginView)}
                 className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
               >
-                {isLoginView ? '¿No tenés cuenta? Registrate gratis' : '¿Ya tenés cuenta? Iniciá sesión'}
+                {isLoginView ? '¿No tenés cuenta? Registrate' : '¿Ya tenés cuenta? Iniciá sesión'}
               </button>
             </div>
           </div>
