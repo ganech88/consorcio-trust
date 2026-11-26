@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Users, Clock, ChevronRight, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
-import { AMENITIES_LIST } from '../lib/constants';
 import { useToast } from './Toast';
-import { fetchReservations, createReservation, cancelReservation, fetchConsortiumReservations } from '../services/data.service';
+import { fetchReservations, createReservation, cancelReservation, fetchConsortiumReservations, fetchAmenities } from '../services/data.service';
 import { formatDate } from '../lib/utils';
 import Modal from './Modal';
 
@@ -48,6 +47,7 @@ export default function AmenitiesView({ session, userProfile }) {
   const [selectedAmenity, setSelectedAmenity] = useState(null);
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
+  const [amenities, setAmenities] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [allReservations, setAllReservations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -59,10 +59,12 @@ export default function AmenitiesView({ session, userProfile }) {
     if (!session?.user?.id) return;
     setLoading(true);
     try {
-      const [mine, all] = await Promise.all([
+      const [mine, all, spaces] = await Promise.all([
         fetchReservations(session.user.id),
         fetchConsortiumReservations(userProfile?.consortium_id).catch(() => []),
+        fetchAmenities(userProfile?.consortium_id, { onlyActive: true }).catch(() => []),
       ]);
+      setAmenities(spaces);
       setReservations(mine);
       setAllReservations(all);
     } catch (err) {
@@ -86,7 +88,7 @@ export default function AmenitiesView({ session, userProfile }) {
     setSubmitting(true);
     try {
       const newRes = await createReservation({
-        amenityId: selectedAmenity.id,
+        amenityId: selectedAmenity.number,
         amenityName: selectedAmenity.name,
         date,
         timeSlot,
@@ -127,7 +129,7 @@ export default function AmenitiesView({ session, userProfile }) {
 
   const takenForSelected = selectedAmenity && date
     ? allReservations
-        .filter((r) => r.amenity_id === selectedAmenity.id && r.date === date && ['pending', 'approved'].includes(r.status))
+        .filter((r) => r.amenity_id === selectedAmenity.number && r.date === date && ['pending', 'approved'].includes(r.status))
         .map((r) => r.time_slot)
     : [];
 
@@ -136,32 +138,37 @@ export default function AmenitiesView({ session, userProfile }) {
       <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg shadow-brand-500/20">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <Calendar size={24} />
-          Reserva de Amenities
+          Reservas de espacios comunes
         </h3>
-        <p className="text-brand-100 mt-1 text-sm">Seleccioná un espacio para reservar tu turno</p>
+        <p className="text-brand-100 mt-1 text-sm">Elegí un espacio, el día y el horario. La administración confirma tu reserva.</p>
       </div>
 
+      {!loading && amenities.length === 0 && (
+        <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-8 text-center">
+          <Calendar size={36} className="mx-auto mb-3 text-slate-300 dark:text-ink-low" />
+          <p className="font-semibold text-slate-700 dark:text-ink-hi">Todavía no hay espacios para reservar</p>
+          <p className="text-sm text-slate-500 dark:text-ink-mid mt-1">
+            {['admin', 'super_admin'].includes(userProfile?.role)
+              ? 'Cargalos desde el Panel de administración → Espacios comunes.'
+              : 'Cuando la administración cargue el SUM, la parrilla u otros espacios, vas a poder reservarlos desde acá.'}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {AMENITIES_LIST.map((amenity) => {
-          const avail = getAvailabilityInfo(amenity.id, allReservations);
+        {amenities.map((amenity) => {
+          const avail = getAvailabilityInfo(amenity.number, allReservations);
           return (
-            <div
+            <button
+              type="button"
               key={amenity.id}
-              className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] hover:border-brand-200 dark:hover:border-brand-600 transition-all group cursor-pointer overflow-hidden"
+              className="text-left bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] hover:border-brand-200 dark:hover:border-brand-600 transition-all group overflow-hidden"
               onClick={() => { setSelectedAmenity(amenity); setDate(''); setTimeSlot(''); }}
             >
-              {/* Image with availability badge */}
-              <div className="relative h-40 overflow-hidden">
-                <img
-                  src={amenity.imageUrl}
-                  alt={amenity.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                {/* Availability badge */}
+              <div className="relative h-24 bg-gradient-to-br from-brand-500/15 to-brand-700/25 dark:from-brand-400/10 dark:to-brand-700/20 flex items-center justify-center">
+                <span className="text-5xl" aria-hidden="true">{amenity.icon || '🏢'}</span>
                 <span className={`absolute top-3 right-3 ${avail.badgeBg} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow`}>
-                  {avail.label}
+                  {avail.label === 'Disponible' ? 'Disponible hoy' : avail.label === 'Ocupado' ? 'Hoy completo' : avail.label}
                 </span>
               </div>
 
@@ -169,27 +176,31 @@ export default function AmenitiesView({ session, userProfile }) {
                 <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi group-hover:text-brand-700 dark:group-hover:text-brand-400 transition-colors">
                   {amenity.name}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-ink-mid mt-1">{amenity.description}</p>
+                {amenity.description && (
+                  <p className="text-sm text-slate-500 dark:text-ink-mid mt-1">{amenity.description}</p>
+                )}
 
                 <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 dark:text-ink-low">
-                  <span className="flex items-center gap-1">
-                    <Users size={14} />
-                    {amenity.capacity} personas
-                  </span>
+                  {amenity.capacity ? (
+                    <span className="flex items-center gap-1">
+                      <Users size={14} />
+                      Hasta {amenity.capacity} personas
+                    </span>
+                  ) : null}
                   {avail.nextSlot && (
                     <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
                       <Clock size={14} />
-                      Próx. libre: {avail.nextSlot.split(' - ')[0]}
+                      Próximo turno libre hoy: {avail.nextSlot.split(' - ')[0]}
                     </span>
                   )}
                 </div>
 
-                <button className="mt-4 w-full border-2 border-brand-100 dark:border-brand-900 text-brand-600 dark:text-brand-400 font-semibold py-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:border-brand-200 dark:hover:border-brand-800 transition-all flex items-center justify-center gap-2">
-                  Reservar Turno
+                <span className="mt-4 w-full border-2 border-brand-100 dark:border-brand-900 text-brand-600 dark:text-brand-400 font-semibold py-2.5 rounded-xl group-hover:bg-brand-50 dark:group-hover:bg-brand-900/20 transition-all flex items-center justify-center gap-2">
+                  Reservar turno
                   <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                </span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -199,7 +210,7 @@ export default function AmenitiesView({ session, userProfile }) {
         <div className="p-5 border-b border-slate-100 dark:border-white/[0.07]">
           <h4 className="font-bold text-slate-800 dark:text-ink-hi flex items-center gap-2">
             <Calendar size={18} className="text-brand-600 dark:text-brand-400" />
-            Mis Reservas
+            Mis reservas
           </h4>
         </div>
 
@@ -258,7 +269,7 @@ export default function AmenitiesView({ session, userProfile }) {
         <Modal title={`Reservar ${selectedAmenity.name}`} onClose={() => setSelectedAmenity(null)}>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="bg-slate-50 dark:bg-surface-inset rounded-xl p-4 flex items-center gap-3">
-              <span className="text-3xl">{selectedAmenity.icon}</span>
+              <span className="text-3xl">{selectedAmenity.icon || '🏢'}</span>
               <div>
                 <p className="font-bold text-slate-800 dark:text-ink-hi">{selectedAmenity.name}</p>
                 <p className="text-xs text-slate-500 dark:text-ink-mid">{selectedAmenity.description}</p>
@@ -318,7 +329,7 @@ export default function AmenitiesView({ session, userProfile }) {
                 ) : (
                   <CheckCircle size={16} />
                 )}
-                {submitting ? 'Enviando...' : 'Confirmar Reserva'}
+                {submitting ? 'Enviando...' : 'Confirmar reserva'}
               </button>
               <button
                 type="button"

@@ -49,7 +49,7 @@ export default function RendicionTab({ userProfile }) {
       ), 'Por mes');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
         byCategory.map(([c, v]) => ({ Categoria: sanitizeCellValue(c), Egresos: v }))
-      ), 'Por categoria');
+      ), 'Por categoría');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
         rows.map(r => ({ Fecha: r.date, Categoria: sanitizeCellValue(r.category), Detalle: sanitizeCellValue(r.description), Monto: Number(r.amount || 0) }))
       ), 'Detalle');

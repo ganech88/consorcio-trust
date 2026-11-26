@@ -14,8 +14,8 @@ const STATUS_CONFIG = {
 };
 
 const PAYMENT_STATUS_CONFIG = {
-  pending:  { label: 'Pendiente de aprobacion', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
-  reported: { label: 'En revision',             color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400' },
+  pending:  { label: 'Pendiente de aprobación', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  reported: { label: 'En revisión',             color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400' },
   approved: { label: 'Aprobado',                color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
   rejected: { label: 'Rechazado',               color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
 };
@@ -51,7 +51,7 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
       }
       if (fine) {
         await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId, fineId: fine.id, method, notes: notes.trim() || null });
-        toast.success('Pago de la multa informado. El administrador lo revisara.');
+        toast.success('Pago de la multa informado. La administración lo va a revisar.');
         onReported(fine.id);
       } else {
         await reportPeriodItemPayment(item.id, { notes: notes.trim() || null, method, receiptUrl });
@@ -59,7 +59,7 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
         try {
           await savePaymentRecord({ amount, proofUrl: receiptUrl, userId, unitId: item.unit_uuid || unitId, periodItemId: item.id, method, notes: interest > 0 ? `Incluye interés por mora ${interest}. ${notes.trim()}`.trim() : (notes.trim() || null) });
         } catch (err) { console.warn('payments insert:', err.message); }
-        toast.success('Pago informado. El administrador lo revisara.');
+        toast.success('Pago informado. La administración lo va a revisar.');
         onReported(item.id);
       }
       onClose();
@@ -98,7 +98,7 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
             </label>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas / N de operacion (opcional)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Notas o N.º de operación (opcional)</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Ej: Transferencia banco / comprobante..." className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none resize-none" />
           </div>
           <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
@@ -150,9 +150,9 @@ export default function ExpensesView({ session, userProfile }) {
   useEffect(() => {
     const mp = searchParams.get('mp');
     if (!mp) return;
-    if (mp === 'success') toast.success('Pago recibido. Se acredita automaticamente en unos minutos.');
-    else if (mp === 'pending') toast.success('Pago pendiente de acreditacion en MercadoPago.');
-    else toast.error('El pago no se completo. Podes intentar de nuevo.');
+    if (mp === 'success') toast.success('Pago recibido. Se acredita automáticamente en unos minutos.');
+    else if (mp === 'pending') toast.success('Tu pago está pendiente de acreditación en MercadoPago.');
+    else toast.error('El pago no se completó. Podés intentar de nuevo.');
     const next = new URLSearchParams(searchParams); next.delete('mp'); setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams, toast]);
 
@@ -172,7 +172,7 @@ export default function ExpensesView({ session, userProfile }) {
     try {
       const pref = await createMpPreference(it.id);
       const url = pref?.init_point || pref?.sandbox_init_point;
-      if (!url) throw new Error('MercadoPago no devolvio un link de pago');
+      if (!url) throw new Error('MercadoPago no devolvió un link de pago');
       window.location.assign(url);
     } catch (e) {
       toast.error(e.message, 'No se pudo iniciar el pago');
@@ -222,7 +222,7 @@ export default function ExpensesView({ session, userProfile }) {
             <AlertCircle size={20} className={overdue ? 'text-red-500 dark:text-red-400 shrink-0' : 'text-amber-500 dark:text-amber-400 shrink-0'} />
             <div>
               <p className={`text-sm font-bold ${overdue ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                {overdue ? 'Tenes expensas vencidas' : 'Recordatorio de vencimiento'}
+                {overdue ? 'Tenés expensas vencidas' : 'Recordatorio de vencimiento'}
               </p>
               <p className="text-xs text-slate-600 dark:text-ink-mid">
                 {due.length} expensa(s) por un total de {formatCurrency(total)}. Informa tu pago abajo.
@@ -240,7 +240,7 @@ export default function ExpensesView({ session, userProfile }) {
             Como pagar
           </h4>
           <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">
-            Transferi a estos datos y despues informa tu pago con el comprobante.
+            Transferí a estos datos y después informá tu pago con el comprobante.
           </p>
           <div className="space-y-1.5 text-sm">
             {paymentInfo.payment_cbu && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">CBU/CVU</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_cbu}</span></div>}
@@ -257,13 +257,13 @@ export default function ExpensesView({ session, userProfile }) {
       {/* Mi expensa por periodo (segun mi coeficiente) */}
       <div>
         <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1">
-          Mi expensa (segun mi coeficiente)
+          Mi expensa (según mi coeficiente)
         </h4>
         {periodItems.length === 0 ? (
           <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-8 text-center">
             <Receipt size={36} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
-            <p className="text-slate-500 dark:text-ink-mid text-sm">Todavia no hay expensas liquidadas para tu unidad</p>
-            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">Cuando la administracion liquide el periodo, vas a ver aca tu parte para informar el pago.</p>
+            <p className="text-slate-500 dark:text-ink-mid text-sm">Todavía no hay expensas liquidadas para tu unidad</p>
+            <p className="text-slate-400 dark:text-ink-low text-xs mt-1">Cuando la administración liquide el período, vas a ver acá tu parte para informar el pago.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -287,7 +287,7 @@ export default function ExpensesView({ session, userProfile }) {
                 {it.status === 'paid' ? (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Pagada</span>
                 ) : it.status === 'reported' ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">En revision</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-brand-400">En revisión</span>
                 ) : (
                   <div className="flex flex-col gap-1 shrink-0">
                     {mpEnabled && (
@@ -342,7 +342,7 @@ export default function ExpensesView({ session, userProfile }) {
           </button>
           {showTotals && (
             <div className="space-y-2 mt-2">
-              <p className="text-xs text-slate-400 dark:text-ink-low px-1">Estos son los gastos totales del edificio. Tu parte segun coeficiente es la de arriba.</p>
+              <p className="text-xs text-slate-400 dark:text-ink-low px-1">Estos son los gastos totales del edificio. Tu parte según coeficiente es la de arriba.</p>
               {consortiumExpenses.map(exp => {
                 const st = STATUS_CONFIG[exp.status] || STATUS_CONFIG.pending;
                 return (
@@ -365,7 +365,7 @@ export default function ExpensesView({ session, userProfile }) {
       {activeFines.length > 0 && (
         <div>
           <h4 className="text-xs font-bold text-slate-400 dark:text-ink-low uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
-            <Gavel size={13} /> Multas del periodo ({activeFines.length})
+            <Gavel size={13} /> Multas del período ({activeFines.length})
           </h4>
           <div className="space-y-2">
             {activeFines.map(fine => {
@@ -380,14 +380,14 @@ export default function ExpensesView({ session, userProfile }) {
                       {fine.unit_name ? `Unidad ${fine.unit_name}` : 'Unidad'} - {fine.reason}
                     </p>
                     <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
-                      {new Date(fine.fine_date).toLocaleDateString('es-AR')}{fine.period ? ` - Periodo ${fine.period}` : ''}
+                      {new Date(fine.fine_date).toLocaleDateString('es-AR')}{fine.period ? ` · Período ${fine.period}` : ''}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`font-bold ${mine ? 'text-red-700 dark:text-red-400' : 'text-slate-500 dark:text-ink-mid'}`}>{formatCurrency(fine.amount)}</p>
                     <span className={`text-[10px] font-bold uppercase ${mine ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-ink-low'}`}>{mine ? 'La pagas vos' : 'Otra unidad'}</span>
                     {mine && (informedFineIds.has(fine.id) ? (
-                      <p className="text-[10px] font-bold text-blue-600 dark:text-brand-400 mt-1">En revision</p>
+                      <p className="text-[10px] font-bold text-blue-600 dark:text-brand-400 mt-1">En revisión</p>
                     ) : (
                       <button onClick={() => setFineTarget(fine)} className="mt-1 flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ml-auto">
                         <CreditCard size={10} /> Informar pago

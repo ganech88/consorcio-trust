@@ -1,32 +1,36 @@
 import { useState } from 'react';
-import { Home, Megaphone, AlertCircle, Calendar, MessageSquare, Plus } from 'lucide-react';
+import { Home, Megaphone, Receipt, ShieldCheck, MessageSquare, Plus } from 'lucide-react';
 import { VIEWS } from '../lib/constants';
 import QuickActionSheet from './QuickActionSheet';
 
 const ICONS = {
   [VIEWS.DASHBOARD]:     Home,
+  [VIEWS.ADMIN]:         ShieldCheck,
+  [VIEWS.EXPENSES]:      Receipt,
   [VIEWS.ANNOUNCEMENTS]: Megaphone,
-  [VIEWS.CLAIMS]:        AlertCircle,
-  [VIEWS.AMENITIES]:     Calendar,
   [VIEWS.CHAT]:          MessageSquare,
 };
 
 const LABELS = {
   [VIEWS.DASHBOARD]:     'Inicio',
-  [VIEWS.ANNOUNCEMENTS]: 'Noticias',
-  [VIEWS.CLAIMS]:        'Reclamos',
-  [VIEWS.AMENITIES]:     'Reservas',
+  [VIEWS.ADMIN]:         'Panel',
+  [VIEWS.EXPENSES]:      'Expensas',
+  [VIEWS.ANNOUNCEMENTS]: 'Novedades',
   [VIEWS.CHAT]:          'Mensajes',
 };
 
-const BOTTOM_ITEMS = [VIEWS.DASHBOARD, VIEWS.ANNOUNCEMENTS, VIEWS.CLAIMS, VIEWS.AMENITIES, VIEWS.CHAT];
+// Lo que más se usa, a un toque. Reclamos y reservas están en el botón "+".
+// El administrador entra directo a su panel en vez del inicio de vecino.
+const RESIDENT_ITEMS = [VIEWS.DASHBOARD, VIEWS.EXPENSES, VIEWS.ANNOUNCEMENTS, VIEWS.CHAT];
+const ADMIN_ITEMS    = [VIEWS.ADMIN, VIEWS.EXPENSES, VIEWS.ANNOUNCEMENTS, VIEWS.CHAT];
 
-export default function BottomNav({ currentView, onNavigate, unreadChatCount = 0, onPaymentClick }) {
+export default function BottomNav({ currentView, onNavigate, unreadChatCount = 0, onPaymentClick, isAdmin = false }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Split into 2 + FAB + 2 layout
-  const leftItems  = BOTTOM_ITEMS.slice(0, 2);
-  const rightItems = BOTTOM_ITEMS.slice(2);
+  const items = isAdmin ? ADMIN_ITEMS : RESIDENT_ITEMS;
+  const leftItems  = items.slice(0, 2);
+  const rightItems = items.slice(2);
 
   function renderItem(viewId) {
     const Icon = ICONS[viewId];
@@ -36,6 +40,7 @@ export default function BottomNav({ currentView, onNavigate, unreadChatCount = 0
       <button
         key={viewId}
         onClick={() => onNavigate(viewId)}
+        aria-current={isActive ? 'page' : undefined}
         className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors relative ${
           isActive
             ? 'text-brand-600 dark:text-brand-400'

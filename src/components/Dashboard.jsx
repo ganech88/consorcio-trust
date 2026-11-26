@@ -133,7 +133,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
   const expenseCardLabel = isResident ? 'Lo que te toca pagar' : 'Gastos del consorcio';
   const expenseCardValue = isResident ? (myShare > 0 ? `$${myShare.toLocaleString('es-AR')}` : '$0') : expenseLabel;
   const expenseCardSubtitle = isResident
-    ? (myShare > 0 ? 'Tu parte segun coeficiente' : 'Pendiente de liquidacion')
+    ? (myShare > 0 ? 'Tu parte según coeficiente' : 'Pendiente de liquidación')
     : (totalExpenses > 0 ? 'Calculado de gastos registrados' : 'Sin datos de expensas');
 
   // Claims urgency color
@@ -245,7 +245,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <TrendingUp size={20} className="text-brand-600 dark:text-brand-400" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi">Destino de tus Fondos</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi">Destino de tus fondos</h3>
           </div>
           {onNavigate && (
             <button

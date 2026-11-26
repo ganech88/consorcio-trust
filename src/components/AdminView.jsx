@@ -4,7 +4,7 @@ import { VIEWS } from '../lib/constants';
 import {
   ShieldCheck, AlertCircle, DollarSign, Calendar, Megaphone, FileText,
   Receipt, Users, Wrench, Building2, Gavel, ClipboardList, HelpCircle, Home, Wallet, BarChart3,
-  ArrowLeft,
+  ArrowLeft, CalendarCheck,
 } from 'lucide-react';
 
 import UsersTab from './admin/UsersTab';
@@ -24,31 +24,37 @@ import LedgerTab from './admin/LedgerTab';
 import RendicionTab from './admin/RendicionTab';
 import ConsorcioTab from './admin/ConsorcioTab';
 import AdminHome from './admin/AdminHome';
+import SpacesTab from './admin/SpacesTab';
+import ModulesCard from './admin/ModulesCard';
+import SetupChecklist from './admin/SetupChecklist';
 import { fetchAdminPendingCounts } from '../services/data.service';
 
 const SECTIONS = {
-  usuarios:      { label: 'Usuarios',      icon: Users },
-  unidades:      { label: 'Unidades',      icon: Home },
-  claims:        { label: 'Reclamos',      icon: AlertCircle },
-  expenses:      { label: 'Expensas',      icon: DollarSign },
-  liquidacion:   { label: 'Liquidación',   icon: Receipt },
-  ctacte:        { label: 'Cta. Cte.',     icon: Wallet },
-  rendicion:     { label: 'Rendición',     icon: BarChart3 },
-  multas:        { label: 'Multas',        icon: Gavel },
-  reservations:  { label: 'Reservas',      icon: Calendar },
-  announcements: { label: 'Comunicados',   icon: Megaphone },
-  documents:     { label: 'Documentos',    icon: FileText },
-  maintenance:   { label: 'Mantenimiento', icon: Wrench },
-  seguros:       { label: 'Seguros',       icon: ShieldCheck },
-  presupuestos:  { label: 'Presupuestos',  icon: ClipboardList },
-  cobranzas:     { label: 'Cobranzas',     icon: HelpCircle },
-  consorcio:     { label: 'Consorcio',     icon: Building2 },
+  usuarios:      { label: 'Vecinos e invitaciones', icon: Users },
+  unidades:      { label: 'Unidades',               icon: Home },
+  claims:        { label: 'Reclamos',               icon: AlertCircle },
+  expenses:      { label: 'Gastos informativos',    icon: DollarSign },
+  liquidacion:   { label: 'Liquidación y pagos',    icon: Receipt },
+  ctacte:        { label: 'Cuenta corriente',       icon: Wallet },
+  rendicion:     { label: 'Rendición anual',        icon: BarChart3 },
+  multas:        { label: 'Multas',                 icon: Gavel },
+  reservations:  { label: 'Reservas',               icon: Calendar },
+  espacios:      { label: 'Espacios comunes',       icon: CalendarCheck },
+  announcements: { label: 'Comunicados',            icon: Megaphone },
+  documents:     { label: 'Documentos',             icon: FileText },
+  maintenance:   { label: 'Mantenimiento',          icon: Wrench },
+  seguros:       { label: 'Seguros',                icon: ShieldCheck },
+  presupuestos:  { label: 'Presupuestos',           icon: ClipboardList },
+  cobranzas:     { label: 'Pagos sin identificar',  icon: HelpCircle },
+  consorcio:     { label: 'Datos del consorcio',    icon: Building2 },
 };
 
+// Lo de todos los meses primero; la configuración inicial y lo ocasional después.
 const GROUPS = [
-  { title: 'Cobranzas y expensas', ids: ['liquidacion', 'ctacte', 'rendicion', 'expenses', 'cobranzas'] },
+  { title: 'Expensas y cobranza',  ids: ['liquidacion', 'ctacte', 'multas', 'cobranzas', 'rendicion'] },
   { title: 'Comunidad',            ids: ['claims', 'reservations', 'announcements', 'documents'] },
-  { title: 'Administración',       ids: ['usuarios', 'unidades', 'multas', 'maintenance', 'seguros', 'presupuestos', 'consorcio'] },
+  { title: 'Tu edificio',          ids: ['unidades', 'usuarios', 'espacios', 'consorcio'] },
+  { title: 'Gestión',              ids: ['maintenance', 'seguros', 'presupuestos', 'expenses'] },
 ];
 
 function badgeFor(id, counts) {
@@ -75,7 +81,13 @@ function renderSection(id, session, userProfile) {
     case 'seguros':       return <InsuranceTab session={session} userProfile={userProfile} />;
     case 'presupuestos':  return <BudgetsTab session={session} userProfile={userProfile} />;
     case 'cobranzas':     return <CollectionsTab session={session} userProfile={userProfile} />;
-    case 'consorcio':     return <ConsorcioTab session={session} userProfile={userProfile} />;
+    case 'espacios':      return <SpacesTab userProfile={userProfile} />;
+    case 'consorcio':     return (
+      <div className="space-y-6">
+        <ConsorcioTab session={session} userProfile={userProfile} />
+        <ModulesCard userProfile={userProfile} />
+      </div>
+    );
     default:              return null;
   }
 }
@@ -128,10 +140,12 @@ export default function AdminView({ session, userProfile }) {
       <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-6 rounded-2xl text-white shadow-lg">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <ShieldCheck size={24} />
-          Panel de Administrador
+          Panel de administración
         </h3>
         <p className="text-slate-300 mt-1 text-sm">Todo lo que administrás, en un solo lugar.</p>
       </div>
+
+      <SetupChecklist userProfile={userProfile} onGo={setActiveTab} />
 
       <AdminHome counts={counts} onGo={setActiveTab} userProfile={userProfile} />
 

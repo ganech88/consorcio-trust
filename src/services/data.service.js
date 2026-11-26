@@ -21,3 +21,5 @@ export * from './fines.service';
 export * from './suppliers.service';
 export * from './mercadopago.service';
 export * from './multi-consortium.service';
+export * from './amenities.service';
+export * from './units.service';

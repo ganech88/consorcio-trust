@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
+import { Mail, Lock, ArrowRight, UserPlus, User, Eye, EyeOff } from 'lucide-react';
 import { signIn, signUp, requestPasswordReset } from '../services/auth.service';
 import { useToast } from './Toast';
 import Logo from './Logo';
@@ -7,7 +7,12 @@ import Logo from './Logo';
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoginView, setIsLoginView] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  // La landing manda a /?registro=1: quien viene a crear su consorcio cae directo en el alta.
+  const [isLoginView, setIsLoginView] = useState(
+    () => !new URLSearchParams(window.location.search).has('registro')
+  );
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
@@ -20,7 +25,11 @@ export default function LoginPage({ onLogin }) {
         const { session } = await signIn(email, password);
         if (session) onLogin(session);
       } else {
-        const { session } = await signUp(email, password);
+        if (fullName.trim().length < 3) {
+          toast.error('Ingresá tu nombre y apellido para que la administración y tus vecinos te reconozcan.', 'Falta tu nombre');
+          return;
+        }
+        const { session } = await signUp(email, password, fullName);
         if (session) {
           // Sin confirmación de email: la cuenta ya queda activa.
           onLogin(session);
@@ -31,7 +40,7 @@ export default function LoginPage({ onLogin }) {
         }
       }
     } catch (error) {
-      toast.error(error.message, 'Error de autenticación');
+      toast.error(error.message, isLoginView ? 'No pudimos iniciar sesión' : 'No pudimos crear la cuenta');
     } finally {
       setLoading(false);
     }
@@ -65,7 +74,7 @@ export default function LoginPage({ onLogin }) {
                 {[
                   'Pagá y seguí tus expensas fácilmente',
                   'Reclamos y novedades en tiempo real',
-                  'Reservas de amenities online',
+                  'Reservas del SUM y espacios comunes',
                   'Comunicación directa con administración',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -101,11 +110,35 @@ export default function LoginPage({ onLogin }) {
                 {isLoginView ? 'Bienvenido de nuevo' : 'Creá tu cuenta'}
               </h1>
               <p className="text-slate-500 dark:text-ink-mid mt-1.5 text-sm">
-                {isLoginView ? 'Ingresá tus credenciales para continuar' : 'Completá los datos para registrarte'}
+                {isLoginView
+                  ? 'Ingresá con tu email y contraseña'
+                  : 'Gratis y sin tarjeta. Después vas a poder crear tu consorcio o sumarte al tuyo con un código.'}
               </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
+              {!isLoginView && (
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
+                    Nombre y apellido
+                  </label>
+                  <div className="relative">
+                    <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-ink-low" />
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06]"
+                      placeholder="Ej: María González"
+                      required
+                      maxLength={80}
+                      autoComplete="name"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-ink-mid mb-1.5">
                   Email
@@ -133,15 +166,23 @@ export default function LoginPage({ onLogin }) {
                   <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-ink-low" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06]"
-                    placeholder="••••••••"
+                    className="w-full pl-11 pr-12 py-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06]"
+                    placeholder={isLoginView ? '••••••••' : 'Mínimo 8 caracteres'}
                     required
-                    minLength={6}
+                    minLength={isLoginView ? 6 : 8}
                     autoComplete={isLoginView ? 'current-password' : 'new-password'}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 dark:text-ink-low hover:text-slate-600 dark:hover:text-ink-hi rounded-lg"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
@@ -154,7 +195,7 @@ export default function LoginPage({ onLogin }) {
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    {isLoginView ? 'Ingresar' : 'Crear Cuenta'}
+                    {isLoginView ? 'Ingresar' : 'Crear cuenta'}
                     {isLoginView ? <ArrowRight size={18} /> : <UserPlus size={18} />}
                   </>
                 )}
@@ -186,7 +227,7 @@ export default function LoginPage({ onLogin }) {
                 onClick={() => setIsLoginView(!isLoginView)}
                 className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
               >
-                {isLoginView ? '¿No tenés cuenta? Regístrate gratis' : '¿Ya tenés cuenta? Iniciá Sesión'}
+                {isLoginView ? '¿No tenés cuenta? Registrate gratis' : '¿Ya tenés cuenta? Iniciá sesión'}
               </button>
             </div>
           </div>

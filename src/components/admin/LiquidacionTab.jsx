@@ -96,9 +96,9 @@ export default function LiquidacionTab({ session, userProfile }) {
         await deletePeriodItems(period.id);
       }
       const units = await fetchUnits(userProfile?.consortium_id);
-      if (!units.length) { toast.error('No hay unidades cargadas. Cargalas en la pestana Unidades.'); return; }
+      if (!units.length) { toast.error('No hay unidades cargadas. Cargalas en la sección Unidades.'); return; }
       const dist = distributeByCoefficient(period.total_amount, units);
-      if (!dist.rows.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la pestana Unidades.'); return; }
+      if (!dist.rows.length) { toast.error('Ninguna unidad tiene coeficiente. Cargalos en la sección Unidades.'); return; }
       const rows = dist.rows.map(r => ({ period_id: period.id, ...r }));
 
       await createPeriodItems(rows);
@@ -107,7 +107,7 @@ export default function LiquidacionTab({ session, userProfile }) {
 
       const { excluded, sumCoefficient: sumCoef, coefficientOk: coefOk, undistributed: sinDistribuir } = dist;
       if (excluded.length === 0 && coefOk) {
-        toast.success(`Expensas distribuidas a ${rows.length} unidades segun su coeficiente`);
+        toast.success(`Expensas distribuidas a ${rows.length} unidades según su coeficiente`);
       } else {
         const avisos = [];
         if (excluded.length > 0) {
@@ -120,7 +120,7 @@ export default function LiquidacionTab({ session, userProfile }) {
           avisos.push(`Monto sin distribuir: $${sinDistribuir.toLocaleString('es-AR')}.`);
         }
         toast.error(
-          `Se distribuyo a ${rows.length} unidades, pero: ${avisos.join(' ')} Corregi los coeficientes en la pestana Unidades y usa Re-distribuir.`,
+          `Se distribuyó a ${rows.length} unidades, pero: ${avisos.join(' ')} Corregí los coeficientes en la sección Unidades y usá Re-distribuir.`,
           'Distribucion incompleta',
         );
       }
@@ -249,7 +249,7 @@ export default function LiquidacionTab({ session, userProfile }) {
 
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-slate-400 dark:text-ink-low">
-            Al publicar, distribui el total entre las unidades segun su <strong className="text-slate-500 dark:text-ink-mid">coeficiente</strong> (pestana Unidades).
+            Al publicar, distribuí el total entre las unidades según su <strong className="text-slate-500 dark:text-ink-mid">coeficiente</strong> (sección Unidades).
           </p>
           <button
             type="submit"
@@ -308,13 +308,13 @@ export default function LiquidacionTab({ session, userProfile }) {
                     {items.length > 0 ? (
                       <div className="flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-400/[0.10] border border-emerald-200 dark:border-emerald-800 rounded-xl p-3">
                         <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 size={14} /> Distribuida a {items.length} unidades segun coeficiente.
+                          <CheckCircle2 size={14} /> Distribuida a {items.length} unidades según coeficiente.
                         </p>
                         {items.every(i => i.status === 'pending') && (
                           <button
                             onClick={() => handleDistribute(period, true)}
                             disabled={saving === period.id}
-                            title="Borra y recalcula (solo si nadie informo o pago aun)"
+                            title="Borra y recalcula (solo si nadie informó o pagó todavía)"
                             className="flex items-center gap-1.5 bg-slate-200 dark:bg-surface-panel2 hover:bg-slate-300 dark:hover:bg-white/[0.1] disabled:opacity-60 text-slate-700 dark:text-ink-mid px-3 py-2 rounded-lg text-xs font-semibold transition-colors shrink-0"
                           >
                             {saving === period.id ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
@@ -325,7 +325,7 @@ export default function LiquidacionTab({ session, userProfile }) {
                     ) : (
                       <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-surface-inset rounded-xl p-3">
                         <p className="text-xs text-slate-500 dark:text-ink-mid">
-                          Distribuye ${Number(period.total_amount).toLocaleString('es-AR')} entre las unidades segun su coeficiente.
+                          Distribuye ${Number(period.total_amount).toLocaleString('es-AR')} entre las unidades según su coeficiente.
                         </p>
                         <button
                           onClick={() => handleDistribute(period)}

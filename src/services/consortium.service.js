@@ -41,7 +41,7 @@ export async function joinConsortiumByCode(inviteCode, _userId) {
   const { data, error } = await supabase.rpc('join_consortium_by_code', {
     p_code: inviteCode.trim(),
   });
-  if (error) throw new Error(error.message || 'No se pudo unir al consorcio. Intenta de nuevo.');
+  if (error) throw new Error(error.message || 'No pudimos sumarte al consorcio. Intentá de nuevo.');
   const row = Array.isArray(data) ? data[0] : data;
   return { id: row?.consortium_id, name: row?.consortium_name };
 }

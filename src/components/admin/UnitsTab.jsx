@@ -4,6 +4,7 @@ import { fetchUnits, createUnit, updateUnit, deleteUnit } from '../../services/u
 import { fetchConsortiumMembers } from '../../services/data.service';
 import { useToast } from '../Toast';
 import { LoadingSpinner, EmptyState } from './shared';
+import UnitsImportCard from './UnitsImportCard';
 
 export default function UnitsTab({ userProfile }) {
   const toast = useToast();
@@ -106,6 +107,12 @@ export default function UnitsTab({ userProfile }) {
   return (
     <div className="space-y-6">
       {/* Alta de unidad */}
+      <UnitsImportCard
+        consortiumId={userProfile?.consortium_id}
+        existingNames={units.map(u => u.name || '')}
+        onImported={(created) => setUnits(prev => [...prev, ...created].sort((a, b) => (a.name || '').localeCompare(b.name || '')))}
+      />
+
       <form onSubmit={handleCreate} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-5 space-y-4">
         <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2">
           <Home size={16} className="text-brand-500" />

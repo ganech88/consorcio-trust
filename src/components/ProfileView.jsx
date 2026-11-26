@@ -41,7 +41,7 @@ export default function ProfileView({ session, userProfile, onProfileUpdate, onL
       toast.success('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('No se pudo actualizar el perfil. Intenta nuevamente.');
+      toast.error('No se pudo actualizar el perfil. Intentá nuevamente.');
     } finally {
       setSaving(false);
     }

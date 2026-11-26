@@ -3,7 +3,7 @@ import {
   User, ShieldCheck, Receipt, MessageSquare, Vote, CalendarDays, DoorOpen,
   TrendingUp, PackageSearch, LayoutList, Store, Crown,
 } from 'lucide-react';
-import { VIEWS, NAV_ITEMS, NAV_SECTIONS } from '../lib/constants';
+import { VIEWS, NAV_ITEMS, NAV_SECTIONS, isModuleHidden } from '../lib/constants';
 import { useData } from '../context/DataContext';
 import Logo from './Logo';
 
@@ -16,7 +16,8 @@ const ICON_MAP = {
 export default function Sidebar({ session, userProfile, currentView, onNavigate, isOpen, onClose, onLogout }) {
   const isAdmin = userProfile?.role === 'admin';
   const isSuperAdmin = userProfile?.role === 'super_admin';
-  const { unreadChatCount } = useData();
+  const { unreadChatCount, consortium } = useData();
+  const hiddenModules = consortium?.hidden_modules;
 
   // Build a map from view id to NAV_ITEM for quick lookup
   const navMap = Object.fromEntries(NAV_ITEMS.map(item => [item.id, item]));
@@ -25,9 +26,10 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
   const sections = NAV_SECTIONS.map(section => ({
     label: section.label,
     items: section.keys
+      .filter(key => !isModuleHidden(key, hiddenModules))
       .map(key => navMap[key])
       .filter(Boolean),
-  }));
+  })).filter(section => section.items.length > 0);
 
   function renderNavButton(item) {
     const Icon = ICON_MAP[item.iconName];
@@ -126,22 +128,11 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
 
         {/* Grouped navigation */}
         <nav className="flex-1 px-3 overflow-y-auto space-y-4 pb-2" role="navigation" aria-label="Menú principal">
-          {sections.map((section) => (
-            <div key={section.label}>
-              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-ink-low px-3 mb-1.5">
-                {section.label}
-              </p>
-              <div className="space-y-0.5">
-                {section.items.map(renderNavButton)}
-              </div>
-            </div>
-          ))}
-
-          {/* Admin panel — shown only for admins, at bottom of nav */}
+          {/* Panel de administración — primero, es lo que más usa quien administra */}
           {(isAdmin || isSuperAdmin) && (
             <div>
               <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-ink-low px-3 mb-1.5">
-                Admin
+                Administración
               </p>
               {(isAdmin || isSuperAdmin) && (
                 <button
@@ -156,7 +147,7 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
                     className={`mr-3 shrink-0 transition-colors ${currentView === VIEWS.ADMIN ? 'text-white' : 'text-slate-400 dark:text-ink-low'}`}
                     size={18}
                   />
-                  Panel Admin
+                  Panel de administración
                 </button>
               )}
               {isSuperAdmin && (
@@ -177,6 +168,17 @@ export default function Sidebar({ session, userProfile, currentView, onNavigate,
               )}
             </div>
           )}
+          {sections.map((section) => (
+            <div key={section.label}>
+              <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 dark:text-ink-low px-3 mb-1.5">
+                {section.label}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map(renderNavButton)}
+              </div>
+            </div>
+          ))}
+
         </nav>
 
         {/* Logout */}

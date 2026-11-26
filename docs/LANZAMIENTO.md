@@ -4,6 +4,22 @@ Estado al 20/09/2026. Marca lo pendiente antes de abrir a consorcios reales.
 
 ## ✅ Hecho en esta etapa
 
+### Noviembre 2026 (2) — usabilidad para salir al mercado
+Revisión de "primer contacto" de un consorcio nuevo. Migración 080 aplicada.
+- **Espacios comunes configurables**: cada consorcio carga los suyos en Panel → Espacios comunes (tabla `amenities`, vinculada a las reservas por `number`). Antes todos veían 4 espacios fijos con fotos de stock. Un consorcio sin espacios ve un aviso, no una pileta que no tiene.
+- **Primeros pasos del admin** (`SetupChecklist` + `lib/setup-steps.ts`): unidades → coeficientes al 100% → medios de pago → invitar vecinos → primera liquidación. Se oculta sola al completar.
+- **Carga masiva de unidades** pegando filas desde Excel (`UnitsImportCard` + `lib/units-import.ts`); valida coeficientes, duplicados y avisa por fila.
+- **Secciones visibles** (`consortia.hidden_modules`, Panel → Datos del consorcio): el admin oculta del menú del vecino lo que el edificio no usa.
+- **Errores en castellano** (`lib/friendly-error.ts`, aplicado en `Toast`): se terminó el "Invalid login credentials".
+- **Registro** con nombre y apellido (viaja a `profiles.full_name` por `handle_new_user`), ver contraseña, mínimo 8. La landing lleva a `/?registro=1` (abre el alta, no el login).
+- **Celular**: barra inferior con Expensas; el admin tiene "Panel" como primer botón. Panel de administración arriba en el menú lateral.
+- **Panel admin reordenado** y con nombres claros (Liquidación y pagos, Cuenta corriente, Pagos sin identificar, Gastos informativos, Vecinos e invitaciones).
+- **Campanita**: el punto rojo aparece solo si hay novedades posteriores a la última vez que se abrió.
+- Onboarding con "Cerrar sesión" y explicación del código; tildes y voseo corregidos en las pantallas principales.
+- Landing: "pegar desde Excel" (lo que existe hoy) en vez de "importar desde Excel".
+
+**Sigue pendiente de producto/comercial:** límite del plan gratis (20 unidades) y cobro de suscripciones no están implementados (hoy es política comercial manual); el mail `hola@consorciotrust.app` de la landing usa otro dominio que el sitio (`.com`): confirmar que existe; regenerar `database.types.ts` (faltan columnas de 079/080).
+
 ### Noviembre 2026 — revisión general (frontend + config, sin cambios de DB)
 - **Bandeja de pagos del admin**: ya no lista (ni cuenta en el Inicio) los checkouts de MercadoPago abandonados. Antes cada clic en "Pagar online" dejaba un `payments` `pending` que el admin podía aprobar a mano y saldar un cargo sin cobro. Filtro compartido `NOT_UNPAID_MP_CHECKOUT` en `payments.service.js`; también se aplica a "Mis pagos informados" del residente.
 - **Headers de seguridad en Vercel** (`vercel.json`): `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, HSTS, y caché `immutable` para `/assets/*`. Falta CSP (ver pendientes).

@@ -17,7 +17,7 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
 
   const actions = [
     {
-      label: 'Informar Pago',
+      label: 'Informar un pago',
       description: 'Enviá tu comprobante',
       icon: UploadCloud,
       iconBg: 'bg-emerald-50 dark:bg-emerald-400/[0.14]',
@@ -25,7 +25,7 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
       onClick: () => { onPaymentClick?.(); onClose(); },
     },
     {
-      label: 'Nuevo Reclamo',
+      label: 'Nuevo reclamo',
       description: 'Reportá un problema',
       icon: AlertCircle,
       iconBg: 'bg-orange-50 dark:bg-orange-900/30',
@@ -33,8 +33,8 @@ export default function QuickActionSheet({ isOpen, onClose, onNavigate, onPaymen
       onClick: () => { onNavigate?.(VIEWS.CLAIMS); onClose(); },
     },
     {
-      label: 'Reservar Espacio',
-      description: 'SUM, piscina, coworking...',
+      label: 'Reservar un espacio',
+      description: 'SUM, parrilla y otros espacios comunes',
       icon: Calendar,
       iconBg: 'bg-brand-50 dark:bg-brand-400/[0.14]',
       iconColor: 'text-brand-600 dark:text-brand-400',

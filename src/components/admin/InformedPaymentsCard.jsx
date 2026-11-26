@@ -82,7 +82,7 @@ export default function InformedPaymentsCard({ userProfile }) {
         Pagos informados por aprobar
         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-400/[0.14] dark:text-amber-400">{items.length}</span>
       </h4>
-      <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">Residentes que informaron un pago y esperan tu confirmacion.</p>
+      <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">Vecinos que informaron un pago y esperan tu confirmación.</p>
       <div className="space-y-2">
         {items.map(row => (
           <div key={row.key} className="flex flex-wrap items-center gap-3 border border-slate-100 dark:border-white/[0.07] rounded-xl p-3">

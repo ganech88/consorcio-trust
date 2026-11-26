@@ -145,7 +145,7 @@ export default function LedgerTab({ userProfile }) {
                 <FileText size={14} /> Certificado de deuda (PDF)
               </button>
               <button onClick={() => handlePdf('intimacion')} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
-                <FileText size={14} /> Intimacion de pago (PDF)
+                <FileText size={14} /> Intimación de pago (PDF)
               </button>
             </div>
           )}

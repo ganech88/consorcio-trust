@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
+import { friendlyError } from '../lib/friendly-error';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
 const ToastContext = createContext(null);
@@ -90,7 +91,7 @@ export function ToastProvider({ children }) {
 
   const toast = useMemo(() => ({
     success: (message, title) => addToast({ type: 'success', message, title }),
-    error: (message, title) => addToast({ type: 'error', message, title: title || 'Error' }),
+    error: (message, title) => addToast({ type: 'error', message: friendlyError(message), title: title || 'Error' }),
     info: (message, title) => addToast({ type: 'info', message, title }),
   }), [addToast]);
 

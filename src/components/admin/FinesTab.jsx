@@ -75,7 +75,7 @@ export default function FinesTab({ session, userProfile }) {
       const unit = units.find(u => u.id === form.unit_id);
       userId = unit?.owner_id || unit?.tenant_id || null;
       if (!userId) {
-        toast.info('La unidad no tiene ocupante asignado: la multa quedara sin destinatario visible para los residentes.');
+        toast.info('La unidad no tiene ocupante asignado: la multa va a quedar sin destinatario visible para los residentes.');
       }
     }
     setSaving(true);

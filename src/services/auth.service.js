@@ -19,8 +19,14 @@ export async function signIn(email, password) {
   return data;
 }
 
-export async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+// fullName viaja en los metadatos: el trigger handle_new_user lo copia al perfil.
+export async function signUp(email, password, fullName) {
+  const name = (fullName || '').trim();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: name ? { data: { full_name: name } } : undefined,
+  });
   if (error) throw error;
   return data;
 }

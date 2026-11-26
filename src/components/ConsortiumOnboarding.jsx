@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Building2, KeyRound, Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, KeyRound, Plus, ArrowRight, Loader2, LogOut } from 'lucide-react';
 import { joinConsortiumByCode, createConsortiumForUser } from '../services/data.service';
 import { useToast } from './Toast';
 import Logo from './Logo';
 
-export default function ConsortiumOnboarding({ session, onComplete }) {
+export default function ConsortiumOnboarding({ session, onComplete, onLogout }) {
   const [mode, setMode] = useState(null); // 'join' | 'create'
   const [inviteCode, setInviteCode] = useState('');
   const [name, setName] = useState('');
@@ -34,7 +34,7 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
     setLoading(true);
     try {
       const consortium = await createConsortiumForUser(name, address, city, session.user.id);
-      toast.success(`Consorcio "${consortium.name}" creado`);
+      toast.success(`Consorcio "${consortium.name}" creado. Te dejamos una lista de primeros pasos en tu panel.`);
       onComplete();
     } catch (err) {
       toast.error(err.message, 'Error al crear consorcio');
@@ -56,9 +56,9 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
           <span className="font-bold text-xl text-slate-800 dark:text-ink-hi">ConsorcioTrust</span>
         </div>
 
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-ink-hi mb-1">Configurá tu consorcio</h2>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-ink-hi mb-1">¿Cómo querés empezar?</h2>
         <p className="text-slate-500 dark:text-ink-mid text-sm mb-6">
-          Para empezar, unite a un consorcio existente o creá uno nuevo.
+          Si sos vecino, sumate a tu edificio con el código que te pasó la administración. Si administrás un edificio, crealo acá.
         </p>
 
         {!mode && (
@@ -71,8 +71,8 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
                 <KeyRound size={20} className="text-white" />
               </div>
               <div>
-                <p className="font-bold text-slate-800 dark:text-ink-hi text-sm">Tengo un código de invitación</p>
-                <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">Unirme a un consorcio existente</p>
+                <p className="font-bold text-slate-800 dark:text-ink-hi text-sm">Soy vecino y tengo un código</p>
+                <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">Sumarme a mi edificio como propietario o inquilino</p>
               </div>
               <ArrowRight size={16} className="ml-auto text-slate-400 shrink-0" />
             </button>
@@ -85,8 +85,8 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
                 <Plus size={20} className="text-white" />
               </div>
               <div>
-                <p className="font-bold text-slate-800 dark:text-ink-hi text-sm">Crear nuevo consorcio</p>
-                <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">Seré administrador del consorcio</p>
+                <p className="font-bold text-slate-800 dark:text-ink-hi text-sm">Administro un edificio</p>
+                <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">Crear el consorcio y ser su administrador</p>
               </div>
               <ArrowRight size={16} className="ml-auto text-slate-400 shrink-0" />
             </button>
@@ -114,6 +114,9 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
                 className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-4 py-3 text-sm bg-slate-50 dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none font-mono tracking-widest"
                 autoFocus
               />
+              <p className="text-xs text-slate-500 dark:text-ink-mid mt-2">
+                El código te lo da la administración de tu edificio. Si no lo tenés, pedíselo: te asigna a tu unidad automáticamente.
+              </p>
             </div>
             <button
               type="submit"
@@ -182,6 +185,19 @@ export default function ConsortiumOnboarding({ session, onComplete }) {
               Crear consorcio
             </button>
           </form>
+        )}
+
+        {onLogout && (
+          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.07] flex items-center justify-between gap-3">
+            <p className="text-xs text-slate-400 dark:text-ink-low truncate">{session?.user?.email}</p>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-ink-mid hover:text-red-500 transition-colors shrink-0"
+            >
+              <LogOut size={14} /> Cerrar sesión
+            </button>
+          </div>
         )}
       </div>
     </div>

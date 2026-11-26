@@ -36,7 +36,7 @@ export const CHART_COLORS_DARK = ['#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#
 
 // --- Items de navegación ---
 export const NAV_ITEMS = [
-  { id: VIEWS.DASHBOARD,     label: 'Dashboard',     iconName: 'Home' },
+  { id: VIEWS.DASHBOARD,     label: 'Inicio',        iconName: 'Home' },
   { id: VIEWS.EXPENSES,      label: 'Expensas',      iconName: 'Receipt' },
   { id: VIEWS.CALENDAR,      label: 'Calendario',    iconName: 'CalendarDays' },
   { id: VIEWS.PACKAGES,      label: 'Paquetería',    iconName: 'PackageSearch' },
@@ -49,8 +49,8 @@ export const NAV_ITEMS = [
   { id: VIEWS.ACCESS,        label: 'Accesos',       iconName: 'DoorOpen' },
   { id: VIEWS.FINANCE,       label: 'Finanzas',      iconName: 'TrendingUp' },
   { id: VIEWS.SUPPLIERS,     label: 'Proveedores',   iconName: 'Store' },
-  { id: VIEWS.DOCS,          label: 'Documentos',    iconName: 'FileText' },
-  { id: VIEWS.DOCUMENTS,    label: 'Mis Documentos', iconName: 'FileText' },
+  { id: VIEWS.DOCS,          label: 'Documentos del edificio', iconName: 'FileText' },
+  { id: VIEWS.DOCUMENTS,    label: 'Mis trámites',  iconName: 'FileText' },
   { id: VIEWS.CONTACTS,      label: 'Contactos',     iconName: 'Phone' },
 ];
 
@@ -62,49 +62,26 @@ export const NAV_SECTIONS = [
   { label: 'Info',       keys: ['/finanzas', '/proveedores', '/docs', '/documents', '/contactos'] },
 ];
 
-// --- Amenities disponibles ---
-export const AMENITIES_LIST = [
-  {
-    id: 1,
-    name: 'SUM / Parrilla',
-    capacity: 30,
-    description: 'Salón de usos múltiples con parrilla y cocina equipada',
-    icon: '🍖',
-    imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=600&q=80',
-  },
-  {
-    id: 2,
-    name: 'Piscina',
-    capacity: 20,
-    description: 'Piscina climatizada con sector para niños',
-    icon: '🏊',
-    imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600&q=80',
-  },
-  {
-    id: 3,
-    name: 'Coworking',
-    capacity: 10,
-    description: 'Espacio de trabajo compartido con WiFi y proyector',
-    icon: '💻',
-    imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
-  },
-  {
-    id: 4,
-    name: 'Gimnasio',
-    capacity: 15,
-    description: 'Equipamiento completo con zona de cardio y pesas',
-    icon: '🏋️',
-    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80',
-  },
+// --- Módulos que el administrador puede ocultar del menú de los vecinos ---
+// (Inicio, Expensas, Novedades, Reclamos y Mensajes son el núcleo y no se ocultan.)
+export const OPTIONAL_MODULES = [
+  { id: VIEWS.AMENITIES, label: 'Reservas',                description: 'Turnos del SUM, parrilla y otros espacios comunes' },
+  { id: VIEWS.CALENDAR,  label: 'Calendario',              description: 'Eventos y fechas del edificio' },
+  { id: VIEWS.VOTING,    label: 'Votaciones',              description: 'Consultas y votaciones entre vecinos' },
+  { id: VIEWS.BOARD,     label: 'Tablón',                  description: 'Avisos y clasificados entre vecinos' },
+  { id: VIEWS.PACKAGES,  label: 'Paquetería',              description: 'Aviso de paquetes recibidos en portería' },
+  { id: VIEWS.ACCESS,    label: 'Accesos',                 description: 'Visitas autorizadas' },
+  { id: VIEWS.FINANCE,   label: 'Finanzas',                description: 'Egresos del consorcio a la vista de los vecinos' },
+  { id: VIEWS.SUPPLIERS, label: 'Proveedores',             description: 'Proveedores del edificio' },
+  { id: VIEWS.DOCS,      label: 'Documentos del edificio', description: 'Reglamento, actas y otros documentos' },
+  { id: VIEWS.DOCUMENTS, label: 'Mis trámites',            description: 'Documentación que el vecino presenta a la administración' },
+  { id: VIEWS.CONTACTS,  label: 'Contactos',               description: 'Teléfonos útiles y de emergencia' },
 ];
 
-// --- Documentos de ejemplo ---
-export const DOCUMENTS_LIST = [
-  { id: 1, name: 'Reglamento de Copropiedad', date: '12/03/2023', type: 'pdf' },
-  { id: 2, name: 'Acta Asamblea Ordinaria 2025', date: '15/11/2025', type: 'pdf' },
-  { id: 3, name: 'Liquidación Expensas Enero 2026', date: '05/01/2026', type: 'pdf' },
-  { id: 4, name: 'Póliza de Seguro Edilicio', date: '01/06/2025', type: 'pdf' },
-];
+/** Vistas visibles en el menú según lo que ocultó la administración. */
+export function isModuleHidden(viewId, hiddenModules) {
+  return Array.isArray(hiddenModules) && hiddenModules.includes(viewId);
+}
 
 // --- Tipos de archivo aceptados para comprobantes ---
 export const ACCEPTED_FILE_TYPES = 'image/*,.pdf';

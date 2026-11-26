@@ -169,7 +169,7 @@ export default function ChatView({ session, userProfile }) {
         {conversations.length === 0 ? (
           <div className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-12 text-center">
             <MessageSquare size={40} className="mx-auto text-slate-300 dark:text-ink-low mb-3" />
-            <p className="text-slate-500 dark:text-ink-mid text-sm">Todavia no hay conversaciones</p>
+            <p className="text-slate-500 dark:text-ink-mid text-sm">Todavía no hay conversaciones</p>
           </div>
         ) : (
           conversations.map(c => (
@@ -184,7 +184,7 @@ export default function ChatView({ session, userProfile }) {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{c.profiles?.full_name || 'Residente'}</p>
                 <p className="text-xs text-slate-400 dark:text-ink-low">
-                  {c.last_message_at ? `Ultimo mensaje: ${formatDate(c.last_message_at)}` : 'Sin mensajes aun'}
+                  {c.last_message_at ? `Último mensaje: ${formatDate(c.last_message_at)}` : 'Sin mensajes aún'}
                 </p>
               </div>
               {(unreadByConv[c.id] || 0) > 0 && (
@@ -200,7 +200,7 @@ export default function ChatView({ session, userProfile }) {
   }
 
   const grouped = groupByDate(messages);
-  const headerName = isAdmin ? (conversation?.profiles?.full_name || 'Residente') : 'Administracion';
+  const headerName = isAdmin ? (conversation?.profiles?.full_name || 'Vecino') : 'Administración';
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] animate-fade-in">
@@ -229,9 +229,9 @@ export default function ChatView({ session, userProfile }) {
         {grouped.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
             <MessageSquare size={40} className="text-slate-300 dark:text-ink-low mb-3" />
-            <p className="text-slate-500 dark:text-ink-mid text-sm font-medium">No hay mensajes aun</p>
+            <p className="text-slate-500 dark:text-ink-mid text-sm font-medium">Todavía no hay mensajes</p>
             <p className="text-slate-400 dark:text-ink-low text-xs mt-1">
-              {isAdmin ? 'Escribi para responderle al residente' : 'Envia un mensaje para iniciar la conversacion con la administracion'}
+              {isAdmin ? 'Escribí para responderle al vecino' : 'Escribí tu consulta y la administración te responde por acá'}
             </p>
           </div>
         )}
@@ -287,7 +287,7 @@ export default function ChatView({ session, userProfile }) {
           type="text"
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder="Escribi tu mensaje..."
+          placeholder="Escribí tu mensaje..."
           className="flex-1 border border-slate-200 dark:border-white/[0.09] rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-panel dark:text-ink-hi focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
           maxLength={1000}
           disabled={sending}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Bell, Sun, Moon } from 'lucide-react';
 import { VIEWS } from './lib/constants';
+import { hasUnseenNotifications } from './lib/notifications';
 import { ToastProvider, useToast } from './components/Toast';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -40,14 +41,14 @@ const SuppliersView   = lazy(() => import('./components/SuppliersView'));
 const SuperAdminView  = lazy(() => import('./components/SuperAdminView'));
 
 const VIEW_TITLES = {
-  [VIEWS.DASHBOARD]:     'Dashboard',
+  [VIEWS.DASHBOARD]:     'Inicio',
   [VIEWS.CLAIMS]:        'Reclamos',
   [VIEWS.ANNOUNCEMENTS]: 'Novedades',
   [VIEWS.AMENITIES]:     'Reservas',
-  [VIEWS.DOCS]:          'Documentos',
+  [VIEWS.DOCS]:          'Documentos del edificio',
   [VIEWS.CONTACTS]:      'Contactos',
   [VIEWS.PROFILE]:       'Mi Perfil',
-  [VIEWS.ADMIN]:         'Panel Admin',
+  [VIEWS.ADMIN]:         'Panel de administración',
   [VIEWS.EXPENSES]:      'Expensas',
   [VIEWS.CHAT]:          'Mensajes',
   [VIEWS.VOTING]:        'Votaciones',
@@ -56,7 +57,7 @@ const VIEW_TITLES = {
   [VIEWS.FINANCE]:       'Finanzas',
   [VIEWS.PACKAGES]:      'Paquetería',
   [VIEWS.BOARD]:         'Tablón',
-  [VIEWS.DOCUMENTS]:     'Mis Documentos',
+  [VIEWS.DOCUMENTS]:     'Mis trámites',
   [VIEWS.SUPPLIERS]:     'Proveedores',
   [VIEWS.SUPER_ADMIN]:   'Super Admin',
 };
@@ -71,6 +72,12 @@ function ViewSkeleton() {
       <SkeletonList />
     </div>
   );
+}
+
+const NOTIF_SEEN_KEY = 'ct-notif-seen-at';
+
+function readNotifSeenAt() {
+  try { return Number(localStorage.getItem(NOTIF_SEEN_KEY) || 0); } catch { return 0; }
 }
 
 function requestNotificationPermission() {
@@ -156,12 +163,19 @@ function AppContent() {
     setSidebarOpen(false);
   }
 
+  const [notifSeenAt, setNotifSeenAt] = useState(() => readNotifSeenAt());
+
   function handleOpenNotifications() {
     setShowNotifications(prev => !prev);
     setRealtimeBadge(0);
+    const now = Date.now();
+    setNotifSeenAt(now);
+    try { localStorage.setItem(NOTIF_SEEN_KEY, String(now)); } catch { /* sin storage: solo en memoria */ }
   }
 
-  const hasNotifBadge = realtimeBadge > 0 || reclamos.length > 0 || payments.length > 0;
+  // Punto rojo solo si hay algo más nuevo que la última vez que se abrió la campanita.
+  const hasNotifBadge = realtimeBadge > 0
+    || hasUnseenNotifications([reclamos, payments, reservations], notifSeenAt);
 
   if (authLoading) {
     return (
@@ -206,6 +220,7 @@ function AppContent() {
       <ConsortiumOnboarding
         session={session}
         onComplete={() => loadData(session.user.id)}
+        onLogout={handleLogout}
       />
     );
   }
@@ -233,7 +248,7 @@ function AppContent() {
             >
               <Menu size={22} />
             </button>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-ink-hi">{VIEW_TITLES[view] || 'Dashboard'}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-ink-hi">{VIEW_TITLES[view] || 'Inicio'}</h2>
           </div>
 
           <div className="flex items-center gap-2">
@@ -343,6 +358,7 @@ function AppContent() {
         onNavigate={handleNavigate}
         unreadChatCount={unreadChatCount}
         onPaymentClick={() => navigate(VIEWS.EXPENSES)}
+        isAdmin={['admin', 'super_admin'].includes(userProfile?.role)}
       />
     </div>
   );

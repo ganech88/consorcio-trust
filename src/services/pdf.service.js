@@ -240,7 +240,7 @@ export async function generateDebtPdf({ kind = 'certificado', unit, ownerName, m
 
   if (kind === 'intimacion') {
     doc.setFontSize(9); doc.setTextColor(70);
-    const txt = `Se intima al pago de la suma adeudada de ${money(total)} dentro de los 10 (diez) dias corridos de recibida la presente. Vencido dicho plazo sin regularizar la deuda, se procedera conforme a derecho y al reglamento de copropiedad.`;
+    const txt = `Se intima al pago de la suma adeudada de ${money(total)} dentro de los 10 (diez) días corridos de recibida la presente. Vencido dicho plazo sin regularizar la deuda, se procedera conforme a derecho y al reglamento de copropiedad.`;
     doc.text(doc.splitTextToSize(txt, 182), M, endY);
     endY += 24;
   }
