@@ -1,28 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
 import { Building2, ChevronDown, Check, Loader2 } from 'lucide-react';
-import { fetchAdminConsortia, switchActiveConsortium } from '../services/data.service';
+import { fetchAdminConsortia, fetchAllConsortia, switchActiveConsortium } from '../services/data.service';
+import { useData } from '../context/DataContext';
 
 export default function ConsortiumSwitcher({ userProfile, onSwitch }) {
   const [consortia, setConsortia] = useState([]);
   const [open, setOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
   const ref = useRef(null);
+  const { consortium: activeConsortium } = useData();
+  const isSuperAdmin = userProfile?.role === 'super_admin';
 
   const isMulti = ['admin', 'super_admin'].includes(userProfile?.role);
 
   useEffect(() => {
     if (!isMulti || !userProfile?.id) return;
-    fetchAdminConsortia(userProfile.id)
+    // El super admin puede entrar a cualquier consorcio; el admin, a los que tiene asignados.
+    const load = isSuperAdmin ? fetchAllConsortia() : fetchAdminConsortia(userProfile.id);
+    load
       .then(list => {
         // Asegurarse que el consorcio actual esté en la lista
         if (list.length === 0 && userProfile.consortium_id) {
-          setConsortia([{ id: userProfile.consortium_id, name: 'Consorcio actual' }]);
+          setConsortia([{ id: userProfile.consortium_id, name: null }]);
         } else {
           setConsortia(list);
         }
       })
       .catch(() => {});
-  }, [userProfile?.id, isMulti, userProfile?.consortium_id]);
+  }, [userProfile?.id, isMulti, isSuperAdmin, userProfile?.consortium_id]);
 
   // Cerrar al clickear fuera
   useEffect(() => {
@@ -39,7 +44,7 @@ export default function ConsortiumSwitcher({ userProfile, onSwitch }) {
       <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-ink-mid px-2">
         <Building2 size={13} />
         <span className="truncate max-w-[140px]">
-          {consortia[0]?.name || userProfile?.consortium_id?.slice(0, 8) || 'Consorcio'}
+          {consortia[0]?.name || activeConsortium?.name || 'Mi consorcio'}
         </span>
       </div>
     );
