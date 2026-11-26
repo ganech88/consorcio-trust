@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { parseLocalDate } from '../../lib/utils';
 import { Wallet, Receipt, Gavel, FileText, Percent, Banknote } from 'lucide-react';
 import { amountWithInterest } from '../../lib/mora';
 import { fetchUnits } from '../../services/units.service';
@@ -75,7 +76,7 @@ export default function LedgerTab({ userProfile }) {
       id: 'p' + p.id, kind: 'pago', label: `Pago acreditado${p.payment_method === 'mercadopago' ? ' (MercadoPago)' : ''}`,
       date: p.paid_at || p.created_at, amount: Number(p.amount || 0), status: 'credit',
     })),
-  ].sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+  ].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date)) : [];
 
   const charges = movements.filter(m => m.status !== 'credit');
   const totalFacturado = charges.reduce((s, m) => s + m.amount, 0);
@@ -170,7 +171,7 @@ export default function LedgerTab({ userProfile }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm truncate">{m.label}</p>
-                      <p className="text-xs text-slate-400 dark:text-ink-low">{m.date ? new Date(m.date).toLocaleDateString('es-AR') : '—'}</p>
+                      <p className="text-xs text-slate-400 dark:text-ink-low">{m.date ? parseLocalDate(m.date).toLocaleDateString('es-AR') : '—'}</p>
                     </div>
                     <p className={`font-bold font-mono shrink-0 ${m.kind === 'pago' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-ink-hi'}`}>{m.kind === 'pago' ? '-' : ''}{fmtCurrency(m.amount)}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>

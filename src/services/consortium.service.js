@@ -191,17 +191,21 @@ export async function fetchAdminPendingCounts(consortiumId) {
     supabase.from('claims').select('id', { count: 'exact', head: true }).eq('consortium_id', consortiumId).eq('status', 'open'),
     supabase.from('units').select('id').eq('consortium_id', consortiumId),
   ]);
+  // Un pago informado contra un item de período deja el item en 'reported': es UN
+  // pendiente, no dos. Se cuentan los pagos y, aparte, los items informados sin pago.
   let pagos = 0;
+  const linkedItems = new Set();
   const unitIds = (units.data || []).map(u => u.id);
   if (unitIds.length) {
-    const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('unit_id', unitIds).eq('status', 'pending').or(NOT_UNPAID_MP_CHECKOUT);
-    pagos = count || 0;
+    const { data: pend } = await supabase.from('payments').select('id, period_item_id').in('unit_id', unitIds).eq('status', 'pending').or(NOT_UNPAID_MP_CHECKOUT);
+    pagos = (pend || []).length;
+    (pend || []).forEach(p => { if (p.period_item_id) linkedItems.add(p.period_item_id); });
   }
   const { data: periods } = await supabase.from('expense_periods').select('id').eq('consortium_id', consortiumId);
   const periodIds = (periods || []).map(p => p.id);
   if (periodIds.length) {
-    const { count } = await supabase.from('expense_period_items').select('id', { count: 'exact', head: true }).in('period_id', periodIds).eq('status', 'reported');
-    pagos += count || 0;
+    const { data: reported } = await supabase.from('expense_period_items').select('id').in('period_id', periodIds).eq('status', 'reported');
+    pagos += (reported || []).filter(it => !linkedItems.has(it.id)).length;
   }
   return { reservas: resv.count || 0, pagos, reclamos: clm.count || 0 };
 }

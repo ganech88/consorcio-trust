@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatShortDate } from '../../lib/utils';
 import { Receipt, ChevronUp, ChevronDown, Loader2, Users, Check, X, CheckCircle2, RefreshCw, FileText, FileDown } from 'lucide-react';
 import {
   fetchExpensePeriods, createExpensePeriod, fetchPeriodItems, createPeriodItems,
@@ -55,6 +56,7 @@ export default function LiquidacionTab({ session, userProfile }) {
       return;
     }
     setSaving(true);
+    let created = null;
     try {
       const p = await createExpensePeriod({
         period: form.period,
@@ -64,7 +66,7 @@ export default function LiquidacionTab({ session, userProfile }) {
         createdBy: session.user.id,
       });
       setPeriods(prev => [p, ...prev]);
-      toast.success('Período creado');
+      toast.success('Liquidación publicada');
       setForm({ period: new Date().toISOString().slice(0, 7), totalAmount: '', dueDate: '', amountPerUnit: '' });
 
       if ('Notification' in window && Notification.permission === 'granted') {
@@ -73,10 +75,17 @@ export default function LiquidacionTab({ session, userProfile }) {
           icon: '/icon-192.svg',
         });
       }
+      // Publicar ya reparte por coeficiente: antes era un segundo paso manual y, si se
+      // olvidaba, los vecinos no veían su expensa.
+      created = p;
     } catch (e) {
       toast.error(e.message, 'Error al crear período');
     } finally {
       setSaving(false);
+    }
+    if (created) {
+      setExpanded(created.id);
+      await handleDistribute(created);
     }
   }
 
@@ -121,7 +130,7 @@ export default function LiquidacionTab({ session, userProfile }) {
         }
         toast.error(
           `Se distribuyó a ${rows.length} unidades, pero: ${avisos.join(' ')} Corregí los coeficientes en la sección Unidades y usá Re-distribuir.`,
-          'Distribucion incompleta',
+          'Distribución incompleta',
         );
       }
     } catch (e) {
@@ -249,7 +258,7 @@ export default function LiquidacionTab({ session, userProfile }) {
 
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-slate-400 dark:text-ink-low">
-            Al publicar, distribuí el total entre las unidades según su <strong className="text-slate-500 dark:text-ink-mid">coeficiente</strong> (sección Unidades).
+            Al publicar, el total se reparte automáticamente entre las unidades según su <strong className="text-slate-500 dark:text-ink-mid">coeficiente</strong> (sección Unidades).
           </p>
           <button
             type="submit"
@@ -285,7 +294,7 @@ export default function LiquidacionTab({ session, userProfile }) {
                   <div className="flex-1">
                     <p className="font-semibold text-slate-800 dark:text-ink-hi">{formatPeriod(period.period)}</p>
                     <p className="text-xs text-slate-400 dark:text-ink-low">
-                      Total: ${Number(period.total_amount).toLocaleString('es-AR')} · Vence: {new Date(period.due_date).toLocaleDateString('es-AR')}
+                      Total: ${Number(period.total_amount).toLocaleString('es-AR')} · Vence: {formatShortDate(period.due_date)}
                     </p>
                   </div>
                   {isOpen ? <ChevronUp size={16} className="text-slate-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-400 shrink-0" />}

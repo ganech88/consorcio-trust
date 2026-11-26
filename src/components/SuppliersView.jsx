@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatShortDate, parseLocalDate } from '../lib/utils';
 import ComprobanteLink from './ComprobanteLink';
 import {
   Truck, Plus, Loader2, Trash2, X, CheckCircle, Clock,
@@ -480,7 +481,7 @@ export default function SuppliersView({ session, userProfile }) {
             <div className="space-y-2">
               {orders.map(o => {
                 const st = ORDER_STATUS[o.status] || ORDER_STATUS.pending;
-                const isOverdue = o.due_date && o.status === 'pending' && new Date(o.due_date) < new Date();
+                const isOverdue = o.due_date && o.status === 'pending' && parseLocalDate(o.due_date) < new Date(new Date().setHours(0, 0, 0, 0));
                 return (
                   <div key={o.id} className={`bg-white dark:bg-surface-panel rounded-2xl border p-4 flex items-start gap-3 ${isOverdue ? 'border-red-200 dark:border-red-800' : 'border-slate-100 dark:border-white/[0.07]'}`}>
                     <div className="flex-1 min-w-0">
@@ -492,7 +493,7 @@ export default function SuppliersView({ session, userProfile }) {
                       <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">{o.description}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-slate-400 dark:text-ink-low">
                         {o.invoice_number && <span>Fact. {o.invoice_number}</span>}
-                        {o.due_date && <span>Vence: {new Date(o.due_date).toLocaleDateString('es-AR')}</span>}
+                        {o.due_date && <span>Vence: {formatShortDate(o.due_date)}</span>}
                         {o.paid_at && <span>Pagada: {new Date(o.paid_at).toLocaleDateString('es-AR')}</span>}
                         {o.attachment_url && (
                           <ComprobanteLink

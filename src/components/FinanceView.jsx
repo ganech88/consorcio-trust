@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatShortDate } from '../lib/utils';
 import { TrendingUp, Plus, Loader2, DollarSign, UploadCloud, FileText } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -396,7 +397,7 @@ export default function FinanceView({ session, userProfile }) {
                         <span className="text-xs text-slate-400 dark:text-ink-low">{e.provider}</span>
                       )}
                       <span className="text-xs text-slate-400 dark:text-ink-low">
-                        {new Date(e.date).toLocaleDateString('es-AR')}
+                        {formatShortDate(e.date)}
                       </span>
                     </div>
                   </div>

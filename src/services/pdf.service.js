@@ -1,5 +1,6 @@
 // Genera el PDF de certificado de deuda / intimación de pago de una unidad.
 // Reusa jsPDF + autoTable (import dinámico) como en lib/export-utils, e incluye
+import { formatShortDate } from '../lib/utils';
 // el logo, datos y firma de la administración (white-label) si están cargados.
 
 function money(n) {
@@ -228,7 +229,7 @@ export async function generateDebtPdf({ kind = 'certificado', unit, ownerName, m
   autoTable(doc, {
     startY: y,
     head: [['Concepto', 'Fecha', 'Importe']],
-    body: pend.map(m => [m.label, m.date ? new Date(m.date).toLocaleDateString('es-AR') : '-', money(m.amount)]),
+    body: pend.map(m => [m.label, m.date ? formatShortDate(m.date) : '-', money(m.amount)]),
     foot: [['', 'Total adeudado', money(total)]],
     headStyles: { fillColor: [13, 148, 136], textColor: 255, fontStyle: 'bold' },
     footStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },

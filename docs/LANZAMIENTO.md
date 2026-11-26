@@ -18,7 +18,14 @@ Revisión de "primer contacto" de un consorcio nuevo. Migración 080 aplicada.
 - Onboarding con "Cerrar sesión" y explicación del código; tildes y voseo corregidos en las pantallas principales.
 - Landing: "pegar desde Excel" (lo que existe hoy) en vez de "importar desde Excel".
 
-**Sigue pendiente de producto/comercial:** límite del plan gratis (20 unidades) y cobro de suscripciones no están implementados (hoy es política comercial manual); el mail `hola@consorciotrust.app` de la landing usa otro dominio que el sitio (`.com`): confirmar que existe; regenerar `database.types.ts` (faltan columnas de 079/080).
+**Simulación de punta a punta (26/11/2026)** con el consorcio de prueba "Edificio Simulación Mitre 850" en producción: alta del consorcio, 6 unidades pegadas desde Excel, medios de pago, invitación por unidad, alta de la vecina por código (RPC real con RLS), liquidación de $600.000 repartida por coeficiente, pago informado, aprobación y conciliación (item `paid`). RLS verificado: la vecina no ve otros consorcios ni puede informar o marcar pagos de otra unidad. Bugs encontrados y corregidos:
+- **Vencimiento un día antes** (`new Date('YYYY-MM-DD')` en UTC-3): `parseLocalDate` / `formatShortDate` en `lib/utils.ts`, aplicado a vencimientos, multas, egresos, reservas y cuenta corriente.
+- **Contador "Pagos por aprobar" duplicado** (contaba el pago y el item informado).
+- **Publicar la liquidación ahora reparte sola** por coeficiente (antes era un segundo botón).
+- Selector de consorcio del super admin (lista todos y muestra el nombre real); Contactos sin teléfonos ni dirección de ejemplo.
+- Landing sin promesas de gratuidad; contacto `hola@desarrollosinfronteras.com`.
+
+**Sigue pendiente:** cobro de suscripciones (hoy manual); logo y firma de la administración se cargan por URL (falta subir archivo); "Datos del consorcio" es una pantalla muy larga (separar en pestañas); un usuario que cambia de consorcio sigue viendo sus expensas del anterior; regenerar `database.types.ts` (faltan columnas de 079/080); guías de uso: ver artefactos "Guía para administradores" y "Guía para vecinos".
 
 ### Noviembre 2026 — revisión general (frontend + config, sin cambios de DB)
 - **Bandeja de pagos del admin**: ya no lista (ni cuenta en el Inicio) los checkouts de MercadoPago abandonados. Antes cada clic en "Pagar online" dejaba un `payments` `pending` que el admin podía aprobar a mano y saldar un cargo sin cobro. Filtro compartido `NOT_UNPAID_MP_CHECKOUT` en `payments.service.js`; también se aplica a "Mis pagos informados" del residente.

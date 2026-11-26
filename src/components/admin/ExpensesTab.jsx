@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { formatShortDate } from '../../lib/utils';
 import {
   Receipt, Plus, Eye, Check, X, Trash2, CreditCard, Loader2,
 } from 'lucide-react';
@@ -226,7 +227,7 @@ export default function ExpensesTab({ session, userProfile }) {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-ink-mid mt-0.5">
-                      {exp.period}{exp.due_date ? ` · Vence ${new Date(exp.due_date).toLocaleDateString('es-AR')}` : ''}
+                      {exp.period}{exp.due_date ? ` · Vence ${formatShortDate(exp.due_date)}` : ''}
                     </p>
                     {exp.description && (
                       <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5 truncate">{exp.description}</p>

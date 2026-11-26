@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatShortDate, parseLocalDate } from '../lib/utils';
 import { useSearchParams } from 'react-router-dom';
 import { Receipt, CheckCircle, Clock, AlertCircle, Loader2, X, CreditCard, ChevronDown, ChevronUp, Gavel, UploadCloud, Wallet, Percent } from 'lucide-react';
 import { fetchExpenses, fetchConsortiumFines, fetchUserPeriodItems, reportPeriodItemPayment, fetchConsortium, uploadPaymentProof, fetchMpConfig, createMpPreference, savePaymentRecord } from '../services/data.service';
@@ -213,10 +214,10 @@ export default function ExpensesView({ session, userProfile }) {
       {(() => {
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const due = periodItems.filter(it => it.status !== 'paid' && it.expense_periods?.due_date
-          && (new Date(it.expense_periods.due_date) - today) / 86400000 <= 7);
+          && (parseLocalDate(it.expense_periods.due_date) - today) / 86400000 <= 7);
         if (due.length === 0) return null;
         const total = due.reduce((s, it) => s + Number(it.amount || 0), 0);
-        const overdue = due.some(it => new Date(it.expense_periods.due_date) < today);
+        const overdue = due.some(it => parseLocalDate(it.expense_periods.due_date) < today);
         return (
           <div className={`rounded-2xl p-4 flex items-center gap-3 ${overdue ? 'bg-red-50 dark:bg-red-400/[0.12] border border-red-200 dark:border-red-800' : 'bg-amber-50 dark:bg-amber-400/[0.12] border border-amber-200 dark:border-amber-800'}`}>
             <AlertCircle size={20} className={overdue ? 'text-red-500 dark:text-red-400 shrink-0' : 'text-amber-500 dark:text-amber-400 shrink-0'} />
@@ -275,7 +276,7 @@ export default function ExpensesView({ session, userProfile }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{formatPeriod(it.expense_periods?.period)}</p>
                   <p className="text-xs text-slate-400 dark:text-ink-low">
-                    {it.expense_periods?.due_date ? `Vence ${new Date(it.expense_periods.due_date).toLocaleDateString('es-AR')}` : ''}
+                    {it.expense_periods?.due_date ? `Vence ${formatShortDate(it.expense_periods.due_date)}` : ''}
                   </p>
                 </div>
                 {(() => { const w = it.status === 'paid' ? null : withInterest(it); return (
@@ -380,7 +381,7 @@ export default function ExpensesView({ session, userProfile }) {
                       {fine.unit_name ? `Unidad ${fine.unit_name}` : 'Unidad'} - {fine.reason}
                     </p>
                     <p className="text-xs text-slate-400 dark:text-ink-low mt-0.5">
-                      {new Date(fine.fine_date).toLocaleDateString('es-AR')}{fine.period ? ` · Período ${fine.period}` : ''}
+                      {formatShortDate(fine.fine_date)}{fine.period ? ` · Período ${fine.period}` : ''}
                     </p>
                   </div>
                   <div className="text-right shrink-0">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { formatShortDate } from '../../lib/utils';
 import ComprobanteLink from '../ComprobanteLink';
 import { Gavel, Plus, Loader2, CheckCircle, X, Trash2, Paperclip } from 'lucide-react';
 import {
@@ -350,7 +351,7 @@ export default function FinesTab({ session, userProfile }) {
                   </div>
 
                   <span className="text-xs text-slate-400 dark:text-ink-low shrink-0">
-                    {fine.period || new Date(fine.fine_date).toLocaleDateString('es-AR')}
+                    {fine.period || formatShortDate(fine.fine_date)}
                   </span>
 
                   <span className="font-bold text-slate-800 dark:text-ink-hi shrink-0">

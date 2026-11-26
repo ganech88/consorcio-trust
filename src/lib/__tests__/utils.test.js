@@ -35,3 +35,20 @@ describe('formatDate', () => {
     expect(out).toContain('2026');
   });
 });
+
+import { parseLocalDate, formatShortDate } from '../utils';
+
+describe('fechas sin corrimiento de zona horaria', () => {
+  it("'YYYY-MM-DD' es medianoche local (el vencimiento no se corre un día)", () => {
+    const d = parseLocalDate('2026-12-10');
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 11, 10, 0]);
+    expect(formatShortDate('2026-12-10')).toBe(new Date(2026, 11, 10).toLocaleDateString('es-AR'));
+    expect(formatDate('2026-12-10')).toContain('10');
+  });
+
+  it('respeta timestamps completos y valores vacíos', () => {
+    expect(parseLocalDate('2026-12-10T15:30:00Z').toISOString()).toBe('2026-12-10T15:30:00.000Z');
+    expect(formatShortDate(null)).toBe('');
+    expect(formatShortDate('no-es-fecha')).toBe('');
+  });
+});
