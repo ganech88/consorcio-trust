@@ -25,6 +25,7 @@ import RendicionTab from './admin/RendicionTab';
 import ConsorcioTab from './admin/ConsorcioTab';
 import AdminHome from './admin/AdminHome';
 import SpacesTab from './admin/SpacesTab';
+import UnitInviteCard from './admin/UnitInviteCard';
 import ModulesCard from './admin/ModulesCard';
 import SetupChecklist from './admin/SetupChecklist';
 import { fetchAdminPendingCounts } from '../services/data.service';
@@ -66,7 +67,12 @@ function badgeFor(id, counts) {
 
 function renderSection(id, session, userProfile) {
   switch (id) {
-    case 'usuarios':      return <UsersTab userProfile={userProfile} />;
+    case 'usuarios':      return (
+      <div className="space-y-6">
+        <UnitInviteCard userProfile={userProfile} />
+        <UsersTab userProfile={userProfile} />
+      </div>
+    );
     case 'unidades':      return <UnitsTab userProfile={userProfile} />;
     case 'claims':        return <ClaimsTab session={session} userProfile={userProfile} />;
     case 'expenses':      return <ExpensesTab session={session} userProfile={userProfile} />;
