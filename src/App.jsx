@@ -47,7 +47,7 @@ const VIEW_TITLES = {
   [VIEWS.AMENITIES]:     'Reservas',
   [VIEWS.DOCS]:          'Documentos del edificio',
   [VIEWS.CONTACTS]:      'Contactos',
-  [VIEWS.PROFILE]:       'Mi Perfil',
+  [VIEWS.PROFILE]:       'Mi perfil',
   [VIEWS.ADMIN]:         'Panel de administración',
   [VIEWS.EXPENSES]:      'Expensas',
   [VIEWS.CHAT]:          'Mensajes',

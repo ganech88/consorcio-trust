@@ -69,7 +69,7 @@ function PaymentTimeline({ payments }) {
       <div className="py-12 text-center text-slate-400 dark:text-ink-low">
         <DollarSign size={40} className="mx-auto mb-2 opacity-30" />
         <p className="text-sm font-medium">No hay pagos registrados</p>
-        <p className="text-xs mt-1">Usá el botón "Informar Pago" para enviar tu comprobante</p>
+        <p className="text-xs mt-1">Usá el botón "Informar pago" para enviar tu comprobante</p>
       </div>
     );
   }
@@ -120,8 +120,10 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
   }, [session?.user?.id]);
 
   const userClaimsCount = reclamos.filter((r) => r.user_id === session.user.id).length;
+  // Un item informado/pagado a través de un pago ya figura en `payments`: no repetirlo.
+  const itemsWithPayment = new Set(payments.map(p => p.period_item_id).filter(Boolean));
   const periodHistory = periodItems
-    .filter(it => it.status === 'paid' || it.status === 'reported')
+    .filter(it => (it.status === 'paid' || it.status === 'reported') && !itemsWithPayment.has(it.id))
     .map(it => ({ id: 'pi-' + it.id, amount: it.amount, status: it.status === 'paid' ? 'approved' : 'pending', created_at: it.paid_at || it.reported_at || it.created_at }));
   const displayPayments = [...payments, ...periodHistory]
     .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
@@ -152,7 +154,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
     <div className="space-y-6 animate-fade-in">
       {/* Greeting strip */}
       <div className="bg-white dark:bg-surface-panel border border-slate-100 dark:border-white/[0.07] rounded-2xl px-6 py-5 text-slate-900 dark:text-ink-hi">
-        <p className="text-brand-600 dark:text-brand-400 text-sm capitalize font-mono">{getDateSpanish()}</p>
+        <p className="text-brand-600 dark:text-brand-400 text-sm first-letter:uppercase font-mono">{getDateSpanish()}</p>
         <h2 className="text-2xl font-bold mt-1 font-display">
           {getGreeting()}{firstName ? `, ${firstName}` : ''}
         </h2>
@@ -167,7 +169,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
           <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-400/[0.14] rounded-xl flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 transition-colors">
             <UploadCloud size={22} className="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-xs font-semibold text-slate-600 dark:text-ink-mid text-center leading-tight">Informar Pago</span>
+          <span className="text-xs font-semibold text-slate-600 dark:text-ink-mid text-center leading-tight">Informar pago</span>
         </button>
 
         <button
@@ -177,7 +179,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
           <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-xl flex items-center justify-center group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
             <AlertCircle size={22} className="text-orange-500 dark:text-orange-400" />
           </div>
-          <span className="text-xs font-semibold text-slate-600 dark:text-ink-mid text-center leading-tight">Nuevo Reclamo</span>
+          <span className="text-xs font-semibold text-slate-600 dark:text-ink-mid text-center leading-tight">Nuevo reclamo</span>
         </button>
 
         <button
@@ -206,7 +208,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
               onClick={onPaymentClick}
               className="mt-4 w-full bg-brand-500 hover:bg-brand-400 text-[#04201d] py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors"
             >
-              <UploadCloud size={16} /> Informar Pago
+              <UploadCloud size={16} /> Informar pago
             </button>
           }
         />
@@ -300,7 +302,7 @@ export default function Dashboard({ reclamos, gastos, payments = [], session, us
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <DollarSign size={20} className="text-emerald-600 dark:text-emerald-400" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi">Historial de Pagos</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-ink-hi">Historial de pagos</h3>
           </div>
           <span className="text-xs text-slate-400 dark:text-ink-low font-medium">
             {displayPayments.length > 0 ? `Últimos ${displayPayments.length}` : 'Sin registros'}

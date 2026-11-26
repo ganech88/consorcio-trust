@@ -87,7 +87,7 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-ink-mid mb-1.5 block">Medio de pago</label>
             <select value={method} onChange={e => setMethod(e.target.value)} className="w-full border border-slate-200 dark:border-white/[0.09] rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-surface-panel2 dark:text-ink-hi focus:ring-2 focus:ring-brand-500 outline-none">
-              {['Transferencia','Deposito','Efectivo','MercadoPago','Otro'].map(m => <option key={m} value={m}>{m}</option>)}
+              {['Transferencia','Depósito','Efectivo','Otro'].map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div>
@@ -109,6 +109,25 @@ function PeriodReportModal({ item, fine, total, interest, userId, unitId, onClos
         </form>
       </div>
     </div>
+  );
+}
+
+// Copiar el alias/CBU con un toque: en el celular es lo que más se usa para transferir.
+function CopyButton({ value, label }) {
+  const toast = useToast();
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`Se copió el ${label}`);
+    } catch {
+      toast.error(`No se pudo copiar. Mantené apretado el ${label} para copiarlo.`);
+    }
+  }
+  return (
+    <button type="button" onClick={copy} aria-label={`Copiar ${label}`}
+      className="shrink-0 text-xs font-semibold text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-700 rounded-lg px-2 py-1 hover:bg-brand-50 dark:hover:bg-brand-400/[0.10]">
+      Copiar
+    </button>
   );
 }
 
@@ -195,7 +214,7 @@ export default function ExpensesView({ session, userProfile }) {
       <div className="bg-brand-600 p-6 rounded-2xl text-white shadow-lg">
         <div className="flex items-center gap-3 mb-4">
           <Receipt size={24} />
-          <h3 className="text-xl font-bold">Mis Expensas</h3>
+          <h3 className="text-xl font-bold">Mis expensas</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/15 rounded-xl p-3">
@@ -238,14 +257,14 @@ export default function ExpensesView({ session, userProfile }) {
         <div className="bg-white dark:bg-surface-panel rounded-2xl border border-emerald-200 dark:border-emerald-800 p-5">
           <h4 className="font-bold text-slate-800 dark:text-ink-hi text-sm flex items-center gap-2 mb-2">
             <CreditCard size={16} className="text-emerald-500" />
-            Como pagar
+            Cómo pagar
           </h4>
           <p className="text-xs text-slate-500 dark:text-ink-mid mb-3">
             Transferí a estos datos y después informá tu pago con el comprobante.
           </p>
           <div className="space-y-1.5 text-sm">
-            {paymentInfo.payment_cbu && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">CBU/CVU</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_cbu}</span></div>}
-            {paymentInfo.payment_alias && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Alias</span><span className="font-mono text-slate-800 dark:text-ink-hi select-all">{paymentInfo.payment_alias}</span></div>}
+            {paymentInfo.payment_cbu && <div className="flex items-center justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">CBU/CVU</span><span className="flex items-center gap-2 min-w-0"><span className="font-mono text-slate-800 dark:text-ink-hi select-all break-all text-right">{paymentInfo.payment_cbu}</span><CopyButton value={paymentInfo.payment_cbu} label="CBU" /></span></div>}
+            {paymentInfo.payment_alias && <div className="flex items-center justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Alias</span><span className="flex items-center gap-2 min-w-0"><span className="font-mono text-slate-800 dark:text-ink-hi select-all break-all text-right">{paymentInfo.payment_alias}</span><CopyButton value={paymentInfo.payment_alias} label="alias" /></span></div>}
             {paymentInfo.payment_bank && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Banco</span><span className="text-slate-800 dark:text-ink-hi">{paymentInfo.payment_bank}</span></div>}
             {paymentInfo.payment_holder && <div className="flex justify-between gap-3"><span className="text-slate-400 dark:text-ink-low">Titular</span><span className="text-slate-800 dark:text-ink-hi">{paymentInfo.payment_holder}</span></div>}
           </div>
@@ -269,12 +288,12 @@ export default function ExpensesView({ session, userProfile }) {
         ) : (
           <div className="space-y-2">
             {periodItems.map(it => (
-              <div key={it.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex items-center gap-4">
+              <div key={it.id} className="bg-white dark:bg-surface-panel rounded-2xl border border-slate-100 dark:border-white/[0.07] p-4 flex flex-wrap items-center gap-x-4 gap-y-3">
                 <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-400/[0.14] flex items-center justify-center shrink-0">
                   <Receipt size={18} className="text-brand-600 dark:text-brand-400" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm">{formatPeriod(it.expense_periods?.period)}</p>
+                <div className="flex-1 min-w-[8rem]">
+                  <p className="font-semibold text-slate-800 dark:text-ink-hi text-sm first-letter:uppercase">{formatPeriod(it.expense_periods?.period)}</p>
                   <p className="text-xs text-slate-400 dark:text-ink-low">
                     {it.expense_periods?.due_date ? `Vence ${formatShortDate(it.expense_periods.due_date)}` : ''}
                   </p>

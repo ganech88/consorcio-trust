@@ -22,7 +22,7 @@ function formatDate(ts) {
 
 export default function ChatView({ session, userProfile }) {
   const toast = useToast();
-  const { setUnreadChatCount } = useData();
+  const { setUnreadChatCount, consortium } = useData();
   const isAdmin = ['admin', 'super_admin'].includes(userProfile?.role);
 
   const [conversations, setConversations] = useState([]); // bandeja del admin
@@ -220,7 +220,7 @@ export default function ChatView({ session, userProfile }) {
         </div>
         <div>
           <p className="font-semibold text-slate-800 dark:text-ink-hi">{headerName}</p>
-          <p className="text-xs text-emerald-500 font-medium">{isAdmin ? 'Residente' : 'ConsorcioTrust'}</p>
+          <p className="text-xs text-emerald-500 font-medium">{isAdmin ? 'Vecino' : (consortium?.name || 'Tu consorcio')}</p>
         </div>
       </div>
 

@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
     icon: Clock,
   },
   [CLAIM_STATUS.PENDING]: {
-    label: 'En Proceso',
+    label: 'En proceso',
     bg: 'bg-blue-50 dark:bg-brand-400/[0.14]',
     text: 'text-blue-700 dark:text-brand-400',
     border: 'border-blue-200 dark:border-blue-800',
@@ -32,7 +32,7 @@ const STATUS_CONFIG = {
 const FILTER_OPTIONS = [
   { id: 'all', label: 'Todos' },
   { id: CLAIM_STATUS.OPEN, label: 'Pendientes' },
-  { id: CLAIM_STATUS.PENDING, label: 'En Proceso' },
+  { id: CLAIM_STATUS.PENDING, label: 'En proceso' },
   { id: CLAIM_STATUS.CLOSED, label: 'Resueltos' },
 ];
 
@@ -82,7 +82,7 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
       setCategory('');
       setShowForm(false);
       setPage(1);
-      toast.success('Reclamo creado exitosamente');
+      toast.success('Reclamo enviado. La administración lo va a ver.');
     } catch (error) {
       toast.error(error.message, 'Error al crear reclamo');
     } finally {
@@ -115,7 +115,7 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
       <div className="flex items-center justify-between gap-4">
         <h3 className="font-bold text-lg flex items-center gap-2 text-slate-800 dark:text-ink-hi">
           <MessageSquare size={20} className="text-blue-600 dark:text-brand-400" />
-          Mis Reclamos
+          Mis reclamos
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -128,7 +128,7 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
           {showForm ? (
             <>Cancelar</>
           ) : (
-            <><Plus size={16} /> Nuevo Reclamo</>
+            <><Plus size={16} /> Nuevo reclamo</>
           )}
         </button>
       </div>
@@ -173,7 +173,7 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe el problema con más detalle..."
+                placeholder="Contanos qué pasa y dónde..."
                 rows={3}
                 className="w-full p-3 border border-slate-200 dark:border-white/[0.09] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-slate-50/50 dark:bg-surface-panel2 dark:text-ink-hi hover:bg-white dark:hover:bg-white/[0.06] resize-none"
                 maxLength={500}
@@ -191,13 +191,13 @@ export default function ClaimsView({ reclamos, setReclamos, session, userProfile
               ) : (
                 <Plus size={18} />
               )}
-              Crear Reclamo
+              Crear reclamo
             </button>
           </form>
         </div>
       )}
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         <Filter size={16} className="text-slate-400 dark:text-ink-low shrink-0" />
         {FILTER_OPTIONS.map((opt) => (
           <button
